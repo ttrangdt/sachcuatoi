@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/main.tsx","./src/components/bookhoverpreview.tsx","./src/components/bookreader.tsx","./src/components/bookshelf.tsx","./src/components/decorativebookmark.tsx","./src/components/finishedarchive.tsx","./src/data/defaultbooks.ts","./src/types/book.ts","./src/utils/pdfengine.ts","./src/utils/storage.ts","./src/utils/timeformat.ts"],"version":"5.9.3"}
