@@ -15,12 +15,14 @@ import {
   AchillesSpineArt,
   AchillesSprayedEdge,
 } from './AchillesArtwork';
+import { RoomMood } from './AmbientRoomEffects';
 
 interface BookshelfProps {
   books: BookItem[];
   progressMap: Record<string, BookProgress>;
   viewMode: ShelfViewMode;
   hoverPreviewEnabled: boolean;
+  roomMood: RoomMood;
   onOpenBook: (book: BookItem) => void;
   onHoverBook: (book: BookItem) => void;
   onLeaveBook: () => void;
@@ -28,11 +30,11 @@ interface BookshelfProps {
   onAddBookClick?: () => void;
 }
 
-/** Trailing ivy plant draping from the top-right corner of the white bookcase (like Image 1) */
+/** Trailing ivy plant draping from the top-right corner of the white bookcase */
 const TrailingIvyDecor: React.FC = () => (
   <svg
     viewBox="0 0 180 220"
-    className="ivy-breeze pointer-events-none absolute -top-2 -right-2 z-30 h-40 w-32 sm:h-52 sm:w-44 drop-shadow-[0_6px_8px_rgba(32,58,40,0.22)]"
+    className="ivy-breeze pointer-events-none absolute -top-2 -right-2 z-30 h-28 w-24 sm:h-40 sm:w-32 drop-shadow-[0_6px_8px_rgba(32,58,40,0.22)]"
     aria-hidden="true"
   >
     <g fill="none" stroke="#3E6B48" strokeWidth="2" strokeLinecap="round">
@@ -40,7 +42,6 @@ const TrailingIvyDecor: React.FC = () => (
       <path d="M155 0 C128 32 108 66 86 112" />
       <path d="M174 10 C166 64 164 118 152 192" />
     </g>
-    {/* Leaves along stems */}
     {[
       { x: 158, y: 18, r: -25, c: '#4E8259' },
       { x: 140, y: 30, r: 35, c: '#3D6E49' },
@@ -68,20 +69,54 @@ const TrailingIvyDecor: React.FC = () => (
   </svg>
 );
 
-/** Small ceramic scented candle prop sitting on shelf */
-const CeramicCandleProp: React.FC = () => (
+/** Flickering ceramic scented candle prop sitting on shelf */
+const CeramicCandleProp: React.FC<{ isEvening: boolean }> = ({ isEvening }) => (
   <div
     className="pointer-events-none hidden sm:flex flex-col items-center select-none"
     aria-hidden="true"
   >
-    <div className="h-2.5 w-1 rounded-full bg-amber-300/90 shadow-[0_0_8px_3px_rgba(251,191,36,0.45)]" />
-    <div className="h-12 w-10 rounded-t-sm rounded-b-md bg-gradient-to-r from-[#DFD8CC] via-[#F2EDE3] to-[#CFC7B9] shadow-[0_4px_8px_rgba(0,0,0,0.16)] border-t border-white/80 flex items-center justify-center">
-      <div className="h-5 w-6 rounded-[2px] border border-[#B7A994]/70 bg-[#FAF7F0] flex items-center justify-center">
-        <span className="text-[6px] tracking-widest text-[#7E705D] uppercase">
+    <div
+      className={`candle-flame h-3 w-1.5 rounded-full bg-gradient-to-t from-amber-500 via-amber-300 to-yellow-100 ${
+        isEvening
+          ? 'shadow-[0_0_24px_10px_rgba(251,191,36,0.58)]'
+          : 'shadow-[0_0_12px_4px_rgba(251,191,36,0.45)]'
+      }`}
+    />
+    <div className="h-10 w-9 rounded-t-sm rounded-b-md bg-gradient-to-r from-[#DFD8CC] via-[#F2EDE3] to-[#CFC7B9] shadow-[0_4px_8px_rgba(0,0,0,0.16)] border-t border-white/80 flex items-center justify-center">
+      <div className="h-4 w-5 rounded-[2px] border border-[#B7A994]/70 bg-[#FAF7F0] flex items-center justify-center">
+        <span className="text-[5px] tracking-widest text-[#7E705D] uppercase">
           calm
         </span>
       </div>
     </div>
+  </div>
+);
+
+/** Warm ceramic teacup with gentle rising steam wisps */
+const SteamingTeacupProp: React.FC = () => (
+  <div
+    className="pointer-events-none hidden md:flex flex-col items-center select-none"
+    aria-hidden="true"
+  >
+    <div className="flex gap-1.5 -mb-0.5">
+      <span
+        className="steam-wisp h-4 w-1 rounded-full bg-white/70 blur-[1.5px]"
+        style={{ animationDelay: '0s' }}
+      />
+      <span
+        className="steam-wisp h-5 w-1 rounded-full bg-white/60 blur-[1.5px]"
+        style={{ animationDelay: '1.1s' }}
+      />
+      <span
+        className="steam-wisp h-3.5 w-1 rounded-full bg-white/65 blur-[1.5px]"
+        style={{ animationDelay: '2.1s' }}
+      />
+    </div>
+    <div className="relative flex items-center">
+      <div className="h-7 w-9 rounded-b-xl rounded-t-xs bg-gradient-to-r from-[#D5E1D9] via-[#E9F0EB] to-[#C6D5CB] shadow-[0_4px_7px_rgba(0,0,0,0.14)] border-t border-white/90" />
+      <div className="h-4 w-2.5 -ml-0.5 rounded-r-full border-2 border-l-0 border-[#C6D5CB]" />
+    </div>
+    <div className="h-1 w-11 rounded-full bg-[#DCE4DE] shadow-xs" />
   </div>
 );
 
@@ -91,7 +126,7 @@ const MiniPlantProp: React.FC = () => (
     className="pointer-events-none hidden sm:flex flex-col items-center select-none"
     aria-hidden="true"
   >
-    <svg viewBox="0 0 64 58" className="h-14 w-16 -mb-1">
+    <svg viewBox="0 0 64 58" className="h-12 w-14 -mb-1">
       <ellipse cx="32" cy="30" rx="16" ry="9" fill="#5D9267" />
       <ellipse
         cx="22"
@@ -109,14 +144,7 @@ const MiniPlantProp: React.FC = () => (
         fill="#6BA274"
         transform="rotate(24 42 26)"
       />
-      <ellipse
-        cx="32"
-        cy="20"
-        rx="7"
-        ry="11"
-        fill="#7BB283"
-      />
-      {/* Terracotta / sage ceramic pot */}
+      <ellipse cx="32" cy="20" rx="7" ry="11" fill="#7BB283" />
       <path
         d="M16 32 H48 L44 55 C44 56.5 42 57 40 57 H24 C22 57 20 56.5 20 55 Z"
         fill="#C9A286"
@@ -126,13 +154,13 @@ const MiniPlantProp: React.FC = () => (
   </div>
 );
 
-/** Minimalist framed reading quote sitting on lower shelf */
+/** Minimalist framed reading quote */
 const MiniQuoteFrame: React.FC = () => (
   <div
-    className="pointer-events-none hidden md:flex h-24 w-20 flex-col items-center justify-center rounded-[3px] border-[5px] border-[#D8C5A8] bg-[#FCFBF7] p-2 text-center shadow-[0_6px_12px_rgba(40,32,20,0.16)] select-none"
+    className="pointer-events-none hidden md:flex h-20 w-18 flex-col items-center justify-center rounded-[3px] border-[4px] border-[#D8C5A8] bg-[#FCFBF7] p-1.5 text-center shadow-[0_5px_10px_rgba(40,32,20,0.16)] select-none"
     aria-hidden="true"
   >
-    <span className="font-display text-[11px] italic leading-snug text-[#46594E]">
+    <span className="font-display text-[10px] italic leading-tight text-[#46594E]">
       “Đọc một cuốn sách, sống thêm một đời.”
     </span>
   </div>
@@ -172,8 +200,8 @@ const ShelfBookItem: React.FC<{
 
   if (viewMode === 'spine') {
     const spineWidth = isAchilles
-      ? 56
-      : Math.min(76, Math.max(48, Math.round(total / 22) + 42));
+      ? 48
+      : Math.min(62, Math.max(42, Math.round(total / 26) + 36));
     return (
       <div
         className="group relative flex flex-col items-center"
@@ -181,7 +209,7 @@ const ShelfBookItem: React.FC<{
         onMouseLeave={onLeave}
       >
         {hasBookmark && progress && (
-          <div className="pointer-events-none absolute -top-5 z-20 transition-transform duration-300 group-hover:-translate-y-3">
+          <div className="pointer-events-none absolute -top-4 z-20 transition-transform duration-300 group-hover:-translate-y-2.5">
             <DecorativeBookmark styleId={progress.bookmarkStyle} size="sm" />
           </div>
         )}
@@ -190,28 +218,28 @@ const ShelfBookItem: React.FC<{
           type="button"
           onClick={onOpen}
           style={{ width: `${spineWidth}px` }}
-          className="book-spine-card relative h-[228px] sm:h-[268px] overflow-hidden rounded-t-[4px] rounded-b-[1px] shadow-[4px_6px_14px_rgba(32,26,20,0.34)] focus:outline-none focus:ring-2 focus:ring-[#4A6B5D]"
+          className="book-spine-card book-sheen relative h-[156px] sm:h-[172px] lg:h-[190px] xl:h-[205px] overflow-hidden rounded-t-[4px] rounded-b-[1px] shadow-[4px_6px_14px_rgba(32,26,20,0.34)] focus:outline-none focus:ring-2 focus:ring-[#4A6B5D]"
           title={`${book.title} — ${book.author}`}
         >
           {isAchilles ? (
             <AchillesSpineArt />
           ) : (
             <div
-              className="relative flex h-full w-full flex-col items-center justify-between px-1.5 py-4"
+              className="relative flex h-full w-full flex-col items-center justify-between px-1 py-3"
               style={{
                 backgroundColor: book.spineColor,
                 color: book.spineTextColor,
               }}
             >
               <div className="pointer-events-none absolute inset-y-0 left-0 w-2 bg-gradient-to-r from-white/20 to-transparent" />
-              <div className="pointer-events-none absolute inset-y-0 right-0 w-2.5 bg-gradient-to-l from-black/30 to-transparent" />
+              <div className="pointer-events-none absolute inset-y-0 right-0 w-2 bg-gradient-to-l from-black/30 to-transparent" />
               <div
                 className="h-[2px] w-full opacity-75"
                 style={{ backgroundColor: book.spineAccent }}
               />
-              <div className="my-2 flex flex-1 items-center justify-center overflow-hidden">
+              <div className="my-1.5 flex flex-1 items-center justify-center overflow-hidden">
                 <span
-                  className="font-display text-sm sm:text-base font-bold tracking-wider leading-tight"
+                  className="font-display text-xs sm:text-sm font-bold tracking-wider leading-tight"
                   style={{
                     writingMode: 'vertical-rl',
                     textOrientation: 'mixed',
@@ -220,27 +248,16 @@ const ShelfBookItem: React.FC<{
                   {book.title}
                 </span>
               </div>
-              <div className="flex flex-col items-center gap-1 w-full">
-                <span
-                  className="font-serif text-[9px] opacity-80 truncate max-h-20"
-                  style={{
-                    writingMode: 'vertical-rl',
-                    textOrientation: 'mixed',
-                  }}
-                >
-                  {book.author}
-                </span>
-                <div
-                  className="mt-1 h-[2px] w-full opacity-75"
-                  style={{ backgroundColor: book.spineAccent }}
-                />
-              </div>
+              <div
+                className="h-[2px] w-full opacity-75"
+                style={{ backgroundColor: book.spineAccent }}
+              />
             </div>
           )}
 
           {progress?.isFinished && (
-            <span className="absolute top-1.5 right-1.5 z-20 rounded-full bg-[#24664B] p-0.5 text-white shadow">
-              <CheckCircle2 className="h-3 w-3" />
+            <span className="absolute top-1.5 right-1 z-20 rounded-full bg-[#24664B] p-0.5 text-white shadow">
+              <CheckCircle2 className="h-2.5 w-2.5" />
             </span>
           )}
         </button>
@@ -248,21 +265,19 @@ const ShelfBookItem: React.FC<{
     );
   }
 
-  // Realistic 3D Hardcover Book (Face-out + visible side page edge!)
+  // Viewport-proportioned 3D Hardcover Book (Front cover + visible side page edge!)
   return (
     <div
       className="book-3d-wrap group relative flex flex-col items-center"
       onMouseEnter={onHover}
       onMouseLeave={onLeave}
     >
-      {/* Peeking decorative bookmark */}
       {hasBookmark && progress && (
-        <div className="pointer-events-none absolute -top-3 right-6 z-30 transition-transform duration-300 group-hover:-translate-y-2.5">
+        <div className="pointer-events-none absolute -top-3 right-5 z-30 transition-transform duration-300 group-hover:-translate-y-2">
           <DecorativeBookmark styleId={progress.bookmarkStyle} size="sm" />
         </div>
       )}
 
-      {/* Delete button for custom uploaded PDFs */}
       {book.isCustom && onDelete && (
         <button
           type="button"
@@ -270,27 +285,27 @@ const ShelfBookItem: React.FC<{
             e.stopPropagation();
             onDelete();
           }}
-          className="absolute -top-2 -left-2 z-30 hidden h-7 w-7 items-center justify-center rounded-full bg-[#232A26] text-white shadow-md transition hover:bg-[#9E2A2B] group-hover:flex"
+          className="absolute -top-2 -left-2 z-30 hidden h-6 w-6 items-center justify-center rounded-full bg-[#232A26] text-white shadow-md transition hover:bg-[#9E2A2B] group-hover:flex"
           title="Xóa sách đã tải lên"
           aria-label="Xóa sách"
         >
-          <Trash2 className="h-3.5 w-3.5" />
+          <Trash2 className="h-3 w-3" />
         </button>
       )}
 
       <button
         type="button"
         onClick={onOpen}
-        className="book-3d-card relative flex h-[232px] sm:h-[272px] w-[166px] sm:w-[196px] text-left focus:outline-none focus:ring-2 focus:ring-[#4A6B5D] rounded-md"
+        className="book-3d-card relative flex h-[156px] w-[114px] sm:h-[172px] sm:w-[126px] lg:h-[190px] lg:w-[138px] xl:h-[205px] xl:w-[148px] text-left focus:outline-none focus:ring-2 focus:ring-[#4A6B5D] rounded-md"
       >
         {/* Front Hardcover Face */}
         <div
-          className="relative z-10 h-full flex-1 overflow-hidden rounded-l-[3px] rounded-r-[4px] shadow-[8px_12px_20px_-6px_rgba(32,26,18,0.42)]"
+          className="book-sheen relative z-10 h-full flex-1 overflow-hidden rounded-l-[3px] rounded-r-[4px] shadow-[6px_10px_18px_-5px_rgba(32,26,18,0.44)]"
           style={{ backgroundColor: book.spineColor }}
         >
-          {/* Realistic spine crease groove near left edge */}
+          {/* Realistic spine crease groove */}
           <div
-            className="pointer-events-none absolute inset-y-0 left-0 z-20 w-3"
+            className="pointer-events-none absolute inset-y-0 left-0 z-20 w-2.5"
             style={{
               background:
                 'linear-gradient(90deg, rgba(255,255,255,0.22) 0%, rgba(0,0,0,0.06) 45%, rgba(0,0,0,0.24) 80%, rgba(255,255,255,0.12) 100%)',
@@ -308,30 +323,29 @@ const ShelfBookItem: React.FC<{
             />
           ) : (
             <div
-              className="flex h-full w-full flex-col justify-between p-4 pl-5"
+              className="flex h-full w-full flex-col justify-between p-3 pl-4"
               style={{ color: book.spineTextColor }}
             >
-              <span className="text-[10px] uppercase tracking-[0.16em] opacity-75">
+              <span className="text-[9px] uppercase tracking-[0.14em] opacity-75">
                 {book.genre}
               </span>
               <div>
-                <h3 className="font-display text-xl font-bold leading-snug">
+                <h3 className="font-display text-base font-bold leading-snug">
                   {book.title}
                 </h3>
-                <p className="mt-1 font-serif text-xs italic opacity-85">
+                <p className="mt-0.5 font-serif text-[10px] italic opacity-85">
                   {book.author}
                 </p>
               </div>
               <div
-                className="h-0.5 w-10"
+                className="h-0.5 w-8"
                 style={{ backgroundColor: book.spineAccent }}
               />
             </div>
           )}
 
-          {/* Subtle progress ribbon at bottom edge when reading */}
           {percent > 0 && (
-            <div className="absolute inset-x-0 bottom-0 z-20 h-1.5 bg-black/35">
+            <div className="absolute inset-x-0 bottom-0 z-20 h-1 bg-black/35">
               <div
                 className="h-full transition-all"
                 style={{
@@ -343,16 +357,16 @@ const ShelfBookItem: React.FC<{
           )}
 
           {progress?.isFinished && (
-            <span className="absolute top-2 left-4 z-20 inline-flex items-center gap-1 rounded-full bg-[#1F5C45]/95 px-2 py-0.5 text-[10px] font-medium text-white shadow">
-              <CheckCircle2 className="h-3 w-3" />
-              Đã đọc xong
+            <span className="absolute top-1.5 left-3 z-20 inline-flex items-center gap-0.5 rounded-full bg-[#1F5C45]/95 px-1.5 py-0.5 text-[9px] font-medium text-white shadow">
+              <CheckCircle2 className="h-2.5 w-2.5" />
+              Xong
             </span>
           )}
         </div>
 
-        {/* Realistic Fore-Edge (Page Block Thickness on the right!) */}
+        {/* Realistic Fore-Edge (Page Block Thickness on right) */}
         <div
-          className="relative z-0 my-[3px] -ml-[2px] w-[14px] sm:w-[16px] shrink-0 overflow-hidden rounded-r-[2px] border-y border-r border-black/20 shadow-[4px_6px_12px_rgba(32,26,18,0.28)]"
+          className="relative z-0 my-[2px] -ml-[2px] w-[11px] sm:w-[13px] shrink-0 overflow-hidden rounded-r-[2px] border-y border-r border-black/20 shadow-[3px_5px_10px_rgba(32,26,18,0.26)]"
           title={
             isAchilles
               ? 'Cạnh trang sơn xanh ngọc họa tiết Hy Lạp'
@@ -373,22 +387,20 @@ const ShelfBookItem: React.FC<{
         </div>
       </button>
 
-      {/* Subtle floating caption tag on hover / bookmark indicator */}
-      <div className="mt-1.5 flex items-center gap-1.5 text-[11px] font-medium text-[#526056]">
+      {/* Compact caption pill */}
+      <div className="mt-1 flex items-center gap-1 text-[10px] font-medium text-[#4F5E54]">
         {hasBookmark ? (
-          <span className="inline-flex items-center gap-1 rounded-full bg-[#8E2C2C]/10 px-2 py-0.5 text-[#8E2C2C]">
-            <Bookmark className="h-3 w-3 fill-current" />
-            Trang {progress?.bookmarkedPage}
+          <span className="inline-flex items-center gap-0.5 rounded-full bg-[#8E2C2C]/12 px-1.5 py-0.5 text-[#8E2C2C]">
+            <Bookmark className="h-2.5 w-2.5 fill-current" />
+            Tr. {progress?.bookmarkedPage}
           </span>
         ) : progress?.lastReadAt ? (
-          <span className="inline-flex items-center gap-1 text-[#5E6E63]">
-            <Clock className="h-3 w-3" />
+          <span className="inline-flex items-center gap-0.5 text-[#5A6A5F]">
+            <Clock className="h-2.5 w-2.5" />
             {formatTimeSinceLastRead(progress.lastReadAt)}
           </span>
         ) : (
-          <span className="truncate max-w-[160px] text-[#5B695F]">
-            {book.title}
-          </span>
+          <span className="truncate max-w-[120px]">{book.title}</span>
         )}
       </div>
     </div>
@@ -400,27 +412,27 @@ export const Bookshelf: React.FC<BookshelfProps> = ({
   progressMap,
   viewMode,
   hoverPreviewEnabled,
+  roomMood,
   onOpenBook,
   onHoverBook,
   onLeaveBook,
   onDeleteCustomBook,
   onAddBookClick,
 }) => {
-  // Always display at least 3 realistic shelf tiers so the bookcase feels like a full standing home bookcase
-  const perRow = viewMode === 'spine' ? 10 : 4;
+  const perRow = viewMode === 'spine' ? 12 : 5;
   const bookRows: BookItem[][] = [];
   for (let i = 0; i < books.length; i += perRow) {
     bookRows.push(books.slice(i, i + perRow));
   }
   const totalShelves = Math.max(3, bookRows.length);
+  const isEvening = roomMood === 'evening';
 
   return (
-    <div className="real-bookcase-frame relative mx-auto w-full overflow-hidden rounded-t-xl rounded-b-md">
-      {/* Trailing Green Ivy draping over top-right corner like Reference Image 1 */}
+    <div className="real-bookcase-frame relative mx-auto flex h-full w-full flex-col overflow-hidden rounded-t-xl rounded-b-[4px]">
       <TrailingIvyDecor />
 
-      {/* Shelf Tiers */}
-      <div className="flex flex-col">
+      {/* 3 Equal Viewport-Fitted Shelf Tiers */}
+      <div className="flex flex-1 min-h-0 flex-col">
         {Array.from({ length: totalShelves }).map((_, tierIdx) => {
           const rowBooks = bookRows[tierIdx] || [];
           const isFirstTier = tierIdx === 0;
@@ -428,15 +440,21 @@ export const Bookshelf: React.FC<BookshelfProps> = ({
           const isLastTier = tierIdx === totalShelves - 1;
 
           return (
-            <div key={tierIdx} className="relative flex flex-col">
-              {/* Recessed White Shelf Interior */}
-              <div className="shelf-compartment relative flex min-h-[268px] sm:min-h-[310px] items-end justify-between px-4 sm:px-9 pt-8 pb-0">
-                {/* Books + Cozy Shelf Props standing flush on shelf surface */}
+            <div
+              key={tierIdx}
+              className="relative flex flex-1 min-h-[195px] md:min-h-0 flex-col"
+            >
+              {/* Recessed White Shelf Compartment */}
+              <div
+                className={`${
+                  isEvening ? 'shelf-compartment-evening' : 'shelf-compartment'
+                } relative flex flex-1 items-end justify-between px-4 sm:px-8 pt-4 pb-0 transition-colors duration-700`}
+              >
                 <div
-                  className={`relative z-10 flex flex-wrap items-end justify-center sm:justify-start w-full pb-2 ${
+                  className={`relative z-10 flex flex-wrap items-end justify-center sm:justify-start w-full pb-1.5 ${
                     viewMode === 'spine'
                       ? 'gap-1.5 sm:gap-2'
-                      : 'gap-5 sm:gap-8'
+                      : 'gap-4 sm:gap-7'
                   }`}
                 >
                   {rowBooks.map((book) => (
@@ -458,16 +476,16 @@ export const Bookshelf: React.FC<BookshelfProps> = ({
                     />
                   ))}
 
-                  {/* Cozy Reading Room Shelf Accents so every shelf feels lived-in & real */}
                   {isFirstTier && (
-                    <div className="ml-auto flex items-end gap-4 pb-1 pr-2">
-                      <CeramicCandleProp />
+                    <div className="ml-auto flex items-end gap-4 pb-1 pr-3">
+                      <SteamingTeacupProp />
+                      <CeramicCandleProp isEvening={isEvening} />
                     </div>
                   )}
 
                   {isSecondTier && rowBooks.length === 0 && (
-                    <div className="flex w-full items-end justify-between gap-4 pb-2">
-                      <div className="flex items-end gap-5">
+                    <div className="flex w-full items-end justify-between gap-4 pb-1.5">
+                      <div className="flex items-end gap-4">
                         <MiniPlantProp />
                         <MiniQuoteFrame />
                       </div>
@@ -476,27 +494,27 @@ export const Bookshelf: React.FC<BookshelfProps> = ({
                         <button
                           type="button"
                           onClick={onAddBookClick}
-                          className="group/add flex h-44 w-32 flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-[#B7C6BC] bg-white/45 p-3 text-center text-xs font-medium text-[#52695C] transition hover:border-[#4A6B5D] hover:bg-white/80"
+                          className="group/add flex h-32 w-28 sm:h-36 sm:w-32 flex-col items-center justify-center gap-1.5 rounded-lg border-2 border-dashed border-[#B4C4BA] bg-white/45 p-2.5 text-center text-[11px] font-medium text-[#4A6256] transition hover:border-[#4A6B5D] hover:bg-white/80 hover:scale-[1.03]"
                         >
-                          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#E3EDE7] text-[#3F6353] transition group-hover/add:scale-110">
+                          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#E1ECE5] text-[#3B5E4E] transition group-hover/add:scale-110">
                             <Plus className="h-4 w-4" />
                           </span>
-                          <span>Đặt thêm sách PDF lên kệ</span>
+                          <span>Thêm sách PDF lên kệ</span>
                         </button>
                       )}
                     </div>
                   )}
 
                   {isLastTier && tierIdx >= 2 && rowBooks.length === 0 && (
-                    <div className="flex w-full items-end justify-between pb-2 text-xs text-[#7D8980]">
+                    <div className="flex w-full items-end justify-between pb-1.5 text-xs text-[#738077]">
                       <span className="font-serif italic">
                         {hoverPreviewEnabled
                           ? 'Rê chuột vào gáy hoặc bìa sách để mở xem & lật trang ngay tại kệ'
                           : 'Chạm vào bìa sách để mở đọc'}
                       </span>
                       <div className="hidden sm:flex items-end gap-3">
-                        <div className="h-3 w-28 rounded-sm bg-[#D8E2DC] shadow-sm" />
-                        <div className="h-3 w-24 -ml-28 mb-3 rounded-sm bg-[#E5DDD0] shadow-sm" />
+                        <div className="h-2.5 w-28 rounded-sm bg-[#D6E1DA] shadow-xs" />
+                        <div className="h-2.5 w-24 -ml-28 mb-2.5 rounded-sm bg-[#E5DDD0] shadow-xs" />
                       </div>
                     </div>
                   )}
@@ -504,7 +522,7 @@ export const Bookshelf: React.FC<BookshelfProps> = ({
               </div>
 
               {/* Realistic White Wooden Shelf Plank Ledge */}
-              <div className="white-shelf-ledge relative z-20 h-[18px] sm:h-[20px] w-full" />
+              <div className="white-shelf-ledge relative z-20 h-[14px] sm:h-[16px] shrink-0 w-full" />
             </div>
           );
         })}

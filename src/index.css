@@ -11,9 +11,6 @@
   --color-sage-soft: #d4e3d9;
   --color-ink: #232a26;
   --color-ink-muted: #5a6960;
-  --color-cabinet-white: #f7f5f0;
-  --color-cabinet-inner: #ebe7de;
-  --color-cabinet-ledge: #fdfcf9;
 }
 
 @layer base {
@@ -27,33 +24,66 @@
   }
 }
 
-/* Sunlit Home Reading Room Wall — fresh sage-mint & soft morning daylight */
-.reading-room-bg {
+/* 3 Living Reading-Room Lighting Moods */
+.room-mood-morning {
   background:
-    radial-gradient(ellipse 85% 60% at 15% 5%, rgba(255, 253, 240, 0.92) 0%, transparent 65%),
-    radial-gradient(ellipse 65% 55% at 88% 12%, rgba(212, 232, 220, 0.72) 0%, transparent 70%),
-    linear-gradient(180deg, #e7f0ea 0%, #eff4ee 48%, #e4ece6 100%);
+    radial-gradient(ellipse 85% 60% at 15% 5%, rgba(255, 254, 244, 0.94) 0%, transparent 65%),
+    radial-gradient(ellipse 65% 55% at 88% 12%, rgba(206, 232, 217, 0.78) 0%, transparent 70%),
+    linear-gradient(180deg, #e5f1ea 0%, #eff6f1 50%, #e1ede6 100%);
 }
 
-/* Diagonal soft window sunlight rays */
+.room-mood-golden {
+  background:
+    radial-gradient(ellipse 85% 60% at 18% 8%, rgba(255, 241, 212, 0.92) 0%, transparent 65%),
+    radial-gradient(ellipse 65% 55% at 85% 15%, rgba(246, 219, 194, 0.72) 0%, transparent 70%),
+    linear-gradient(180deg, #f6eadc 0%, #faf2e7 52%, #efe0cf 100%);
+}
+
+.room-mood-evening {
+  background:
+    radial-gradient(ellipse 70% 55% at 50% 10%, rgba(255, 212, 138, 0.16) 0%, transparent 68%),
+    linear-gradient(180deg, #1f2833 0%, #27323f 55%, #1d2530 100%);
+}
+
+/* Window Sunbeams */
 .sunlight-rays {
   background: linear-gradient(
     118deg,
-    rgba(255, 254, 244, 0.42) 0%,
-    rgba(255, 254, 244, 0.14) 22%,
+    rgba(255, 254, 244, 0.48) 0%,
+    rgba(255, 254, 244, 0.15) 22%,
     transparent 34%,
-    rgba(255, 254, 244, 0.22) 44%,
+    rgba(255, 254, 244, 0.26) 44%,
     transparent 56%
   );
 }
 
-/* Pale oak wooden floor strip at bottom of room */
+.golden-rays {
+  background: linear-gradient(
+    116deg,
+    rgba(255, 224, 166, 0.42) 0%,
+    rgba(255, 214, 148, 0.14) 24%,
+    transparent 36%,
+    rgba(255, 224, 166, 0.24) 48%,
+    transparent 60%
+  );
+}
+
+.evening-lamp-glow {
+  background: radial-gradient(
+    ellipse 62% 52% at 50% 18%,
+    rgba(255, 210, 128, 0.22) 0%,
+    rgba(255, 192, 102, 0.08) 42%,
+    transparent 74%
+  );
+}
+
+/* Pale oak wooden floor strip */
 .oak-floor {
   background:
     repeating-linear-gradient(
       90deg,
-      rgba(164, 132, 96, 0.09) 0px,
-      rgba(164, 132, 96, 0.09) 1px,
+      rgba(164, 132, 96, 0.1) 0px,
+      rgba(164, 132, 96, 0.1) 1px,
       transparent 1px,
       transparent 140px
     ),
@@ -61,29 +91,42 @@
   box-shadow: inset 0 6px 14px rgba(72, 54, 34, 0.14);
 }
 
-/* Realistic White-Wood Standing Bookcase (inspired by Reference Image 1) */
+.oak-floor-evening {
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.14) 0px,
+      rgba(0, 0, 0, 0.14) 1px,
+      transparent 1px,
+      transparent 140px
+    ),
+    linear-gradient(180deg, #4b3b2d 0%, #3d3024 50%, #2f241b 100%);
+  box-shadow: inset 0 6px 16px rgba(0, 0, 0, 0.38);
+}
+
+/* Realistic White-Wood Standing Bookcase */
 .real-bookcase-frame {
   background: #f5f2eb;
-  border-left: 16px solid #f7f4ed;
-  border-right: 16px solid #f7f4ed;
-  border-top: 14px solid #faf8f3;
-  border-bottom: 18px solid #eae4d9;
+  border-left: 14px solid #f7f4ed;
+  border-right: 14px solid #f7f4ed;
+  border-top: 12px solid #faf8f3;
+  border-bottom: 12px solid #eae4d9;
   box-shadow:
-    0 28px 60px -18px rgba(34, 52, 42, 0.24),
-    0 8px 20px -6px rgba(34, 52, 42, 0.12),
+    0 24px 54px -16px rgba(34, 52, 42, 0.26),
+    0 8px 18px -6px rgba(34, 52, 42, 0.12),
     inset 4px 0 12px rgba(70, 62, 48, 0.12),
     inset -4px 0 12px rgba(70, 62, 48, 0.12);
 }
 
 @media (max-width: 640px) {
   .real-bookcase-frame {
-    border-left-width: 10px;
-    border-right-width: 10px;
-    border-top-width: 10px;
+    border-left-width: 8px;
+    border-right-width: 8px;
+    border-top-width: 8px;
+    border-bottom-width: 8px;
   }
 }
 
-/* Individual recessed shelf compartment */
 .shelf-compartment {
   background: linear-gradient(
     180deg,
@@ -93,12 +136,21 @@
     #e5dfd3 100%
   );
   box-shadow:
-    inset 0 14px 20px -10px rgba(45, 38, 28, 0.26),
-    inset 10px 0 18px -12px rgba(45, 38, 28, 0.18),
-    inset -10px 0 18px -12px rgba(45, 38, 28, 0.18);
+    inset 0 12px 18px -10px rgba(45, 38, 28, 0.25),
+    inset 10px 0 16px -12px rgba(45, 38, 28, 0.16),
+    inset -10px 0 16px -12px rgba(45, 38, 28, 0.16);
 }
 
-/* White wooden shelf horizontal ledge with realistic front edge + cast shadow below */
+.shelf-compartment-evening {
+  background:
+    radial-gradient(ellipse 80% 45% at 50% 0%, rgba(255, 222, 160, 0.18) 0%, transparent 72%),
+    linear-gradient(180deg, #cbc2b2 0%, #ded6c8 18%, #e5dfd2 78%, #d4ccbd 100%);
+  box-shadow:
+    inset 0 14px 20px -10px rgba(20, 16, 12, 0.42),
+    inset 10px 0 18px -12px rgba(20, 16, 12, 0.24),
+    inset -10px 0 18px -12px rgba(20, 16, 12, 0.24);
+}
+
 .white-shelf-ledge {
   background: linear-gradient(
     180deg,
@@ -108,12 +160,12 @@
     #d8d1c4 100%
   );
   box-shadow:
-    0 12px 18px -6px rgba(42, 36, 28, 0.28),
-    0 3px 5px -1px rgba(42, 36, 28, 0.16),
+    0 10px 16px -6px rgba(42, 36, 28, 0.26),
+    0 2px 4px -1px rgba(42, 36, 28, 0.14),
     inset 0 1px 0 rgba(255, 255, 255, 0.95);
 }
 
-/* 3D Book standing on white shelf */
+/* 3D Book standing on shelf with elastic spring hover & specular sheen */
 .book-3d-wrap {
   perspective: 1100px;
 }
@@ -121,27 +173,134 @@
 .book-3d-card {
   transform-style: preserve-3d;
   transition:
-    transform 0.36s cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 0.36s cubic-bezier(0.22, 1, 0.36, 1);
+    transform 0.42s cubic-bezier(0.22, 1.15, 0.36, 1),
+    box-shadow 0.42s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .book-3d-wrap:hover .book-3d-card,
 .book-3d-wrap:focus-within .book-3d-card {
-  transform: translateY(-10px) rotateY(-16deg) scale(1.03);
+  transform: translateY(-9px) rotateY(-16deg) scale(1.04);
 }
 
-/* Realistic spine-out book standing tightly on shelf */
+/* Diagonal specular light sheen gliding over book cover on hover */
+.book-sheen::after {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  background: linear-gradient(
+    115deg,
+    transparent 35%,
+    rgba(255, 255, 255, 0.34) 48%,
+    rgba(255, 248, 220, 0.12) 55%,
+    transparent 65%
+  );
+  transform: translateX(-120%) rotate(8deg);
+  transition: transform 0.72s cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+  z-index: 25;
+}
+
+.book-3d-wrap:hover .book-sheen::after,
+.book-spine-card:hover .book-sheen::after {
+  transform: translateX(120%) rotate(8deg);
+}
+
 .book-spine-card {
   transition:
-    transform 0.32s cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+    transform 0.36s cubic-bezier(0.22, 1.15, 0.36, 1),
+    box-shadow 0.36s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .book-spine-card:hover {
-  transform: translateY(-12px) translateX(-2px) scale(1.02);
+  transform: translateY(-10px) translateX(-2px) scale(1.03);
   box-shadow:
-    6px 18px 24px -6px rgba(32, 26, 20, 0.42),
-    -2px 0 8px rgba(0, 0, 0, 0.18);
+    6px 16px 22px -6px rgba(32, 26, 20, 0.42),
+    -2px 0 8px rgba(0, 0, 0, 0.16);
+}
+
+/* Floating Sunbeam Dust Motes */
+@keyframes floatMote {
+  0% {
+    transform: translate3d(0, 0, 0) scale(0.85);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.85;
+  }
+  50% {
+    transform: translate3d(18px, -28px, 0) scale(1.1);
+    opacity: 0.65;
+  }
+  80% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate3d(-10px, -58px, 0) scale(0.8);
+    opacity: 0;
+  }
+}
+
+.sun-mote {
+  animation-name: floatMote;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+/* Gentle Candle Flame Flicker */
+@keyframes candleFlicker {
+  0%,
+  100% {
+    transform: scale(1) rotate(-2deg);
+    opacity: 0.92;
+  }
+  35% {
+    transform: scale(1.12, 0.94) rotate(3deg);
+    opacity: 1;
+  }
+  70% {
+    transform: scale(0.95, 1.08) rotate(-1deg);
+    opacity: 0.88;
+  }
+}
+
+.candle-flame {
+  transform-origin: bottom center;
+  animation: candleFlicker 2.2s ease-in-out infinite;
+}
+
+/* Rising Warm Tea Steam */
+@keyframes teaSteam {
+  0% {
+    transform: translateY(4px) scaleX(0.9);
+    opacity: 0;
+  }
+  35% {
+    opacity: 0.55;
+  }
+  100% {
+    transform: translateY(-18px) scaleX(1.25);
+    opacity: 0;
+  }
+}
+
+.steam-wisp {
+  animation: teaSteam 3.2s ease-in-out infinite;
+}
+
+/* Curtain Gentle Breeze */
+@keyframes curtainBreeze {
+  0%,
+  100% {
+    transform: skewX(0deg);
+  }
+  50% {
+    transform: skewX(-1.5deg);
+  }
+}
+
+.curtain-sway {
+  transform-origin: top right;
+  animation: curtainBreeze 8s ease-in-out infinite;
 }
 
 /* Open Book Center Spine Crease */
@@ -269,20 +428,19 @@
   animation: ribbonSway 3.6s ease-in-out infinite;
 }
 
-/* Gentle leaf sway for trailing ivy on bookcase */
 @keyframes leafBreeze {
   0%,
   100% {
     transform: rotate(0deg);
   }
   50% {
-    transform: rotate(1.6deg);
+    transform: rotate(2deg);
   }
 }
 
 .ivy-breeze {
   transform-origin: top right;
-  animation: leafBreeze 6s ease-in-out infinite;
+  animation: leafBreeze 5.5s ease-in-out infinite;
 }
 
 ::-webkit-scrollbar {
