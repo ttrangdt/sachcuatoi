@@ -15,6 +15,7 @@ import {
   renderPageToDataUrl,
 } from '../utils/pdfEngine';
 import { DecorativeBookmark } from './DecorativeBookmark';
+import { AchillesCoverArt } from './AchillesArtwork';
 
 interface BookHoverPreviewProps {
   book: BookItem;
@@ -300,7 +301,11 @@ export const BookHoverPreview: React.FC<BookHoverPreviewProps> = ({
               }`}
             >
               <div className="flex flex-1 items-center justify-center overflow-hidden">
-                {loading ? (
+                {rightPageNum === 1 && book.id === 'truong-ca-achilles' ? (
+                  <div className="h-full max-w-full aspect-[2/3] overflow-hidden rounded-sm shadow-md">
+                    <AchillesCoverArt />
+                  </div>
+                ) : loading ? (
                   <div className="h-full w-full animate-pulse rounded bg-[#EFE7D8]" />
                 ) : rightImg ? (
                   <img

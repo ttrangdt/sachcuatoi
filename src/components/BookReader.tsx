@@ -30,6 +30,7 @@ import {
   BOOKMARK_STYLES,
   DecorativeBookmark,
 } from './DecorativeBookmark';
+import { AchillesCoverArt } from './AchillesArtwork';
 import { formatReadingDuration } from '../utils/timeFormat';
 
 interface BookReaderProps {
@@ -789,7 +790,11 @@ export const BookReader: React.FC<BookReaderProps> = ({
 
             {/* Page Content */}
             <div className="relative flex flex-1 items-center justify-center overflow-hidden p-2.5">
-              {loadingPages && !rightUrl ? (
+              {currentPage === 1 && book.id === 'truong-ca-achilles' ? (
+                <div className="h-full max-w-full aspect-[2/3] overflow-hidden rounded shadow-md">
+                  <AchillesCoverArt />
+                </div>
+              ) : loadingPages && !rightUrl ? (
                 <div className="h-full w-full animate-pulse rounded bg-black/5" />
               ) : rightUrl ? (
                 <img
@@ -927,7 +932,11 @@ export const BookReader: React.FC<BookReaderProps> = ({
               </div>
 
               <div className="flex flex-1 items-center justify-center overflow-hidden py-2">
-                {loadingPages && !rightUrl ? (
+                {rightPageNum === 1 && book.id === 'truong-ca-achilles' ? (
+                  <div className="h-full max-w-full aspect-[2/3] overflow-hidden rounded shadow-lg">
+                    <AchillesCoverArt />
+                  </div>
+                ) : loadingPages && !rightUrl ? (
                   <div className="h-full w-full animate-pulse rounded bg-black/5" />
                 ) : rightUrl ? (
                   <img

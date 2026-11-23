@@ -14,6 +14,7 @@ import {
   formatShortDate,
   formatTimeSinceLastRead,
 } from '../utils/timeFormat';
+import { AchillesCoverArt } from './AchillesArtwork';
 
 interface FinishedArchiveProps {
   books: BookItem[];
@@ -55,7 +56,9 @@ const FinishedBookCard: React.FC<{
         className="relative h-44 w-32 shrink-0 cursor-pointer overflow-hidden rounded-r-lg rounded-l-[3px] shadow-md self-center sm:self-start"
         style={{ backgroundColor: book.spineColor }}
       >
-        {coverUrl ? (
+        {book.id === 'truong-ca-achilles' ? (
+          <AchillesCoverArt />
+        ) : coverUrl ? (
           <img
             src={coverUrl}
             alt={book.title}

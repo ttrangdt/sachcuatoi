@@ -39,10 +39,10 @@ import { DecorativeBookmark } from './components/DecorativeBookmark';
 
 const SPINE_PALETTE = [
   { bg: '#2B423D', accent: '#D4A857', text: '#F5EAD6' },
-  { bg: '#4A1F24', accent: '#C99B63', text: '#F7EFE6' },
-  { bg: '#273549', accent: '#D5B278', text: '#F2EDE4' },
-  { bg: '#4E3B2B', accent: '#E0B46A', text: '#FAF2E6' },
-  { bg: '#3B2D44', accent: '#D6A96C', text: '#F6EEF8' },
+  { bg: '#851A2E', accent: '#F4D36A', text: '#F7DC88' },
+  { bg: '#1E2A38', accent: '#C5D1DD', text: '#F0F4F8' },
+  { bg: '#4E5D4E', accent: '#E2D4B7', text: '#F7F5EE' },
+  { bg: '#5B4636', accent: '#E0C08D', text: '#FAF4EA' },
 ];
 
 export default function App() {
@@ -56,13 +56,11 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<LibraryTab>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Active reader state
   const [activeBook, setActiveBook] = useState<{
     book: BookItem;
     startPage?: number;
   } | null>(null);
 
-  // Hover preview state (desktop)
   const [hoveredBook, setHoveredBook] = useState<BookItem | null>(null);
   const hoverEnterTimer = useRef<number | null>(null);
   const hoverLeaveTimer = useRef<number | null>(null);
@@ -164,7 +162,6 @@ export default function App() {
         addedAt: Date.now(),
       };
 
-      // Probe page count
       try {
         const doc = await loadPdfDocument(newBook);
         newBook.totalPages = doc.numPages;
@@ -190,7 +187,6 @@ export default function App() {
     });
   };
 
-  // Filtered lists
   const finishedBooks = useMemo(
     () => allBooks.filter((b) => progressMap[b.id]?.isFinished),
     [allBooks, progressMap]
@@ -217,7 +213,6 @@ export default function App() {
     );
   }, [activeTab, allBooks, readingBooks, searchQuery]);
 
-  // Most recently read in-progress book for "Tiếp tục đọc" banner
   const continueBook = useMemo(() => {
     const candidates = readingBooks
       .map((book) => ({ book, progress: progressMap[book.id] }))
@@ -229,25 +224,165 @@ export default function App() {
   }, [readingBooks, progressMap]);
 
   return (
-    <div className="paper-grain min-h-screen flex flex-col">
-      {/* Top Literary Header */}
-      <header className="sticky top-0 z-30 border-b border-[#DFD2BE] bg-[#F7F2E8]/92 backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 sm:px-6 py-3.5">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#3A2317] text-[#E9C47C] shadow-sm">
-              <Library className="h-5 w-5" />
+    <div className="reading-room-bg relative min-h-screen flex flex-col overflow-x-hidden">
+      {/* Ambient Sunlit Window Rays across the home reading room wall */}
+      <div className="sunlight-rays pointer-events-none fixed inset-0 z-0" />
+
+      {/* Soft Potted Fiddle-Leaf / Monstera Silhouette in left room corner (Desktop) */}
+      <svg
+        viewBox="0 0 180 420"
+        className="pointer-events-none fixed bottom-10 left-0 z-0 hidden xl:block h-[380px] w-[150px] opacity-40"
+        aria-hidden="true"
+      >
+        <g fill="#6E9979">
+          <ellipse cx="42" cy="180" rx="34" ry="18" transform="rotate(-32 42 180)" />
+          <ellipse cx="82" cy="140" rx="38" ry="20" transform="rotate(-14 82 140)" />
+          <ellipse cx="36" cy="240" rx="32" ry="17" transform="rotate(18 36 240)" />
+          <ellipse cx="92" cy="215" rx="36" ry="18" transform="rotate(24 92 215)" />
+          <ellipse cx="64" cy="96" rx="28" ry="16" transform="rotate(-48 64 96)" />
+        </g>
+        <path
+          d="M52 330 Q54 240 62 120"
+          fill="none"
+          stroke="#4F7459"
+          strokeWidth="4"
+          strokeLinecap="round"
+        />
+        <path d="M22 330 H88 L80 416 H30 Z" fill="#C9B093" />
+      </svg>
+
+      {/* Compact, Airy Floating Top Control Bar so the Bookcase dominates the screen */}
+      <header className="sticky top-0 z-30 border-b border-[#CFDDD4]/80 bg-[#F4F8F5]/82 backdrop-blur-md">
+        <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-2.5 px-3 sm:px-6 py-2">
+          {/* Brand */}
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#4A6B5D] text-[#F4F8F5] shadow-sm">
+              <Library className="h-4 w-4" />
             </div>
-            <div>
-              <h1 className="font-display text-2xl sm:text-3xl font-bold leading-none tracking-tight text-[#221A14]">
-                Tủ Sách Của Tôi
-              </h1>
-              <p className="mt-0.5 text-[11px] sm:text-xs text-[#786554]">
-                Không gian lưu trữ & đọc sách cá nhân
-              </p>
-            </div>
+            <h1 className="font-display text-xl sm:text-2xl font-bold leading-none text-[#23322B]">
+              Tủ Sách Của Tôi
+            </h1>
           </div>
 
-          <div className="flex items-center gap-2">
+          {/* Center Tabs */}
+          <nav className="inline-flex items-center gap-1 rounded-xl border border-[#D4E1D9] bg-[#E8F0EB]/90 p-0.5">
+            <button
+              type="button"
+              onClick={() => setActiveTab('all')}
+              className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 sm:px-3 py-1.5 text-xs font-semibold transition ${
+                activeTab === 'all'
+                  ? 'bg-[#4A6B5D] text-white shadow-sm'
+                  : 'text-[#4B6156] hover:bg-white/70'
+              }`}
+            >
+              <Library className="h-3.5 w-3.5" />
+              <span>Tủ sách ({allBooks.length})</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('reading')}
+              className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 sm:px-3 py-1.5 text-xs font-semibold transition ${
+                activeTab === 'reading'
+                  ? 'bg-[#4A6B5D] text-white shadow-sm'
+                  : 'text-[#4B6156] hover:bg-white/70'
+              }`}
+            >
+              <BookMarked className="h-3.5 w-3.5" />
+              <span>Đang đọc ({readingBooks.length})</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('finished')}
+              className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 sm:px-3 py-1.5 text-xs font-semibold transition ${
+                activeTab === 'finished'
+                  ? 'bg-[#2C6B50] text-white shadow-sm'
+                  : 'text-[#4B6156] hover:bg-white/70'
+              }`}
+            >
+              <Award className="h-3.5 w-3.5" />
+              <span>Đã đọc xong ({finishedBooks.length})</span>
+            </button>
+          </nav>
+
+          {/* Compact Right Tools */}
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            {activeTab !== 'finished' && (
+              <>
+                <div className="relative hidden md:block w-44">
+                  <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#7A8F83]" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Tìm sách..."
+                    className="w-full rounded-lg border border-[#D4E1D9] bg-white/85 py-1.5 pl-8 pr-2.5 text-xs text-[#23322B] placeholder:text-[#8A9D92] focus:border-[#4A6B5D] focus:outline-none"
+                  />
+                </div>
+
+                {/* Cover vs Spine Toggle */}
+                <div className="inline-flex rounded-lg border border-[#D4E1D9] bg-white/85 p-0.5">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setPrefs((p) => ({
+                        ...p,
+                        shelfView: 'cover' as ShelfViewMode,
+                      }))
+                    }
+                    className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium transition ${
+                      prefs.shelfView === 'cover'
+                        ? 'bg-[#4A6B5D] text-white'
+                        : 'text-[#556B5F] hover:text-[#23322B]'
+                    }`}
+                    title="Hiển thị bìa sách"
+                  >
+                    <LayoutGrid className="h-3.5 w-3.5" />
+                    <span className="hidden lg:inline">Bìa</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setPrefs((p) => ({
+                        ...p,
+                        shelfView: 'spine' as ShelfViewMode,
+                      }))
+                    }
+                    className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium transition ${
+                      prefs.shelfView === 'spine'
+                        ? 'bg-[#4A6B5D] text-white'
+                        : 'text-[#556B5F] hover:text-[#23322B]'
+                    }`}
+                    title="Hiển thị gáy sách xếp kệ"
+                  >
+                    <Columns3 className="h-3.5 w-3.5" />
+                    <span className="hidden lg:inline">Gáy</span>
+                  </button>
+                </div>
+
+                {/* Hover Preview Toggle */}
+                <button
+                  type="button"
+                  onClick={() =>
+                    setPrefs((p) => ({
+                      ...p,
+                      hoverPreviewEnabled: !p.hoverPreviewEnabled,
+                    }))
+                  }
+                  className={`hidden md:inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-[11px] font-medium transition ${
+                    prefs.hoverPreviewEnabled
+                      ? 'border-[#4A6B5D]/40 bg-[#4A6B5D]/12 text-[#2E5243]'
+                      : 'border-[#D4E1D9] bg-white/80 text-[#687D72]'
+                  }`}
+                  title="Xem nhanh sách khi rê chuột vào bìa hoặc gáy"
+                >
+                  <Eye className="h-3.5 w-3.5" />
+                  <span className="hidden xl:inline">Rê chuột xem</span>
+                </button>
+              </>
+            )}
+
             <input
               ref={fileInputRef}
               type="file"
@@ -259,211 +394,97 @@ export default function App() {
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-[#3A2317] px-3.5 py-2 text-xs font-medium text-[#F8F2E7] shadow-sm transition hover:bg-[#52301E] disabled:opacity-60"
+              className="inline-flex items-center gap-1 rounded-lg bg-[#4A6B5D] px-2.5 sm:px-3 py-1.5 text-xs font-medium text-white shadow-sm transition hover:bg-[#3A574B] disabled:opacity-60"
             >
-              <Plus className="h-4 w-4" />
-              <span>{uploading ? 'Đang thêm...' : 'Thêm sách PDF'}</span>
+              <Plus className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">
+                {uploading ? 'Đang thêm...' : 'Thêm PDF'}
+              </span>
             </button>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 sm:px-6 py-6 sm:py-8 space-y-6">
-        {/* Quick Resume Reading Banner (if a book is bookmarked or in progress) */}
-        {continueBook && (
-          <section className="relative overflow-hidden rounded-2xl border border-[#DFD0B9] bg-gradient-to-r from-[#FAF4E8] via-[#F6ECDC] to-[#F2E5CF] px-5 py-4 shadow-sm">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div className="flex items-center gap-3.5 min-w-0">
-                <div className="hidden sm:flex h-12 w-10 items-center justify-center">
-                  <DecorativeBookmark
-                    styleId={continueBook.progress.bookmarkStyle}
-                    size="sm"
-                  />
-                </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#8E2C2C]">
-                    <Sparkles className="h-3.5 w-3.5" />
-                    <span>Tiếp tục hành trình đọc</span>
-                  </div>
-                  <p className="mt-0.5 truncate font-display text-xl sm:text-2xl font-bold text-[#221A14]">
-                    {continueBook.book.title}
-                  </p>
-                  <p className="text-xs text-[#6B5B4E]">
-                    {continueBook.progress.bookmarkedPage
-                      ? `Đang đánh dấu tại trang ${continueBook.progress.bookmarkedPage} / ${continueBook.progress.totalPages}`
-                      : `Đang đọc dở trang ${continueBook.progress.currentPage} / ${continueBook.progress.totalPages}`}
-                  </p>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() =>
-                  handleOpenBook(
-                    continueBook.book,
-                    continueBook.progress.bookmarkedPage ||
-                      continueBook.progress.currentPage
-                  )
-                }
-                className="inline-flex items-center gap-2 rounded-xl bg-[#8E2C2C] px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-[#732121]"
-              >
-                <BookOpen className="h-4 w-4" />
-                Đọc tiếp ngay
-              </button>
-            </div>
-          </section>
-        )}
-
-        {/* Navigation Tabs + Shelf Controls */}
-        <section className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-          {/* Tabs */}
-          <div className="inline-flex flex-wrap items-center gap-1.5 rounded-xl border border-[#DFD2BE] bg-[#EFE6D7] p-1">
-            <button
-              type="button"
-              onClick={() => setActiveTab('all')}
-              className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-semibold transition ${
-                activeTab === 'all'
-                  ? 'bg-[#3A2317] text-[#F7F1E5] shadow-sm'
-                  : 'text-[#5A483A] hover:bg-[#E5D7C2]'
-              }`}
-            >
-              <Library className="h-3.5 w-3.5" />
-              Tủ sách ({allBooks.length})
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('reading')}
-              className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-semibold transition ${
-                activeTab === 'reading'
-                  ? 'bg-[#3A2317] text-[#F7F1E5] shadow-sm'
-                  : 'text-[#5A483A] hover:bg-[#E5D7C2]'
-              }`}
-            >
-              <BookMarked className="h-3.5 w-3.5" />
-              Đang đọc ({readingBooks.length})
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('finished')}
-              className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-semibold transition ${
-                activeTab === 'finished'
-                  ? 'bg-[#1F4E3D] text-[#F0FAF4] shadow-sm'
-                  : 'text-[#5A483A] hover:bg-[#E5D7C2]'
-              }`}
-            >
-              <Award className="h-3.5 w-3.5" />
-              Đã đọc xong ({finishedBooks.length})
-            </button>
-          </div>
-
-          {/* Search & Shelf View Controls */}
-          {activeTab !== 'finished' && (
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="relative flex-1 sm:flex-none sm:w-56">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#8C7762]" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Tìm tên sách, tác giả..."
-                  className="w-full rounded-xl border border-[#DDD0BC] bg-[#FCF8F1] py-2 pl-8.5 pr-3 text-xs text-[#221A14] placeholder:text-[#9D8A76] focus:border-[#7C4F33] focus:outline-none"
+      {/* Main Reading Room Stage — Bookcase occupies ~88-92% of the viewport */}
+      <main className="relative z-10 mx-auto flex w-full max-w-[1380px] flex-1 flex-col px-2 sm:px-6 lg:px-10 pt-3 sm:pt-4 pb-0">
+        {/* Compact Resume Pill if reading in progress */}
+        {continueBook && activeTab !== 'finished' && (
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#CFE0D6] bg-white/75 px-4 py-2 backdrop-blur-sm shadow-xs">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="h-7 w-5 shrink-0 flex items-center justify-center">
+                <DecorativeBookmark
+                  styleId={continueBook.progress.bookmarkStyle}
+                  size="sm"
                 />
               </div>
-
-              {/* Cover vs Spine Toggle */}
-              <div className="inline-flex rounded-xl border border-[#DDD0BC] bg-[#FCF8F1] p-0.5">
-                <button
-                  type="button"
-                  onClick={() =>
-                    setPrefs((p) => ({ ...p, shelfView: 'cover' as ShelfViewMode }))
-                  }
-                  className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium transition ${
-                    prefs.shelfView === 'cover'
-                      ? 'bg-[#3A2317] text-[#F7F1E5]'
-                      : 'text-[#6B5B4E] hover:text-[#221A14]'
-                  }`}
-                  title="Hiển thị bìa sách"
-                >
-                  <LayoutGrid className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">Bìa sách</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setPrefs((p) => ({ ...p, shelfView: 'spine' as ShelfViewMode }))
-                  }
-                  className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium transition ${
-                    prefs.shelfView === 'spine'
-                      ? 'bg-[#3A2317] text-[#F7F1E5]'
-                      : 'text-[#6B5B4E] hover:text-[#221A14]'
-                  }`}
-                  title="Hiển thị gáy sách xếp kệ"
-                >
-                  <Columns3 className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">Gáy sách</span>
-                </button>
+              <div className="truncate text-xs text-[#31443B]">
+                <Sparkles className="mr-1 inline h-3.5 w-3.5 text-[#4A6B5D]" />
+                Đọc tiếp{' '}
+                <strong className="font-display text-base text-[#1E2C25]">
+                  {continueBook.book.title}
+                </strong>{' '}
+                <span className="text-[#62786C]">
+                  — Trang{' '}
+                  {continueBook.progress.bookmarkedPage ||
+                    continueBook.progress.currentPage}{' '}
+                  / {continueBook.progress.totalPages}
+                </span>
               </div>
-
-              {/* Hover Preview Toggle (PC) */}
-              <button
-                type="button"
-                onClick={() =>
-                  setPrefs((p) => ({
-                    ...p,
-                    hoverPreviewEnabled: !p.hoverPreviewEnabled,
-                  }))
-                }
-                className={`hidden md:inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-medium transition ${
-                  prefs.hoverPreviewEnabled
-                    ? 'border-[#8E2C2C]/40 bg-[#8E2C2C]/10 text-[#7A2323]'
-                    : 'border-[#DDD0BC] bg-[#FCF8F1] text-[#6B5B4E]'
-                }`}
-                title="Bật/tắt xem nhanh sách khi rê chuột vào bìa hoặc gáy sách"
-              >
-                <Eye className="h-3.5 w-3.5" />
-                <span>Xem khi rê chuột</span>
-              </button>
             </div>
-          )}
-        </section>
-
-        {/* Active View: Bookshelf or Finished Archive */}
-        {activeTab === 'finished' ? (
-          <FinishedArchive
-            books={finishedBooks}
-            progressMap={progressMap}
-            onReadAgain={(book) => handleOpenBook(book, 1)}
-            onUnmarkFinished={(bookId) => {
-              const target = allBooks.find((b) => b.id === bookId);
-              if (!target) return;
-              updateBookProgress(target, (prev) => ({
-                ...prev,
-                isFinished: false,
-                finishedAt: null,
-              }));
-            }}
-          />
-        ) : (
-          <Bookshelf
-            books={visibleShelfBooks}
-            progressMap={progressMap}
-            viewMode={prefs.shelfView}
-            hoverPreviewEnabled={prefs.hoverPreviewEnabled}
-            onOpenBook={(book) => handleOpenBook(book)}
-            onHoverBook={handleHoverBook}
-            onLeaveBook={handleLeaveBookOrPreview}
-            onDeleteCustomBook={handleDeleteCustomBook}
-          />
+            <button
+              type="button"
+              onClick={() =>
+                handleOpenBook(
+                  continueBook.book,
+                  continueBook.progress.bookmarkedPage ||
+                    continueBook.progress.currentPage
+                )
+              }
+              className="inline-flex items-center gap-1.5 rounded-lg bg-[#4A6B5D] px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-[#395549]"
+            >
+              <BookOpen className="h-3.5 w-3.5" />
+              Mở đọc tiếp
+            </button>
+          </div>
         )}
+
+        {/* Dominant Bookcase or Finished Archive */}
+        <div className="flex-1 flex flex-col justify-end">
+          {activeTab === 'finished' ? (
+            <div className="pb-10">
+              <FinishedArchive
+                books={finishedBooks}
+                progressMap={progressMap}
+                onReadAgain={(book) => handleOpenBook(book, 1)}
+                onUnmarkFinished={(bookId) => {
+                  const target = allBooks.find((b) => b.id === bookId);
+                  if (!target) return;
+                  updateBookProgress(target, (prev) => ({
+                    ...prev,
+                    isFinished: false,
+                    finishedAt: null,
+                  }));
+                }}
+              />
+            </div>
+          ) : (
+            <Bookshelf
+              books={visibleShelfBooks}
+              progressMap={progressMap}
+              viewMode={prefs.shelfView}
+              hoverPreviewEnabled={prefs.hoverPreviewEnabled}
+              onOpenBook={(book) => handleOpenBook(book)}
+              onHoverBook={handleHoverBook}
+              onLeaveBook={handleLeaveBookOrPreview}
+              onDeleteCustomBook={handleDeleteCustomBook}
+              onAddBookClick={() => fileInputRef.current?.click()}
+            />
+          )}
+        </div>
       </main>
 
-      {/* Subtle Footer */}
-      <footer className="border-t border-[#E4D8C5] py-4 text-center text-xs text-[#8A7662]">
-        Tủ Sách Của Tôi · Dữ liệu tiến độ, thẻ đánh dấu và sách đã đọc xong được lưu tự động trên trình duyệt của bạn.
-      </footer>
+      {/* Pale Oak Home Floorboard Base under the standing bookcase */}
+      <div className="oak-floor relative z-10 h-7 sm:h-10 w-full border-t border-[#C6B194]" />
 
       {/* Desktop Hover Live Open-Book Preview */}
       {hoveredBook && !activeBook && (
