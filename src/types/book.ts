@@ -1,10 +1,13 @@
 export type BookmarkStyleId =
-  | 'crimson-silk'
-  | 'gold-tassel'
-  | 'maple-leaf'
-  | 'brass-clip'
-  | 'sakura-tag'
-  | 'emerald-velvet';
+  | 'sunset-magnetic'
+  | 'vangogh-starry'
+  | 'little-prince'
+  | 'mystic-moon'
+  | 'monet-sunrise'
+  | 'crystal-butterfly'
+  | 'silver-jade-hook'
+  | 'golden-feather'
+  | 'sakura-cat-chain';
 
 export interface BookmarkEntry {
   id: string;
@@ -20,19 +23,28 @@ export interface TocItem {
   level: number;
 }
 
+export interface BookTextData {
+  id: string;
+  sourcePages: number;
+  chapters: { title: string; paragraphIndex: number }[];
+  paragraphs: string[];
+}
+
 export interface BookItem {
   id: string;
   title: string;
   author: string;
   genre: string;
   description: string;
-  pdfUrl?: string; // Built-in public path
-  isCustom?: boolean; // Stored in IndexedDB
+  pdfUrl?: string;
+  textUrl?: string;
+  isCustom?: boolean;
   spineColor: string;
   spineAccent: string;
   spineTextColor: string;
   totalPages: number;
   addedAt: number;
+  cabinetIndex?: 0 | 1 | 2; // 0 = left, 1 = center, 2 = right
 }
 
 export interface BookProgress {

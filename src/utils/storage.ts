@@ -1,24 +1,22 @@
 import { BookItem, BookProgress, BookmarkStyleId } from '../types/book';
 
-const PROGRESS_KEY = 'sachcuatoi_progress_v1';
+const PROGRESS_KEY = 'sachcuatoi_progress_v2';
 const CUSTOM_BOOKS_KEY = 'sachcuatoi_custom_books_v1';
-const PREFS_KEY = 'sachcuatoi_prefs_v1';
+const PREFS_KEY = 'sachcuatoi_prefs_v2';
 
 const DB_NAME = 'sachcuatoi_pdfs_db';
 const STORE_NAME = 'pdfs';
 
 export interface UserPrefs {
-  shelfView: 'cover' | 'spine';
-  hoverPreviewEnabled: boolean;
   paperTheme: 'cream' | 'white' | 'sepia' | 'night';
   defaultBookmarkStyle: BookmarkStyleId;
+  fontSize: number; // 13 to 24 px
 }
 
 const DEFAULT_PREFS: UserPrefs = {
-  shelfView: 'cover',
-  hoverPreviewEnabled: true,
   paperTheme: 'cream',
-  defaultBookmarkStyle: 'crimson-silk',
+  defaultBookmarkStyle: 'mystic-moon',
+  fontSize: 16,
 };
 
 export function loadAllProgress(): Record<string, BookProgress> {
@@ -53,7 +51,7 @@ export function getOrCreateProgress(
     bookId: book.id,
     currentPage: 1,
     bookmarkedPage: null,
-    bookmarkStyle: 'crimson-silk',
+    bookmarkStyle: 'mystic-moon',
     bookmarks: [],
     firstOpenedAt: null,
     lastReadAt: null,
@@ -97,7 +95,6 @@ export function savePrefs(prefs: UserPrefs): void {
   }
 }
 
-// IndexedDB for user-uploaded PDFs
 function openPdfDb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const req = indexedDB.open(DB_NAME, 1);

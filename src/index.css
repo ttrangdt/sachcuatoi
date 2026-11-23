@@ -5,184 +5,144 @@
   --font-serif: "Newsreader", Georgia, serif;
   --font-sans: "Be Vietnam Pro", system-ui, -apple-system, sans-serif;
 
-  --color-room-wall: #e6efe9;
-  --color-room-cream: #f4f6f0;
-  --color-sage: #4a6b5d;
-  --color-sage-soft: #d4e3d9;
-  --color-ink: #232a26;
-  --color-ink-muted: #5a6960;
+  --color-ink: #232026;
 }
 
 @layer base {
   html,
   body {
-    background-color: var(--color-room-wall);
-    color: var(--color-ink);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
   }
 }
 
-/* 3 Living Reading-Room Lighting Moods */
+/* =========================================================
+   3 VIVID FAIRY-TALE READING ROOM MOODS
+   ========================================================= */
+
+/* 1. Fairy Morning — luminous pastel mint, pearlescent rose & sunlit sky */
 .room-mood-morning {
   background:
-    radial-gradient(ellipse 85% 60% at 15% 5%, rgba(255, 254, 244, 0.94) 0%, transparent 65%),
-    radial-gradient(ellipse 65% 55% at 88% 12%, rgba(206, 232, 217, 0.78) 0%, transparent 70%),
-    linear-gradient(180deg, #e5f1ea 0%, #eff6f1 50%, #e1ede6 100%);
+    radial-gradient(ellipse 80% 55% at 14% 8%, rgba(255, 246, 232, 0.95) 0%, transparent 62%),
+    radial-gradient(ellipse 68% 58% at 86% 14%, rgba(190, 234, 224, 0.85) 0%, transparent 68%),
+    radial-gradient(ellipse 55% 45% at 50% 85%, rgba(242, 219, 232, 0.55) 0%, transparent 72%),
+    linear-gradient(180deg, #dff2ec 0%, #eef7f4 46%, #f4ebe4 100%);
 }
 
+/* 2. Amber Sunset — romantic honey-apricot, rose-gold & lavender dusk */
 .room-mood-golden {
   background:
-    radial-gradient(ellipse 85% 60% at 18% 8%, rgba(255, 241, 212, 0.92) 0%, transparent 65%),
-    radial-gradient(ellipse 65% 55% at 85% 15%, rgba(246, 219, 194, 0.72) 0%, transparent 70%),
-    linear-gradient(180deg, #f6eadc 0%, #faf2e7 52%, #efe0cf 100%);
+    radial-gradient(ellipse 80% 58% at 16% 12%, rgba(255, 214, 146, 0.92) 0%, transparent 64%),
+    radial-gradient(ellipse 70% 55% at 85% 18%, rgba(238, 168, 152, 0.72) 0%, transparent 68%),
+    radial-gradient(ellipse 60% 50% at 50% 90%, rgba(182, 134, 168, 0.35) 0%, transparent 72%),
+    linear-gradient(180deg, #f5d6be 0%, #f8e3ce 45%, #ebd0c5 100%);
 }
 
+/* 3. Enchanted Night — deep starry twilight indigo, mystic violet & warm lantern amber */
 .room-mood-evening {
   background:
-    radial-gradient(ellipse 70% 55% at 50% 10%, rgba(255, 212, 138, 0.16) 0%, transparent 68%),
-    linear-gradient(180deg, #1f2833 0%, #27323f 55%, #1d2530 100%);
+    radial-gradient(ellipse 68% 50% at 50% 14%, rgba(255, 206, 118, 0.16) 0%, transparent 66%),
+    radial-gradient(ellipse 60% 55% at 15% 22%, rgba(124, 92, 214, 0.28) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 50% at 86% 78%, rgba(74, 52, 140, 0.32) 0%, transparent 72%),
+    linear-gradient(180deg, #12152b 0%, #1d1c3d 52%, #17142b 100%);
 }
 
-/* Window Sunbeams */
+/* Atmospheric Sunbeam / Moonlight Rays */
 .sunlight-rays {
   background: linear-gradient(
     118deg,
-    rgba(255, 254, 244, 0.48) 0%,
-    rgba(255, 254, 244, 0.15) 22%,
-    transparent 34%,
-    rgba(255, 254, 244, 0.26) 44%,
-    transparent 56%
+    rgba(255, 254, 240, 0.62) 0%,
+    rgba(255, 250, 224, 0.18) 20%,
+    transparent 33%,
+    rgba(232, 255, 248, 0.32) 45%,
+    transparent 58%
   );
 }
 
 .golden-rays {
   background: linear-gradient(
-    116deg,
-    rgba(255, 224, 166, 0.42) 0%,
-    rgba(255, 214, 148, 0.14) 24%,
-    transparent 36%,
-    rgba(255, 224, 166, 0.24) 48%,
-    transparent 60%
+    114deg,
+    rgba(255, 204, 122, 0.56) 0%,
+    rgba(255, 168, 110, 0.22) 24%,
+    transparent 38%,
+    rgba(255, 212, 144, 0.32) 50%,
+    transparent 64%
   );
 }
 
 .evening-lamp-glow {
-  background: radial-gradient(
-    ellipse 62% 52% at 50% 18%,
-    rgba(255, 210, 128, 0.22) 0%,
-    rgba(255, 192, 102, 0.08) 42%,
-    transparent 74%
-  );
+  background:
+    radial-gradient(ellipse 56% 48% at 50% 24%, rgba(255, 206, 118, 0.24) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 42% at 14% 28%, rgba(164, 134, 255, 0.18) 0%, transparent 68%);
 }
 
-/* Pale oak wooden floor strip */
-.oak-floor {
+/* Warm Walnut Floorboard Base */
+.room-floor-day {
   background:
     repeating-linear-gradient(
       90deg,
-      rgba(164, 132, 96, 0.1) 0px,
-      rgba(164, 132, 96, 0.1) 1px,
+      rgba(96, 62, 36, 0.14) 0px,
+      rgba(96, 62, 36, 0.14) 1px,
       transparent 1px,
-      transparent 140px
+      transparent 130px
     ),
-    linear-gradient(180deg, #d7c3a6 0%, #e2d1b7 38%, #cfb898 100%);
-  box-shadow: inset 0 6px 14px rgba(72, 54, 34, 0.14);
+    linear-gradient(180deg, #9a6d4b 0%, #805739 45%, #644129 100%);
+  box-shadow: inset 0 6px 14px rgba(34, 18, 8, 0.28);
 }
 
-.oak-floor-evening {
+.room-floor-evening {
   background:
     repeating-linear-gradient(
       90deg,
-      rgba(0, 0, 0, 0.14) 0px,
-      rgba(0, 0, 0, 0.14) 1px,
+      rgba(0, 0, 0, 0.24) 0px,
+      rgba(0, 0, 0, 0.24) 1px,
       transparent 1px,
-      transparent 140px
+      transparent 130px
     ),
-    linear-gradient(180deg, #4b3b2d 0%, #3d3024 50%, #2f241b 100%);
-  box-shadow: inset 0 6px 16px rgba(0, 0, 0, 0.38);
+    linear-gradient(180deg, #332219 0%, #241812 50%, #19100c 100%);
+  box-shadow: inset 0 8px 18px rgba(0, 0, 0, 0.55);
 }
 
-/* Realistic White-Wood Standing Bookcase */
-.real-bookcase-frame {
-  background: #f5f2eb;
-  border-left: 14px solid #f7f4ed;
-  border-right: 14px solid #f7f4ed;
-  border-top: 12px solid #faf8f3;
-  border-bottom: 12px solid #eae4d9;
-  box-shadow:
-    0 24px 54px -16px rgba(34, 52, 42, 0.26),
-    0 8px 18px -6px rgba(34, 52, 42, 0.12),
-    inset 4px 0 12px rgba(70, 62, 48, 0.12),
-    inset -4px 0 12px rgba(70, 62, 48, 0.12);
-}
-
-@media (max-width: 640px) {
-  .real-bookcase-frame {
-    border-left-width: 8px;
-    border-right-width: 8px;
-    border-top-width: 8px;
-    border-bottom-width: 8px;
-  }
-}
-
-.shelf-compartment {
+/* =========================================================
+   IMAGE 10 INSPIRED WALNUT + MATTE-BLACK STEEL BOOKCASE
+   ========================================================= */
+.walnut-plank {
   background: linear-gradient(
     180deg,
-    #dbd5c9 0%,
-    #ebe6dc 14%,
-    #f2eee6 76%,
-    #e5dfd3 100%
+    #7a4f33 0%,
+    #5c3821 28%,
+    #442715 76%,
+    #2c170b 100%
   );
   box-shadow:
-    inset 0 12px 18px -10px rgba(45, 38, 28, 0.25),
-    inset 10px 0 16px -12px rgba(45, 38, 28, 0.16),
-    inset -10px 0 16px -12px rgba(45, 38, 28, 0.16);
+    0 10px 18px -4px rgba(15, 8, 4, 0.55),
+    inset 0 1px 0 rgba(255, 222, 184, 0.26);
 }
 
-.shelf-compartment-evening {
-  background:
-    radial-gradient(ellipse 80% 45% at 50% 0%, rgba(255, 222, 160, 0.18) 0%, transparent 72%),
-    linear-gradient(180deg, #cbc2b2 0%, #ded6c8 18%, #e5dfd2 78%, #d4ccbd 100%);
-  box-shadow:
-    inset 0 14px 20px -10px rgba(20, 16, 12, 0.42),
-    inset 10px 0 18px -12px rgba(20, 16, 12, 0.24),
-    inset -10px 0 18px -12px rgba(20, 16, 12, 0.24);
+.steel-pillar {
+  background: linear-gradient(90deg, #141418 0%, #2c2d34 45%, #16161b 100%);
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.42);
 }
 
-.white-shelf-ledge {
-  background: linear-gradient(
-    180deg,
-    #ffffff 0%,
-    #f8f6f1 35%,
-    #e7e2d8 85%,
-    #d8d1c4 100%
-  );
-  box-shadow:
-    0 10px 16px -6px rgba(42, 36, 28, 0.26),
-    0 2px 4px -1px rgba(42, 36, 28, 0.14),
-    inset 0 1px 0 rgba(255, 255, 255, 0.95);
-}
-
-/* 3D Book standing on shelf with elastic spring hover & specular sheen */
-.book-3d-wrap {
-  perspective: 1100px;
-}
-
-.book-3d-card {
-  transform-style: preserve-3d;
+/* Book Spine Hover: Prominent Pull-out & Warm Aura */
+.spine-book-btn {
   transition:
-    transform 0.42s cubic-bezier(0.22, 1.15, 0.36, 1),
-    box-shadow 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+    transform 0.34s cubic-bezier(0.22, 1.18, 0.36, 1),
+    filter 0.28s ease,
+    box-shadow 0.34s ease,
+    opacity 0.28s ease;
 }
 
-.book-3d-wrap:hover .book-3d-card,
-.book-3d-wrap:focus-within .book-3d-card {
-  transform: translateY(-9px) rotateY(-16deg) scale(1.04);
+.spine-book-btn:hover {
+  transform: translateY(-18px) scale(1.07);
+  z-index: 30;
+  box-shadow:
+    0 20px 34px -6px rgba(14, 8, 4, 0.65),
+    0 0 22px rgba(246, 214, 134, 0.48);
 }
 
-/* Diagonal specular light sheen gliding over book cover on hover */
+/* Specular sheen sweep */
 .book-sheen::after {
   content: "";
   position: absolute;
@@ -190,52 +150,94 @@
   background: linear-gradient(
     115deg,
     transparent 35%,
-    rgba(255, 255, 255, 0.34) 48%,
-    rgba(255, 248, 220, 0.12) 55%,
+    rgba(255, 255, 255, 0.36) 48%,
+    rgba(255, 248, 220, 0.14) 55%,
     transparent 65%
   );
-  transform: translateX(-120%) rotate(8deg);
-  transition: transform 0.72s cubic-bezier(0.22, 1, 0.36, 1);
+  transform: translateX(-125%) rotate(8deg);
+  transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
   pointer-events: none;
   z-index: 25;
 }
 
-.book-3d-wrap:hover .book-sheen::after,
-.book-spine-card:hover .book-sheen::after {
-  transform: translateX(120%) rotate(8deg);
+.spine-book-btn:hover .book-sheen::after {
+  transform: translateX(125%) rotate(8deg);
 }
 
-.book-spine-card {
-  transition:
-    transform 0.36s cubic-bezier(0.22, 1.15, 0.36, 1),
-    box-shadow 0.36s cubic-bezier(0.22, 1, 0.36, 1);
+/* Smooth Cover Reveal Modal Animation when clicking a book spine */
+@keyframes coverRevealPop {
+  0% {
+    opacity: 0;
+    transform: perspective(1400px) rotateY(-48deg) scale(0.72) translateY(24px);
+  }
+  65% {
+    opacity: 1;
+    transform: perspective(1400px) rotateY(4deg) scale(1.02) translateY(-2px);
+  }
+  100% {
+    opacity: 1;
+    transform: perspective(1400px) rotateY(0deg) scale(1) translateY(0);
+  }
 }
 
-.book-spine-card:hover {
-  transform: translateY(-10px) translateX(-2px) scale(1.03);
-  box-shadow:
-    6px 16px 22px -6px rgba(32, 26, 20, 0.42),
-    -2px 0 8px rgba(0, 0, 0, 0.16);
+.animate-cover-reveal {
+  animation: coverRevealPop 0.56s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-/* Floating Sunbeam Dust Motes */
+/* =========================================================
+   ENCHANTED BOOKMARK BLINK-BLINK & PENDULUM ANIMATIONS
+   ========================================================= */
+@keyframes sparkleBlink {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scale(0.72);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.28);
+  }
+}
+
+.sparkle-blink {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: sparkleBlink 2.1s ease-in-out infinite;
+}
+
+@keyframes bookmarkPendulum {
+  0%,
+  100% {
+    transform: rotate(-2.2deg);
+  }
+  50% {
+    transform: rotate(2.6deg);
+  }
+}
+
+.bookmark-pendulum {
+  transform-origin: top center;
+  animation: bookmarkPendulum 4.2s ease-in-out infinite;
+}
+
+/* Floating Dust Motes & Golden Fireflies */
 @keyframes floatMote {
   0% {
     transform: translate3d(0, 0, 0) scale(0.85);
     opacity: 0;
   }
   20% {
-    opacity: 0.85;
+    opacity: 0.88;
   }
   50% {
-    transform: translate3d(18px, -28px, 0) scale(1.1);
+    transform: translate3d(20px, -28px, 0) scale(1.15);
     opacity: 0.65;
   }
   80% {
-    opacity: 0.8;
+    opacity: 0.82;
   }
   100% {
-    transform: translate3d(-10px, -58px, 0) scale(0.8);
+    transform: translate3d(-12px, -62px, 0) scale(0.8);
     opacity: 0;
   }
 }
@@ -246,7 +248,36 @@
   animation-iteration-count: infinite;
 }
 
-/* Gentle Candle Flame Flicker */
+@keyframes fireflyDrift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(0.6);
+    opacity: 0.15;
+  }
+  25% {
+    transform: translate3d(24px, -22px, 0) scale(1.25);
+    opacity: 1;
+  }
+  50% {
+    transform: translate3d(-14px, -44px, 0) scale(0.75);
+    opacity: 0.3;
+  }
+  75% {
+    transform: translate3d(18px, -18px, 0) scale(1.2);
+    opacity: 0.95;
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(0.6);
+    opacity: 0.15;
+  }
+}
+
+.firefly-drift {
+  animation-name: fireflyDrift;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+/* Candle flame flicker */
 @keyframes candleFlicker {
   0%,
   100% {
@@ -254,7 +285,7 @@
     opacity: 0.92;
   }
   35% {
-    transform: scale(1.12, 0.94) rotate(3deg);
+    transform: scale(1.14, 0.94) rotate(3deg);
     opacity: 1;
   }
   70% {
@@ -265,42 +296,7 @@
 
 .candle-flame {
   transform-origin: bottom center;
-  animation: candleFlicker 2.2s ease-in-out infinite;
-}
-
-/* Rising Warm Tea Steam */
-@keyframes teaSteam {
-  0% {
-    transform: translateY(4px) scaleX(0.9);
-    opacity: 0;
-  }
-  35% {
-    opacity: 0.55;
-  }
-  100% {
-    transform: translateY(-18px) scaleX(1.25);
-    opacity: 0;
-  }
-}
-
-.steam-wisp {
-  animation: teaSteam 3.2s ease-in-out infinite;
-}
-
-/* Curtain Gentle Breeze */
-@keyframes curtainBreeze {
-  0%,
-  100% {
-    transform: skewX(0deg);
-  }
-  50% {
-    transform: skewX(-1.5deg);
-  }
-}
-
-.curtain-sway {
-  transform-origin: top right;
-  animation: curtainBreeze 8s ease-in-out infinite;
+  animation: candleFlicker 2.1s ease-in-out infinite;
 }
 
 /* Open Book Center Spine Crease */
@@ -365,13 +361,13 @@
 
 .animate-flip-next {
   transform-origin: left center;
-  animation: pageFlipNext 0.52s cubic-bezier(0.32, 0.72, 0.2, 1) forwards;
+  animation: pageFlipNext 0.48s cubic-bezier(0.32, 0.72, 0.2, 1) forwards;
   backface-visibility: hidden;
 }
 
 .animate-flip-prev {
   transform-origin: right center;
-  animation: pageFlipPrev 0.52s cubic-bezier(0.32, 0.72, 0.2, 1) forwards;
+  animation: pageFlipPrev 0.48s cubic-bezier(0.32, 0.72, 0.2, 1) forwards;
   backface-visibility: hidden;
 }
 
@@ -381,8 +377,8 @@
     opacity: 1;
   }
   50% {
-    transform: translateX(-18px) rotateY(-22deg);
-    opacity: 0.65;
+    transform: translateX(-16px) rotateY(-20deg);
+    opacity: 0.7;
   }
   100% {
     transform: translateX(0) rotateY(0deg);
@@ -396,8 +392,8 @@
     opacity: 1;
   }
   50% {
-    transform: translateX(18px) rotateY(22deg);
-    opacity: 0.65;
+    transform: translateX(16px) rotateY(20deg);
+    opacity: 0.7;
   }
   100% {
     transform: translateX(0) rotateY(0deg);
@@ -406,41 +402,11 @@
 }
 
 .animate-mobile-next {
-  animation: mobileFlipNext 0.34s ease-out;
+  animation: mobileFlipNext 0.32s ease-out;
 }
 
 .animate-mobile-prev {
-  animation: mobileFlipPrev 0.34s ease-out;
-}
-
-@keyframes ribbonSway {
-  0%,
-  100% {
-    transform: rotate(0deg);
-  }
-  50% {
-    transform: rotate(1.8deg);
-  }
-}
-
-.bookmark-sway {
-  transform-origin: top center;
-  animation: ribbonSway 3.6s ease-in-out infinite;
-}
-
-@keyframes leafBreeze {
-  0%,
-  100% {
-    transform: rotate(0deg);
-  }
-  50% {
-    transform: rotate(2deg);
-  }
-}
-
-.ivy-breeze {
-  transform-origin: top right;
-  animation: leafBreeze 5.5s ease-in-out infinite;
+  animation: mobileFlipPrev 0.32s ease-out;
 }
 
 ::-webkit-scrollbar {
@@ -453,10 +419,6 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(74, 107, 93, 0.28);
+  background: rgba(120, 96, 146, 0.32);
   border-radius: 9999px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(74, 107, 93, 0.5);
 }

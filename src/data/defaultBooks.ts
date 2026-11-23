@@ -9,11 +9,13 @@ export const DEFAULT_BOOKS: BookItem[] = [
     description:
       'Bản trường ca sâu lắng về tình bạn, định mệnh và vinh quang giữa Patroclus và anh hùng Achilles trước cuộc chiến thành Troy.',
     pdfUrl: './books/truong-ca-achilles.pdf',
+    textUrl: './books/text/truong-ca-achilles.json',
     spineColor: '#851A2E',
     spineAccent: '#F4D36A',
     spineTextColor: '#F7DC88',
     totalPages: 378,
     addedAt: 1700000001000,
+    cabinetIndex: 1,
   },
   {
     id: 'nguoi-ru-ngu',
@@ -23,10 +25,12 @@ export const DEFAULT_BOOKS: BookItem[] = [
     description:
       'Một vụ án bí ẩn với sáu cánh tay bị chôn vùi trong khu rừng tĩnh lặng, mở ra hành trình lần theo dấu vết kẻ thao túng bóng tối.',
     pdfUrl: './books/nguoi-ru-ngu.pdf',
+    textUrl: './books/text/nguoi-ru-ngu.json',
     spineColor: '#1E2A38',
     spineAccent: '#C5D1DD',
     spineTextColor: '#F0F4F8',
-    totalPages: 1334,
+    totalPages: 520,
     addedAt: 1700000002000,
+    cabinetIndex: 1,
   },
 ];
