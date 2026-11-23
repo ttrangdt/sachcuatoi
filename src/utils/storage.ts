@@ -16,7 +16,7 @@ export interface UserPrefs {
 const DEFAULT_PREFS: UserPrefs = {
   paperTheme: 'cream',
   defaultBookmarkStyle: 'mystic-moon',
-  fontSize: 16,
+  fontSize: 18,
 };
 
 export function loadAllProgress(): Record<string, BookProgress> {

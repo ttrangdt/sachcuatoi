@@ -105,24 +105,94 @@
 }
 
 /* =========================================================
-   IMAGE 10 INSPIRED WALNUT + MATTE-BLACK STEEL BOOKCASE
+   PHOTOREALISTIC WALNUT WOOD + BRUSHED MATTE-BLACK STEEL
    ========================================================= */
 .walnut-plank {
+  background-color: #4b2d1b;
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 224, 186, 0.04) 0px,
+      rgba(255, 224, 186, 0.04) 2px,
+      transparent 2px,
+      transparent 11px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      rgba(28, 13, 6, 0.22) 0px,
+      rgba(28, 13, 6, 0.22) 1px,
+      transparent 1px,
+      transparent 3px
+    ),
+    linear-gradient(
+      180deg,
+      #8b5c3c 0%,
+      #6b4228 16%,
+      #4f2f1b 58%,
+      #341d0f 90%,
+      #221108 100%
+    );
+  box-shadow:
+    0 14px 24px -4px rgba(10, 5, 2, 0.68),
+    0 4px 8px -2px rgba(10, 5, 2, 0.45),
+    inset 0 1.5px 0 rgba(255, 228, 194, 0.34),
+    inset 0 -2px 3px rgba(14, 7, 3, 0.6);
+}
+
+.cabinet-recess-shadow {
   background: linear-gradient(
     180deg,
-    #7a4f33 0%,
-    #5c3821 28%,
-    #442715 76%,
-    #2c170b 100%
+    rgba(16, 10, 8, 0.42) 0%,
+    rgba(24, 16, 12, 0.14) 24%,
+    rgba(24, 16, 12, 0.08) 78%,
+    rgba(14, 8, 5, 0.36) 100%
   );
   box-shadow:
-    0 10px 18px -4px rgba(15, 8, 4, 0.55),
-    inset 0 1px 0 rgba(255, 222, 184, 0.26);
+    inset 12px 0 22px -12px rgba(0, 0, 0, 0.55),
+    inset -12px 0 22px -12px rgba(0, 0, 0, 0.55);
 }
 
 .steel-pillar {
-  background: linear-gradient(90deg, #141418 0%, #2c2d34 45%, #16161b 100%);
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.42);
+  background: linear-gradient(
+    90deg,
+    #0e0f12 0%,
+    #25272e 32%,
+    #363942 48%,
+    #1c1d22 72%,
+    #0c0c0f 100%
+  );
+  box-shadow:
+    3px 0 12px rgba(0, 0, 0, 0.55),
+    -2px 0 8px rgba(0, 0, 0, 0.35);
+}
+
+/* Bookmark shimmer glint */
+@keyframes bookmarkShimmer {
+  0%,
+  72% {
+    transform: translateX(-140%) rotate(18deg);
+    opacity: 0;
+  }
+  84% {
+    opacity: 0.75;
+  }
+  100% {
+    transform: translateX(160%) rotate(18deg);
+    opacity: 0;
+  }
+}
+
+.bookmark-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  background: linear-gradient(
+    105deg,
+    transparent 35%,
+    rgba(255, 250, 215, 0.65) 50%,
+    transparent 65%
+  );
+  animation: bookmarkShimmer 4.5s ease-in-out infinite;
 }
 
 /* Book Spine Hover: Prominent Pull-out & Warm Aura */

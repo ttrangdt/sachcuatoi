@@ -15,7 +15,6 @@ export async function loadBookTextData(book: BookItem): Promise<BookTextData> {
       }
     }
 
-    // Fallback: extract text on-the-fly from uploaded custom PDF
     const doc = await loadPdfDocument(book);
     const paragraphs: string[] = [];
     const maxPages = Math.min(doc.numPages, 400);
@@ -51,34 +50,54 @@ export interface PaginatedBook {
 }
 
 /**
- * Smartly reflow paragraphs into readable pages tailored to PC vs Mobile and current fontSize.
- * Guarantees each page fits cleanly without vertical scrolling.
+ * Exact line-budget pagination using measured column width & height.
+ * Fills ~90–94% of every page cleanly without leaving empty bottom voids or clipping lines.
  */
 export function paginateBookText(
   data: BookTextData,
-  options: { isMobile: boolean; fontSize: number }
+  options: {
+    isMobile: boolean;
+    fontSize: number;
+    colWidth: number;
+    colHeight: number;
+  }
 ): PaginatedBook {
-  const { isMobile, fontSize } = options;
+  const { isMobile, fontSize, colWidth, colHeight } = options;
 
-  // Compute ideal character budget per page based on viewport & font size
-  // Base comfortable budget at 16px: ~1050 chars on desktop half-spread, ~620 chars on mobile
-  const scaleFactor = (16 / fontSize) * (16 / fontSize);
-  const baseChars = isMobile ? 600 : 1020;
-  const maxCharsPerPage = Math.max(240, Math.min(1800, Math.round(baseChars * scaleFactor)));
-  const paraOverhead = Math.round(52 * (fontSize / 16));
+  // Average Vietnamese serif glyph width ~0.465 * fontSize (slightly conservative so text never clips)
+  const effectiveWidth = Math.max(220, colWidth - 6);
+  const charsPerLine = Math.max(
+    22,
+    Math.floor(effectiveWidth / (fontSize * (isMobile ? 0.48 : 0.465)))
+  );
+
+  const lineHeightPx = fontSize * 1.66;
+  const maxLines = Math.max(
+    7,
+    Math.floor((Math.max(260, colHeight) - 10) / lineHeightPx)
+  );
+  const paraGapLines = 0.42;
+
+  const estimateLines = (text: string, isHeading: boolean): number => {
+    if (isHeading) {
+      const headingCharsPerLine = Math.max(14, Math.floor(charsPerLine * 0.68));
+      return Math.ceil(text.length / headingCharsPerLine) * 1.45 + 1.1;
+    }
+    const indentChars = 4;
+    return Math.max(1, Math.ceil((text.length + indentChars) / charsPerLine));
+  };
 
   const pages: string[][] = [];
   let currentPageParas: string[] = [];
-  let currentWeight = 0;
+  let usedLines = 0;
 
-  // Map paragraph index -> resulting 1-based book page number (Cover = 1, first text page = 2)
   const paraToPage = new Map<number, number>();
 
   const flushPage = () => {
     if (currentPageParas.length > 0) {
       pages.push(currentPageParas);
       currentPageParas = [];
-      currentWeight = 0;
+      usedLines = 0;
     }
   };
 
@@ -86,61 +105,74 @@ export function paginateBookText(
     const para = data.paragraphs[i];
     const isHeading = para.startsWith('## ');
 
-    // Start major chapter headings on a fresh page if current page is > 35% full
-    if (isHeading && currentWeight > maxCharsPerPage * 0.35) {
+    // Start chapter headings on a fresh page if current page is already > 45% filled
+    if (isHeading && usedLines > maxLines * 0.45) {
       flushPage();
     }
 
-    const weight = para.length + paraOverhead + (isHeading ? 120 : 0);
+    const needed = estimateLines(para, isHeading);
+    const gap = currentPageParas.length > 0 ? paraGapLines : 0;
 
-    // If a single paragraph is very long, split gracefully at sentence boundaries
-    if (para.length > maxCharsPerPage * 0.92 && !isHeading) {
-      const sentences = para.match(/[^.!?…]+[.!?…]*\s*/g) || [para];
-      let chunk = '';
-      for (const sentence of sentences) {
-        if (chunk.length + sentence.length > maxCharsPerPage * 0.85 && chunk.trim()) {
-          if (currentWeight + chunk.length > maxCharsPerPage && currentPageParas.length > 0) {
-            flushPage();
-          }
-          if (!paraToPage.has(i)) paraToPage.set(i, pages.length + 2);
-          currentPageParas.push(chunk.trim());
-          currentWeight += chunk.length + paraOverhead;
-          flushPage();
-          chunk = sentence;
-        } else {
-          chunk += sentence;
-        }
-      }
-      if (chunk.trim()) {
-        if (currentWeight + chunk.length > maxCharsPerPage && currentPageParas.length > 0) {
-          flushPage();
-        }
-        if (!paraToPage.has(i)) paraToPage.set(i, pages.length + 2);
-        currentPageParas.push(chunk.trim());
-        currentWeight += chunk.length + paraOverhead;
-      }
+    // If paragraph fits on current page, place it directly
+    if (usedLines + gap + needed <= maxLines) {
+      if (!paraToPage.has(i)) paraToPage.set(i, pages.length + 2);
+      currentPageParas.push(para);
+      usedLines += gap + needed;
       continue;
     }
 
-    if (currentWeight + weight > maxCharsPerPage && currentPageParas.length > 0) {
+    // If paragraph is small/medium and doesn't fit remaining lines, move cleanly to next page
+    if (needed <= maxLines * 0.72 || isHeading) {
       flushPage();
+      if (!paraToPage.has(i)) paraToPage.set(i, pages.length + 2);
+      currentPageParas.push(para);
+      usedLines = needed;
+      continue;
     }
 
-    if (!paraToPage.has(i)) {
-      paraToPage.set(i, pages.length + 2);
+    // Long paragraph: split smoothly at sentence boundaries so bottom of page stays nicely filled!
+    const sentences = para.match(/[^.!?…]+[.!?…]*\s*/g) || [para];
+    let chunk = '';
+
+    for (const sentence of sentences) {
+      const candidate = chunk ? `${chunk}${sentence}` : sentence;
+      const candLines = estimateLines(candidate.trim(), false);
+      const currentGap = currentPageParas.length > 0 ? paraGapLines : 0;
+
+      if (usedLines + currentGap + candLines > maxLines) {
+        if (chunk.trim()) {
+          if (!paraToPage.has(i)) paraToPage.set(i, pages.length + 2);
+          currentPageParas.push(chunk.trim());
+          flushPage();
+          chunk = sentence;
+        } else {
+          // Even first sentence didn't fit remaining lines -> flush page and start fresh
+          flushPage();
+          chunk = sentence;
+        }
+      } else {
+        chunk = candidate;
+      }
     }
-    currentPageParas.push(para);
-    currentWeight += weight;
+
+    if (chunk.trim()) {
+      const remLines = estimateLines(chunk.trim(), false);
+      const currentGap = currentPageParas.length > 0 ? paraGapLines : 0;
+      if (usedLines + currentGap + remLines > maxLines && currentPageParas.length > 0) {
+        flushPage();
+      }
+      if (!paraToPage.has(i)) paraToPage.set(i, pages.length + 2);
+      currentPageParas.push(chunk.trim());
+      usedLines += (currentPageParas.length > 1 ? paraGapLines : 0) + remLines;
+    }
   }
 
   flushPage();
 
-  // Build accurate dynamic TOC mapped to reflowed page numbers
   const toc: TocItem[] = [{ title: 'Bìa sách', page: 1, level: 0 }];
   for (const ch of data.chapters) {
     let resolvedPage = paraToPage.get(ch.paragraphIndex);
     if (!resolvedPage) {
-      // Find nearest following paragraph
       for (let j = ch.paragraphIndex; j < data.paragraphs.length; j++) {
         if (paraToPage.has(j)) {
           resolvedPage = paraToPage.get(j);
@@ -157,7 +189,7 @@ export function paginateBookText(
 
   return {
     pages,
-    totalPages: pages.length + 1, // +1 for Cover page
+    totalPages: pages.length + 1,
     toc,
   };
 }

@@ -28,7 +28,6 @@ import {
 } from './utils/storage';
 import { loadPdfDocument } from './utils/pdfEngine';
 import { Bookshelf } from './components/Bookshelf';
-import { BookCoverModal } from './components/BookCoverModal';
 import { BookReader } from './components/BookReader';
 import { FinishedArchive } from './components/FinishedArchive';
 import { DecorativeBookmark } from './components/DecorativeBookmark';
@@ -58,11 +57,6 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [roomMood, setRoomMood] = useState<RoomMood>('morning');
   const [parallax, setParallax] = useState({ x: 0, y: 0 });
-
-  // Clicking a book spine smoothly reveals its front cover modal first
-  const [selectedCoverBook, setSelectedCoverBook] = useState<BookItem | null>(
-    null
-  );
 
   // Full open book reader
   const [activeBook, setActiveBook] = useState<{
@@ -102,7 +96,6 @@ export default function App() {
   };
 
   const handleStartReading = (book: BookItem, startPage?: number) => {
-    setSelectedCoverBook(null);
     setActiveBook({ book, startPage });
   };
 
@@ -438,7 +431,7 @@ export default function App() {
               books={visibleShelfBooks}
               progressMap={progressMap}
               roomMood={roomMood}
-              onSelectBook={(book) => setSelectedCoverBook(book)}
+              onOpenBook={handleStartReading}
               onDeleteCustomBook={handleDeleteCustomBook}
               onAddBookClick={() => fileInputRef.current?.click()}
             />
@@ -454,16 +447,6 @@ export default function App() {
             : 'room-floor-day border-[#5B3B25]'
         } relative z-10 h-5 sm:h-7 shrink-0 w-full border-t transition-colors duration-700`}
       />
-
-      {/* Smooth 3D Front Cover Reveal Modal when clicking a book spine */}
-      {selectedCoverBook && !activeBook && (
-        <BookCoverModal
-          book={selectedCoverBook}
-          progress={getOrCreateProgress(progressMap, selectedCoverBook)}
-          onStartReading={handleStartReading}
-          onClose={() => setSelectedCoverBook(null)}
-        />
-      )}
 
       {/* Full Realistic Reflow Book Reader */}
       {activeBook && (

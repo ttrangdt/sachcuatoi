@@ -105,10 +105,10 @@ const PageTextColumn: React.FC<{
 
   return (
     <div
-      className={`flex-1 overflow-hidden py-2 font-serif leading-[1.72] ${theme.bodyText}`}
+      className={`flex-1 overflow-hidden py-1 font-serif leading-[1.66] ${theme.bodyText}`}
       style={{ fontSize: `${fontSize}px` }}
     >
-      <div className="space-y-3">
+      <div className="space-y-2.5">
         {paragraphs.map((para, idx) => {
           if (para.startsWith('## ')) {
             return (
@@ -169,12 +169,36 @@ export const BookReader: React.FC<BookReaderProps> = ({
 
   const touchStartX = useRef<number | null>(null);
   const prevTotalRef = useRef<number>(progress.totalPages || book.totalPages);
+  const measureColRef = useRef<HTMLDivElement | null>(null);
+  const [colDims, setColDims] = useState<{ width: number; height: number }>(() => ({
+    width: typeof window !== 'undefined' && window.innerWidth < 860 ? 340 : 460,
+    height: typeof window !== 'undefined' ? Math.max(420, window.innerHeight * 0.68) : 540,
+  }));
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 860);
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, []);
+
+  // Measure actual rendered page text area so every page fills ~90-94% height cleanly
+  useEffect(() => {
+    const el = measureColRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver((entries) => {
+      const rect = entries[0]?.contentRect;
+      if (rect && rect.width > 120 && rect.height > 180) {
+        setColDims((prev) =>
+          Math.abs(prev.width - rect.width) > 10 ||
+          Math.abs(prev.height - rect.height) > 10
+            ? { width: rect.width, height: rect.height }
+            : prev
+        );
+      }
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [isMobile]);
 
   // Track firstOpenedAt + lastReadAt
   useEffect(() => {
@@ -216,11 +240,16 @@ export const BookReader: React.FC<BookReaderProps> = ({
     };
   }, [book]);
 
-  // Smartly reflow book pages whenever viewport mode (PC vs Mobile) or fontSize changes
+  // Smartly reflow book pages using measured page column width & height
   const paginated = useMemo(() => {
     if (!bookText) return null;
-    return paginateBookText(bookText, { isMobile, fontSize });
-  }, [bookText, isMobile, fontSize]);
+    return paginateBookText(bookText, {
+      isMobile,
+      fontSize,
+      colWidth: colDims.width,
+      colHeight: colDims.height,
+    });
+  }, [bookText, isMobile, fontSize, colDims.width, colDims.height]);
 
   const totalPages = paginated?.totalPages || progress.totalPages || book.totalPages;
   const toc = paginated?.toc || [{ title: 'Bìa sách', page: 1, level: 0 }];
@@ -819,7 +848,10 @@ export const BookReader: React.FC<BookReaderProps> = ({
               </span>
             </div>
 
-            <div className="relative flex flex-1 flex-col overflow-hidden px-5 py-2">
+            <div
+              ref={measureColRef}
+              className="relative flex flex-1 flex-col overflow-hidden px-5 py-2"
+            >
               {currentPage === 1 ? (
                 <div className="flex flex-1 items-center justify-center">
                   {book.id === 'truong-ca-achilles' ? (
@@ -967,33 +999,35 @@ export const BookReader: React.FC<BookReaderProps> = ({
                 <span>{rightPageNum === 1 ? 'Bìa sách' : ''}</span>
               </div>
 
-              {rightPageNum === 1 ? (
-                <div className="flex flex-1 items-center justify-center py-2">
-                  {book.id === 'truong-ca-achilles' ? (
-                    <div className="h-full max-h-[64vh] aspect-[2/3] overflow-hidden rounded shadow-xl">
-                      <AchillesCoverArt />
-                    </div>
-                  ) : coverUrl ? (
-                    <img
-                      src={coverUrl}
-                      alt={book.title}
-                      className="max-h-full max-w-full rounded object-contain shadow-lg"
-                    />
-                  ) : (
-                    <div className="text-center font-display text-3xl font-bold">
-                      {book.title}
-                    </div>
-                  )}
-                </div>
-              ) : loading ? (
-                <div className="my-3 flex-1 animate-pulse rounded bg-black/5" />
-              ) : (
-                <PageTextColumn
-                  paragraphs={rightParagraphs}
-                  fontSize={fontSize}
-                  theme={theme}
-                />
-              )}
+              <div ref={measureColRef} className="flex flex-1 flex-col overflow-hidden">
+                {rightPageNum === 1 ? (
+                  <div className="flex flex-1 items-center justify-center py-2">
+                    {book.id === 'truong-ca-achilles' ? (
+                      <div className="h-full max-h-[64vh] aspect-[2/3] overflow-hidden rounded shadow-xl">
+                        <AchillesCoverArt />
+                      </div>
+                    ) : coverUrl ? (
+                      <img
+                        src={coverUrl}
+                        alt={book.title}
+                        className="max-h-full max-w-full rounded object-contain shadow-lg"
+                      />
+                    ) : (
+                      <div className="text-center font-display text-3xl font-bold">
+                        {book.title}
+                      </div>
+                    )}
+                  </div>
+                ) : loading ? (
+                  <div className="my-3 flex-1 animate-pulse rounded bg-black/5" />
+                ) : (
+                  <PageTextColumn
+                    paragraphs={rightParagraphs}
+                    fontSize={fontSize}
+                    theme={theme}
+                  />
+                )}
+              </div>
 
               <div
                 className={`text-center font-serif text-xs ${theme.mutedText}`}
