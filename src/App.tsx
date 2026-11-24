@@ -18,6 +18,7 @@ import { Bookshelf } from './components/Bookshelf';
 import { BookReader } from './components/BookReader';
 import { FinishedArchive } from './components/FinishedArchive';
 import {
+  AmbientForegroundParticles,
   AmbientRoomEffects,
   PullChainSwitch,
   RoomMood,
@@ -161,6 +162,9 @@ export default function App() {
     >
       {/* Unified Library Room Background */}
       <AmbientRoomEffects mood={roomMood} parallax={parallax} />
+
+      {/* Foreground Seasonal / Night Living Particles (Sakura / Maple Leaves / Fireflies) */}
+      {!activeBook && <AmbientForegroundParticles mood={roomMood} />}
 
       {/* Physical Brass Pull-Chain Switch in Top-Left Corner (replaces 3 buttons!) */}
       {!activeBook && (
