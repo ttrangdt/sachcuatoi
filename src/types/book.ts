@@ -37,6 +37,7 @@ export interface BookItem {
   genre: string;
   year?: string;
   description: string;
+  coverUrl?: string;
   pdfUrl?: string;
   textUrl?: string;
   isCustom?: boolean;

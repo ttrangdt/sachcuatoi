@@ -45,11 +45,18 @@ const InlineFlipBook: React.FC<{
   onOpenReader,
   onDelete,
 }) => {
-  const [coverUrl, setCoverUrl] = useState<string | null>(null);
+  const [coverUrl, setCoverUrl] = useState<string | null>(
+    book.coverUrl || null
+  );
   const isAchilles = book.id === 'truong-ca-achilles';
 
   useEffect(() => {
-    if (isAchilles || !book.pdfUrl || coverUrl) return;
+    if (isAchilles) return;
+    if (book.coverUrl) {
+      setCoverUrl(book.coverUrl);
+      return;
+    }
+    if (!book.pdfUrl || coverUrl) return;
     let active = true;
     getBookCoverUrl(book).then((url) => {
       if (active) setCoverUrl(url);
@@ -225,7 +232,7 @@ const StandingBookcaseFrame: React.FC<{
 
   return (
     <div
-      className={`${frameClass} relative flex h-[92%] w-full max-w-[720px] flex-col rounded-t-[6px] transition-all duration-700`}
+      className={`${frameClass} relative flex h-[92%] w-full max-w-[580px] flex-col rounded-t-[6px] transition-all duration-700`}
     >
       <div
         className={`${corniceClass} -mx-2.5 sm:-mx-3.5 h-5 sm:h-6 shrink-0 rounded-t-[5px] transition-all duration-700`}
@@ -273,7 +280,7 @@ const ShelfTierBay: React.FC<{
         {mood === 'evening' && (
           <div className="shelf-downlight pointer-events-none absolute inset-x-4 top-0 h-32" />
         )}
-        <div className="relative z-10 flex h-full w-full items-end justify-center gap-1 sm:gap-1.5 pb-[2px] overflow-x-auto no-scrollbar">
+        <div className="relative z-10 flex h-full w-full items-end justify-start gap-1 sm:gap-1.5 pb-[2px] overflow-x-auto no-scrollbar">
           {children}
         </div>
       </div>
@@ -285,13 +292,45 @@ const ShelfTierBay: React.FC<{
 
 const HEIGHT_VARIATIONS = ['h-[93%]', 'h-[89%]', 'h-[95%]', 'h-[87%]', 'h-[92%]'];
 
-function splitInto3Tiers(list: BookItem[]): [BookItem[], BookItem[], BookItem[]] {
-  const perTier = Math.max(1, Math.ceil(list.length / 3));
-  return [
-    list.slice(0, perTier),
-    list.slice(perTier, perTier * 2),
-    list.slice(perTier * 2),
-  ];
+/**
+ * Pack books sequentially left-to-right into shelves (~470px capacity per shelf),
+ * filling all 3 shelves of one bookcase completely before overflowing to the next bookcase!
+ * Fill order: Center Cabinet (primary) -> Right Cabinet -> Left Cabinet.
+ */
+function packBooksIntoCabinets(
+  books: BookItem[],
+  progressMap: Record<string, BookProgress>
+): {
+  center: [BookItem[], BookItem[], BookItem[]];
+  right: [BookItem[], BookItem[], BookItem[]];
+  left: [BookItem[], BookItem[], BookItem[]];
+} {
+  const MAX_SHELF_WIDTH = 472;
+  const GAP = 6;
+  const shelves: BookItem[][] = Array.from({ length: 9 }, () => []);
+  let shelfIdx = 0;
+  let usedWidth = 0;
+
+  for (const book of books) {
+    const w = getBookSpineWidth(
+      progressMap[book.id]?.totalPages || book.totalPages
+    );
+    const needed = usedWidth > 0 ? w + GAP : w;
+
+    if (usedWidth + needed > MAX_SHELF_WIDTH && shelfIdx < 8) {
+      shelfIdx++;
+      usedWidth = 0;
+    }
+
+    shelves[shelfIdx].push(book);
+    usedWidth += usedWidth > 0 ? w + GAP : w;
+  }
+
+  return {
+    center: [shelves[0], shelves[1], shelves[2]],
+    right: [shelves[3], shelves[4], shelves[5]],
+    left: [shelves[6], shelves[7], shelves[8]],
+  };
 }
 
 export const Bookshelf: React.FC<BookshelfProps> = ({
@@ -336,17 +375,36 @@ export const Bookshelf: React.FC<BookshelfProps> = ({
     setIsDragging(false);
   };
 
-  // Distribute ALL user books across the 3 cabinets naturally:
-  // Center cabinet gets the first 10 books (featured!), Left gets the next 8, Right gets the remaining 8+!
-  const centerBooks = books.slice(0, 10);
-  const leftBooks = books.slice(10, 18);
-  const rightBooks = books.slice(18);
+  // Fill Center Cabinet completely (tiers 0->1->2), then overflow to Right Cabinet, then Left Cabinet
+  const packed = packBooksIntoCabinets(books, progressMap);
 
-  const cabinets: { idx: 0 | 1 | 2; list: BookItem[]; origin: string }[] = [
-    { idx: 0, list: leftBooks, origin: 'right bottom' },
-    { idx: 1, list: centerBooks, origin: 'center bottom' },
-    { idx: 2, list: rightBooks, origin: 'left bottom' },
+  const cabinets: {
+    idx: 0 | 1 | 2;
+    tiers: [BookItem[], BookItem[], BookItem[]];
+    origin: string;
+  }[] = [
+    { idx: 0, tiers: packed.left, origin: 'right bottom' },
+    { idx: 1, tiers: packed.center, origin: 'center bottom' },
+    { idx: 2, tiers: packed.right, origin: 'left bottom' },
   ];
+
+  // Place the "+" upload slot on the first non-full shelf in fill order (center -> right -> left)
+  const addSlotTarget = (() => {
+    const order: (0 | 1 | 2)[] = [1, 2, 0];
+    for (const cIdx of order) {
+      const cTiers =
+        cIdx === 1 ? packed.center : cIdx === 2 ? packed.right : packed.left;
+      for (let t = 0; t < 3; t++) {
+        const used = cTiers[t].reduce(
+          (sum, b) =>
+            sum + getBookSpineWidth(progressMap[b.id]?.totalPages || b.totalPages) + 6,
+          0
+        );
+        if (used + 56 <= 472) return { cIdx, tierIdx: t };
+      }
+    }
+    return { cIdx: 0 as const, tierIdx: 2 };
+  })();
 
   const basePercent = 21 - activeCabinet * 58;
 
@@ -370,61 +428,61 @@ export const Bookshelf: React.FC<BookshelfProps> = ({
             : 'transform 0.65s cubic-bezier(0.22, 1, 0.36, 1)',
         }}
       >
-        {cabinets.map(({ idx, list, origin }) => {
-          const tiers = splitInto3Tiers(list);
-          return (
-            <section
-              key={idx}
-              onClick={() => {
-                if (activeCabinet !== idx) {
-                  setActiveCabinet(idx);
-                  setExpandedBookKey(null);
-                }
-              }}
-              className={`flex h-full w-[58%] shrink-0 items-end justify-center px-4 sm:px-9 transition-all duration-700 ${
-                activeCabinet === idx
-                  ? 'scale-100 opacity-100'
-                  : 'scale-[0.9] opacity-82 hover:opacity-95 cursor-pointer'
-              }`}
-              style={{ transformOrigin: origin }}
-            >
-              <StandingBookcaseFrame mood={roomMood}>
-                {tiers.map((tierBooks, tierIdx) => (
-                  <ShelfTierBay key={tierIdx} mood={roomMood}>
-                    {tierBooks.map((book, bIdx) => {
-                      const key = `cab${idx}-${book.id}`;
-                      const hPct =
-                        HEIGHT_VARIATIONS[(bIdx + tierIdx) % HEIGHT_VARIATIONS.length];
-                      return (
-                        <InlineFlipBook
-                          key={key}
-                          book={book}
-                          progress={progressMap[book.id]}
-                          isExpanded={expandedBookKey === key}
-                          isThisHovered={hoveredBookKey === key}
-                          heightPct={hPct}
-                          onHoverChange={(h) => setHoveredBookKey(h ? key : null)}
-                          onToggleExpand={() =>
-                            setExpandedBookKey((cur) => (cur === key ? null : key))
-                          }
-                          onOpenReader={() =>
-                            onOpenBook(
-                              book,
-                              progressMap[book.id]?.bookmarkedPage ||
-                                progressMap[book.id]?.currentPage
-                            )
-                          }
-                          onDelete={
-                            book.isCustom && onDeleteCustomBook
-                              ? () => onDeleteCustomBook(book.id)
-                              : undefined
-                          }
-                        />
-                      );
-                    })}
+        {cabinets.map(({ idx, tiers, origin }) => (
+          <section
+            key={idx}
+            onClick={() => {
+              if (activeCabinet !== idx) {
+                setActiveCabinet(idx);
+                setExpandedBookKey(null);
+              }
+            }}
+            className={`flex h-full w-[58%] shrink-0 items-end justify-center px-4 sm:px-9 transition-all duration-700 ${
+              activeCabinet === idx
+                ? 'scale-100 opacity-100'
+                : 'scale-[0.9] opacity-82 hover:opacity-95 cursor-pointer'
+            }`}
+            style={{ transformOrigin: origin }}
+          >
+            <StandingBookcaseFrame mood={roomMood}>
+              {tiers.map((tierBooks, tierIdx) => (
+                <ShelfTierBay key={tierIdx} mood={roomMood}>
+                  {tierBooks.map((book, bIdx) => {
+                    const key = `cab${idx}-${book.id}`;
+                    const hPct =
+                      HEIGHT_VARIATIONS[(bIdx + tierIdx) % HEIGHT_VARIATIONS.length];
+                    return (
+                      <InlineFlipBook
+                        key={key}
+                        book={book}
+                        progress={progressMap[book.id]}
+                        isExpanded={expandedBookKey === key}
+                        isThisHovered={hoveredBookKey === key}
+                        heightPct={hPct}
+                        onHoverChange={(h) => setHoveredBookKey(h ? key : null)}
+                        onToggleExpand={() =>
+                          setExpandedBookKey((cur) => (cur === key ? null : key))
+                        }
+                        onOpenReader={() =>
+                          onOpenBook(
+                            book,
+                            progressMap[book.id]?.bookmarkedPage ||
+                              progressMap[book.id]?.currentPage
+                          )
+                        }
+                        onDelete={
+                          book.isCustom && onDeleteCustomBook
+                            ? () => onDeleteCustomBook(book.id)
+                            : undefined
+                        }
+                      />
+                    );
+                  })}
 
-                    {/* Add PDF slot on bottom tier of Right cabinet */}
-                    {idx === 2 && tierIdx === 2 && onAddBookClick && (
+                  {/* Add PDF slot right after the last book */}
+                  {onAddBookClick &&
+                    addSlotTarget.cIdx === idx &&
+                    addSlotTarget.tierIdx === tierIdx && (
                       <button
                         type="button"
                         onClick={(e) => {
@@ -442,12 +500,11 @@ export const Bookshelf: React.FC<BookshelfProps> = ({
                         <Plus className="h-5 w-5" />
                       </button>
                     )}
-                  </ShelfTierBay>
-                ))}
-              </StandingBookcaseFrame>
-            </section>
-          );
-        })}
+                </ShelfTierBay>
+              ))}
+            </StandingBookcaseFrame>
+          </section>
+        ))}
       </div>
     </div>
   );

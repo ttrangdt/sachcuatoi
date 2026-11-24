@@ -279,10 +279,16 @@ export const BookReader: React.FC<BookReaderProps> = ({
         });
     }
 
-    if (book.id !== 'truong-ca-achilles' && book.pdfUrl) {
-      getBookCoverUrl(book).then((url) => {
-        if (active) setCoverUrl(url);
-      });
+    if (book.id !== 'truong-ca-achilles') {
+      if (book.coverUrl) {
+        setCoverUrl(book.coverUrl);
+      } else if (book.pdfUrl) {
+        getBookCoverUrl(book).then((url) => {
+          if (active) setCoverUrl(url);
+        });
+      } else {
+        setCoverUrl(null);
+      }
     }
 
     return () => {

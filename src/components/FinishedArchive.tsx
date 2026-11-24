@@ -30,9 +30,15 @@ const FinishedBookCard: React.FC<{
   onReadAgain: () => void;
   onUnmark: () => void;
 }> = ({ book, progress, now, onReadAgain, onUnmark }) => {
-  const [coverUrl, setCoverUrl] = useState<string | null>(null);
+  const [coverUrl, setCoverUrl] = useState<string | null>(
+    book.coverUrl || null
+  );
 
   useEffect(() => {
+    if (book.coverUrl) {
+      setCoverUrl(book.coverUrl);
+      return;
+    }
     let active = true;
     getBookCoverUrl(book).then((url) => {
       if (active) setCoverUrl(url);
