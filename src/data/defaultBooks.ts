@@ -198,6 +198,21 @@ export const DEFAULT_BOOKS: BookItem[] = [
     addedAt: 1700000013000,
   },
   {
+    id: "hoa-than",
+    title: "Hóa Thân",
+    author: "Franz Kafka",
+    genre: "Kinh điển · Văn học Đức",
+    year: "1915",
+    description: "Hóa Thân — Franz Kafka (Kinh điển · Văn học Đức, khoảng 90 trang).",
+    coverUrl: "./books/covers/hoa-than.png",
+    textUrl: "./books/text/hoa-than.json",
+    spineColor: "#745636",
+    spineAccent: "#F0D594",
+    spineTextColor: "#F8F4EC",
+    totalPages: 90,
+    addedAt: 1700000014000,
+  },
+  {
     id: "muu-ma-chuoc-quy",
     title: "Mưu Ma Chước Quỷ",
     author: "Leigh Bardugo",
@@ -210,7 +225,7 @@ export const DEFAULT_BOOKS: BookItem[] = [
     spineAccent: "#F0D594",
     spineTextColor: "#F8F4EC",
     totalPages: 312,
-    addedAt: 1700000014000,
+    addedAt: 1700000015000,
     series: {"id":"mong-vuot-qua-den","name":"Móng Vuốt Quạ Đen","boxColor":"#1E1A22","boxAccent":"#DFB664","order":3},
   },
   {
@@ -226,7 +241,7 @@ export const DEFAULT_BOOKS: BookItem[] = [
     spineAccent: "#F0D594",
     spineTextColor: "#F8F4EC",
     totalPages: 427,
-    addedAt: 1700000015000,
+    addedAt: 1700000016000,
   },
   {
     id: "ngan-mat-troi-ruc-ro",
@@ -241,7 +256,7 @@ export const DEFAULT_BOOKS: BookItem[] = [
     spineAccent: "#F0D594",
     spineTextColor: "#F8F4EC",
     totalPages: 425,
-    addedAt: 1700000016000,
+    addedAt: 1700000017000,
   },
   {
     id: "nguoi-dan-ong-mang-ten-ove",
@@ -256,7 +271,7 @@ export const DEFAULT_BOOKS: BookItem[] = [
     spineAccent: "#5C4328",
     spineTextColor: "#1F1A17",
     totalPages: 318,
-    addedAt: 1700000017000,
+    addedAt: 1700000018000,
   },
   {
     id: "nguoi-ru-ngu",
@@ -272,7 +287,7 @@ export const DEFAULT_BOOKS: BookItem[] = [
     spineAccent: "#F0D594",
     spineTextColor: "#F8F4EC",
     totalPages: 410,
-    addedAt: 1700000018000,
+    addedAt: 1700000019000,
   },
   {
     id: "ngay-thang-nam",
@@ -287,7 +302,7 @@ export const DEFAULT_BOOKS: BookItem[] = [
     spineAccent: "#F0D594",
     spineTextColor: "#F8F4EC",
     totalPages: 109,
-    addedAt: 1700000019000,
+    addedAt: 1700000020000,
   },
   {
     id: "phi-vu-bat-kha",
@@ -302,7 +317,7 @@ export const DEFAULT_BOOKS: BookItem[] = [
     spineAccent: "#F0D594",
     spineTextColor: "#F8F4EC",
     totalPages: 234,
-    addedAt: 1700000020000,
+    addedAt: 1700000021000,
     series: {"id":"mong-vuot-qua-den","name":"Móng Vuốt Quạ Đen","boxColor":"#1E1A22","boxAccent":"#DFB664","order":2},
   },
   {
@@ -318,7 +333,7 @@ export const DEFAULT_BOOKS: BookItem[] = [
     spineAccent: "#F0D594",
     spineTextColor: "#F8F4EC",
     totalPages: 254,
-    addedAt: 1700000021000,
+    addedAt: 1700000022000,
   },
   {
     id: "sau-ke-bat-hao",
@@ -333,8 +348,23 @@ export const DEFAULT_BOOKS: BookItem[] = [
     spineAccent: "#F0D594",
     spineTextColor: "#F8F4EC",
     totalPages: 302,
-    addedAt: 1700000022000,
+    addedAt: 1700000023000,
     series: {"id":"mong-vuot-qua-den","name":"Móng Vuốt Quạ Đen","boxColor":"#1E1A22","boxAccent":"#DFB664","order":1},
+  },
+  {
+    id: "suoi-nguon",
+    title: "Suối Nguồn",
+    author: "Ayn Rand",
+    genre: "Kinh điển · Triết lý",
+    year: "1943",
+    description: "Suối Nguồn — Ayn Rand (Kinh điển · Triết lý, khoảng 1375 trang).",
+    coverUrl: "./books/covers/suoi-nguon.png",
+    textUrl: "./books/text/suoi-nguon.json",
+    spineColor: "#bab8a4",
+    spineAccent: "#5C4328",
+    spineTextColor: "#1F1A17",
+    totalPages: 1375,
+    addedAt: 1700000024000,
   },
   {
     id: "tho-xam-o-auschwitz",
@@ -349,7 +379,7 @@ export const DEFAULT_BOOKS: BookItem[] = [
     spineAccent: "#F0D594",
     spineTextColor: "#F8F4EC",
     totalPages: 248,
-    addedAt: 1700000023000,
+    addedAt: 1700000025000,
   },
   {
     id: "thu-vien-nua-dem",
@@ -364,7 +394,7 @@ export const DEFAULT_BOOKS: BookItem[] = [
     spineAccent: "#F0D594",
     spineTextColor: "#F8F4EC",
     totalPages: 299,
-    addedAt: 1700000024000,
+    addedAt: 1700000026000,
   },
   {
     id: "thi-tran-nho-giac-mo-lon",
@@ -379,7 +409,7 @@ export const DEFAULT_BOOKS: BookItem[] = [
     spineAccent: "#5C4328",
     spineTextColor: "#1F1A17",
     totalPages: 515,
-    addedAt: 1700000025000,
+    addedAt: 1700000027000,
   },
   {
     id: "tan-ngay-de-lai",
@@ -394,7 +424,7 @@ export const DEFAULT_BOOKS: BookItem[] = [
     spineAccent: "#F0D594",
     spineTextColor: "#F8F4EC",
     totalPages: 294,
-    addedAt: 1700000026000,
+    addedAt: 1700000028000,
   },
   {
     id: "xa-ngoai-kia-noi-loai-tom-hat",
@@ -409,6 +439,6 @@ export const DEFAULT_BOOKS: BookItem[] = [
     spineAccent: "#5C4328",
     spineTextColor: "#1F1A17",
     totalPages: 383,
-    addedAt: 1700000027000,
+    addedAt: 1700000029000,
   },
 ];

@@ -229,6 +229,8 @@ const CURATED_META = [
   { match: 'thu vien nua dem', id: 'thu-vien-nua-dem', title: 'Thư Viện Nửa Đêm', author: 'Matt Haig', genre: 'Kỳ ảo · Triết lý sống', year: '2020', spineColor: '#1E3C47', spineAccent: '#F0D084', spineTextColor: '#F2F9FA' },
   { match: 'thi tran nho', id: 'thi-tran-nho-giac-mo-lon', title: 'Thị Trấn Nhỏ Giấc Mơ Lớn', author: 'Fredrik Backman', genre: 'Tiểu thuyết · Thị trấn', year: '2016', spineColor: '#2E4D42', spineAccent: '#E8D29B', spineTextColor: '#F3FAF6' },
   { match: 'tan ngay de lai', id: 'tan-ngay-de-lai', title: 'Tàn Ngày Để Lại', author: 'Kazuo Ishiguro', genre: 'Kinh điển · Nobel', year: '1989', spineColor: '#6B4E3D', spineAccent: '#F2DBC0', spineTextColor: '#FAF4EE' },
+  { match: 'hoathan', id: 'hoa-than', title: 'Hóa Thân', author: 'Franz Kafka', genre: 'Kinh điển · Văn học Đức', year: '1915', spineColor: '#3A3A38', spineAccent: '#DFC79A', spineTextColor: '#F5F2EB' },
+  { match: 'suoinguon', id: 'suoi-nguon', title: 'Suối Nguồn', author: 'Ayn Rand', genre: 'Kinh điển · Triết lý', year: '1943', spineColor: '#2B4257', spineAccent: '#EBC878', spineTextColor: '#F5F7FA' },
   { match: 'loai tom hat', id: 'xa-ngoai-kia-noi-loai-tom-hat', title: 'Xa Ngoài Kia Nơi Loài Tôm Hát', author: 'Delia Owens', genre: 'Tiểu thuyết · Thiên nhiên', year: '2018', spineColor: '#2D5954', spineAccent: '#EBD392', spineTextColor: '#F2FAF8' },
 ];
 
@@ -259,34 +261,11 @@ async function resolveDestPage(doc, dest) {
  * Extract structured visual lines with exact X, Y, and width from PDF text items.
  */
 function extractVisualLines(textItems) {
-  // Compute median normal font height on this page to detect oversized drop-caps accurately
-  const heights = textItems
-    .filter((it) => it.str && it.str.trim().length >= 3)
-    .map((it) => Math.abs(it.transform?.[3] || it.height || 12))
-    .filter((h) => h > 4)
-    .sort((a, b) => a - b);
-  const normalFontH = heights.length > 0 ? heights[Math.floor(heights.length * 0.5)] : 12;
-
-  const dropCaps = [];
+  // Group items into visual lines by Y-coordinate (±4pt tolerance), handling out-of-order PDF streams
   const rawLines = [];
-
   for (const item of textItems) {
     if (!item.str) continue;
-    const trimmed = item.str.trim();
-    const itemH = Math.abs(item.transform?.[3] || item.height || normalFontH);
     const y = Math.round(item.transform[5]);
-    const x = item.transform[4];
-
-    // Detect giant drop-cap letter (1 uppercase letter, >= 1.55x normal font size) whose baseline sits on line 2/3
-    if (
-      trimmed.length === 1 &&
-      itemH >= normalFontH * 1.55 &&
-      /^[A-ZĐÀÁẢÃẠĂẮẰẲẴẶÂẤẦẨẪẬÈÉẺẼẸÊẾỀỂỄỆÌÍỈĨỊÒÓỎÕỌÔỐỒỔỖỘƠỚỜỞỠỢÙÚỦŨỤƯỨỪỬỮỰỲÝỶỸỴ“"']$/.test(trimmed)
-    ) {
-      dropCaps.push({ item, x, y, itemH });
-      continue;
-    }
-
     let bucket = rawLines.find((rl) => Math.abs(rl.y - y) <= 4);
     if (!bucket) {
       bucket = { y, items: [] };
@@ -297,19 +276,6 @@ function extractVisualLines(textItems) {
 
   // Sort top-to-bottom (higher PDF Y = higher on the page) so headers/titles ALWAYS precede body prose!
   rawLines.sort((a, b) => b.y - a.y);
-
-  // Snap each drop-cap to the top-most line it spans (within [y - 4, y + itemH * 1.15])
-  for (const dc of dropCaps) {
-    let targetLine = rawLines.find(
-      (rl) => rl.y >= dc.y - 4 && rl.y <= dc.y + dc.itemH * 1.15
-    );
-    if (!targetLine) {
-      targetLine = { y: dc.y, items: [] };
-      rawLines.push(targetLine);
-      rawLines.sort((a, b) => b.y - a.y);
-    }
-    targetLine.items.push(dc.item);
-  }
 
   const lines = [];
   for (let idx = 0; idx < rawLines.length; idx++) {
@@ -405,16 +371,16 @@ function reconstructBookParagraphs(pageLinesList, pageChapters) {
       continue;
     }
 
-    // 2. Dedicated TOC page (ONLY on first 6 PDF pages if titled "MỤC LỤC")
+    // 2. Dedicated TOC page (ONLY on first 6 PDF pages if titled "MỤC LỤC" or "Table of Contents")
     if (
       pdfPageNum <= 6 &&
-      lines.some((l) => /^MỤC LỤC$/i.test(l.text.trim()))
+      lines.some((l) => /^(MỤC LỤC|TABLE OF CONTENTS)$/i.test(l.text.trim()))
     ) {
       pushPageBreak();
       for (const line of lines) {
         const t = fixDropCapSpacing(line.text.trim());
         if (!t) continue;
-        if (/^MỤC LỤC$/i.test(t)) {
+        if (/^(MỤC LỤC|TABLE OF CONTENTS)$/i.test(t)) {
           paragraphs.push(`## ${t}`);
         } else {
           paragraphs.push(`:: ${t}`);
@@ -511,7 +477,7 @@ function reconstructBookParagraphs(pageLinesList, pageChapters) {
           outlineHeadingInserted &&
           paragraphs.length > 0 &&
           normalizeKey(paragraphs[paragraphs.length - 1].replace(/^##\s+/, '')) ===
-            normalizeKey(text)
+          normalizeKey(text)
         ) {
           continue;
         }
@@ -700,18 +666,15 @@ const tsLines = [
     author: ${JSON.stringify(b.author)},
     genre: ${JSON.stringify(b.genre)},
     year: ${JSON.stringify(b.year)},
-    description: ${JSON.stringify(`${b.title} — ${b.author} (${b.genre}, khoảng ${b.totalPages} trang).`)},${
-      b.coverUrl ? `\n    coverUrl: ${JSON.stringify(b.coverUrl)},` : ''
-    }${b.textUrl ? `\n    textUrl: ${JSON.stringify(b.textUrl)},` : ''}${
-      b.pdfUrl ? `\n    pdfUrl: ${JSON.stringify(b.pdfUrl)},` : ''
-    }
+    description: ${JSON.stringify(`${b.title} — ${b.author} (${b.genre}, khoảng ${b.totalPages} trang).`)},${b.coverUrl ? `\n    coverUrl: ${JSON.stringify(b.coverUrl)},` : ''
+      }${b.textUrl ? `\n    textUrl: ${JSON.stringify(b.textUrl)},` : ''}${b.pdfUrl ? `\n    pdfUrl: ${JSON.stringify(b.pdfUrl)},` : ''
+      }
     spineColor: ${JSON.stringify(b.spineColor)},
     spineAccent: ${JSON.stringify(b.spineAccent)},
     spineTextColor: ${JSON.stringify(b.spineTextColor)},
     totalPages: ${b.totalPages},
-    addedAt: ${1700000000000 + (idx + 1) * 1000},${
-      b.series ? `\n    series: ${JSON.stringify(b.series)},` : ''
-    }
+    addedAt: ${1700000000000 + (idx + 1) * 1000},${b.series ? `\n    series: ${JSON.stringify(b.series)},` : ''
+      }
   },`
   ),
   `];`,
