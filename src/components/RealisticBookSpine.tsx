@@ -6,14 +6,14 @@ import { BookItem } from '../types/book';
  */
 export function getBookSpineWidth(totalPages: number): number {
   const safePages = Math.max(80, totalPages || 250);
-  return Math.round(Math.max(40, Math.min(76, 34 + safePages / 14)));
+  return Math.round(Math.max(42, Math.min(76, 36 + safePages / 14)));
 }
 
 /**
  * Photorealistic 3D Clothbound / Hardcover Spine:
- * - Spine color automatically matches the book's real cover color
- * - Full author name displayed cleanly without truncation
- * - Zero artificial diagonal sheen glare
+ * - Full uncropped 2:3 miniature cover image on spine
+ * - Full author name without mid-word character wrapping (no orphan "O")
+ * - Spine color matched to real book cover
  */
 export const RealisticBookSpine: React.FC<{
   book: BookItem;
@@ -42,8 +42,14 @@ export const RealisticBookSpine: React.FC<{
             ? 13
             : 15;
 
-  const authorFontSize = book.author.length > 18 ? 6.5 : 7.5;
-  const thumbSize = isSlim ? 'h-7 w-7' : 'h-9 w-9 sm:h-10 sm:w-10';
+  // Compute exact author font size from the LONGEST single word vs available spine width so NO word ever splits mid-word!
+  const longestAuthorWord = Math.max(
+    ...book.author.split(/\s+/).map((w) => w.length),
+    4
+  );
+  const availAuthorW = Math.max(28, spineWidth - 10);
+  const fitAuthorSize = availAuthorW / (longestAuthorWord * 0.72);
+  const authorFontSize = Math.max(5.4, Math.min(7.4, Number(fitAuthorSize.toFixed(1))));
 
   return (
     <div
@@ -51,7 +57,6 @@ export const RealisticBookSpine: React.FC<{
       style={{
         backgroundColor: book.spineColor,
         color: book.spineTextColor,
-        // Clean natural matte clothbound 3D curvature (no diagonal glare!)
         backgroundImage: `
           repeating-linear-gradient(0deg, rgba(255,255,255,0.025) 0px, rgba(255,255,255,0.025) 1px, transparent 1px, transparent 3px),
           linear-gradient(90deg, rgba(0,0,0,0.28) 0%, rgba(255,255,255,0.12) 14%, rgba(0,0,0,0) 50%, rgba(0,0,0,0.14) 84%, rgba(0,0,0,0.36) 100%)
@@ -64,23 +69,23 @@ export const RealisticBookSpine: React.FC<{
       <div className="pointer-events-none absolute inset-y-0 left-[3px] w-[1px] bg-black/22" />
       <div className="pointer-events-none absolute inset-y-0 right-[3px] w-[1px] bg-black/22" />
 
-      {/* Top Miniature Framed Cover Vignette */}
+      {/* Top Miniature Full-Cover Vignette (2:3 vertical aspect ratio so 100% of cover is shown without cropping!) */}
       <div
-        className={`relative z-10 ${thumbSize} shrink-0 overflow-hidden rounded-[2px] border shadow-xs`}
+        className="relative z-10 w-[76%] max-w-[44px] aspect-[2/3] shrink-0 overflow-hidden rounded-[2px] border bg-black/20 shadow-xs"
         style={{ borderColor: `${book.spineAccent}AA` }}
       >
         {isAchilles ? (
-          <svg viewBox="0 0 40 40" className="h-full w-full">
-            <rect width="40" height="40" fill="#7E172A" />
+          <svg viewBox="0 0 40 60" className="h-full w-full">
+            <rect width="40" height="60" fill="#7E172A" />
             <path
-              d="M0 10 Q10 4 20 10 T40 10 M0 20 Q10 14 20 20 T40 20 M0 30 Q10 24 20 30 T40 30"
+              d="M0 12 Q10 6 20 12 T40 12 M0 26 Q10 20 20 26 T40 26 M0 40 Q10 34 20 40 T40 40"
               fill="none"
               stroke="#C95668"
               strokeWidth="1"
               opacity="0.55"
             />
             <path
-              d="M20 6 C12 6 8 12 8 20 C8 27 9 33 11 35 H16 V26 C13 25 13 20 16 20 H24 C27 20 27 25 24 26 V35 H29 C31 33 32 27 32 20 C32 12 28 6 20 6 Z"
+              d="M20 10 C12 10 8 18 8 28 C8 37 9 45 11 48 H16 V36 C13 35 13 29 16 29 H24 C27 29 27 35 24 36 V48 H29 C31 45 32 37 32 28 C32 18 28 10 20 10 Z"
               fill="#F3CE68"
             />
           </svg>
@@ -88,11 +93,11 @@ export const RealisticBookSpine: React.FC<{
           <img
             src={coverThumbUrl}
             alt=""
-            className="h-full w-full object-cover object-top"
+            className="h-full w-full object-contain"
           />
         ) : (
           <div
-            className="flex h-full w-full items-center justify-center font-display text-[11px] font-bold"
+            className="flex h-full w-full items-center justify-center font-display text-[10px] font-bold"
             style={{ backgroundColor: 'rgba(0,0,0,0.22)', color: book.spineAccent }}
           >
             {book.title
@@ -129,11 +134,16 @@ export const RealisticBookSpine: React.FC<{
         </span>
       </div>
 
-      {/* Full Author Name (wrapped cleanly so nothing is cut off!) + Year Badge */}
+      {/* Full Author Name — never splits mid-word! */}
       <div className="relative z-10 flex w-full shrink-0 flex-col items-center gap-0.5 pt-1 px-0.5">
         <span
-          className="w-full text-center font-semibold uppercase leading-[1.15] opacity-95 break-words"
-          style={{ fontSize: `${authorFontSize}px` }}
+          className="w-full text-center font-semibold uppercase leading-[1.15] opacity-95"
+          style={{
+            fontSize: `${authorFontSize}px`,
+            wordBreak: 'keep-all',
+            overflowWrap: 'normal',
+            letterSpacing: '-0.01em',
+          }}
         >
           {book.author}
         </span>

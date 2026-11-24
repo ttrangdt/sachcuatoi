@@ -565,6 +565,13 @@
   letter-spacing: 0.04em;
 }
 
+.stf-meta {
+  margin: 6px 0;
+  text-align: center;
+  font-style: italic;
+  color: var(--reader-muted, #7c6a58);
+}
+
 .stf-para {
   margin: 0 0 9px 0;
   text-align: justify;

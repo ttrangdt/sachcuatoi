@@ -45,6 +45,8 @@ export async function loadBookTextData(book: BookItem): Promise<BookTextData> {
 export interface PageBlock {
   text: string;
   isHeading?: boolean;
+  /** Centered front-matter / publisher / epigraph line */
+  isMeta?: boolean;
   /** True when this block is the continuation of a paragraph from the previous page (no first-line indent) */
   continued?: boolean;
 }
@@ -147,19 +149,39 @@ export function paginateBookText(
   for (let i = 0; i < data.paragraphs.length; i++) {
     const raw = data.paragraphs[i];
     if (!raw || !raw.trim()) continue;
+
+    // Hard page break separating front-matter, intro, TOC, and new chapters cleanly!
+    if (raw === '---PAGEBREAK---') {
+      flushPage();
+      continue;
+    }
+
     const isHeading = raw.startsWith('## ');
+    const isMeta = raw.startsWith(':: ');
 
     if (isHeading) {
       const headingText = raw.replace(/^##\s+/, '').trim();
       const headingHeight = fontSize * 1.45 * 1.4 + 22;
 
-      // Start new chapter on next page only if we're near bottom (> 72% full)
-      if (usedHeight > maxHeightPx * 0.72) {
+      if (usedHeight > 0) {
         flushPage();
       }
       if (!paraToPage.has(i)) paraToPage.set(i, pages.length + 2);
       currentPageBlocks.push({ text: headingText, isHeading: true });
       usedHeight += headingHeight + paraGapPx;
+      continue;
+    }
+
+    if (isMeta) {
+      const metaText = raw.replace(/^::\s+/, '').trim();
+      const metaLines = wrapIntoLines(metaText, 0);
+      const neededH = Math.max(1, metaLines.length) * lineHeightPx + paraGapPx;
+      if (usedHeight + neededH > maxHeightPx && currentPageBlocks.length > 0) {
+        flushPage();
+      }
+      if (!paraToPage.has(i)) paraToPage.set(i, pages.length + 2);
+      currentPageBlocks.push({ text: metaText, isMeta: true });
+      usedHeight += neededH;
       continue;
     }
 

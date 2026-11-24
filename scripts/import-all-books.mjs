@@ -309,30 +309,85 @@ function extractVisualLines(textItems) {
  * - Detects true paragraph starts via X-indent, extra vertical spacing (> 1.38x normal leading), dialogue markers, or short terminal lines.
  * - Stitches sentences that wrap across PDF page breaks seamlessly!
  */
+function fixDropCapSpacing(text) {
+  // Fix PDF drop-cap split like "B ố thật là..." -> "Bố thật là...", "G iống như..." -> "Giống như..."
+  // Preserve valid standalone 1-letter Vietnamese words (Ô, Ơ, À, Á, Ở, Ý, A, E, I, O, U)
+  return text.replace(
+    /^([BCDĐFGHJKLMNPQRSTVWXZ])\s+([a-zđàáảãạăắằẳẵặâấầẩẫậèéẻẽẹêếềểễệìíỉĩịòóỏõọôốồổỗộơớờởỡợùúủũụưứừửữựỳýỷỹỵ]{2,})/,
+    '$1$2'
+  );
+}
+
+function isFrontMatterLine(text) {
+  return /(tác giả\s*:|người dịch\s*:|dịch giả\s*:|nhà xuất bản|nxb\s|phát hành\s*:|ebook|vctvegroup|mọt truyện|quét mã qr|isbn|bản quyền|copyright|chịu trách nhiệm|in tại|khổ sách|giấy phép)/i.test(
+    text
+  );
+}
+
 function reconstructBookParagraphs(pageLinesList, pageChapters) {
   const paragraphs = [];
   const chapters = [];
   let buffer = '';
 
   const flush = () => {
-    const cleaned = buffer.replace(/\s+/g, ' ').trim();
+    const cleaned = fixDropCapSpacing(buffer.replace(/\s+/g, ' ').trim());
     if (cleaned) paragraphs.push(cleaned);
     buffer = '';
+  };
+
+  const pushPageBreak = () => {
+    flush();
+    if (
+      paragraphs.length > 0 &&
+      paragraphs[paragraphs.length - 1] !== '---PAGEBREAK---'
+    ) {
+      paragraphs.push('---PAGEBREAK---');
+    }
   };
 
   for (let pIdx = 0; pIdx < pageLinesList.length; pIdx++) {
     const pdfPageNum = pIdx + 2;
     const lines = pageLinesList[pIdx];
 
+    if (!lines || lines.length === 0) continue;
+
+    // Detect if this early PDF page is a Title / Publisher / Copyright / TOC / Epigraph front-matter page
+    const pageJoined = lines.map((l) => l.text).join(' ');
+    const isEarlyPage = pdfPageNum <= 14;
+    const hasFrontMatterKeywords = isFrontMatterLine(pageJoined);
+    const isTocPage =
+      isEarlyPage &&
+      lines.some((l) => /^MỤC LỤC$/i.test(l.text.trim()));
+    const isShortFrontPage =
+      isEarlyPage &&
+      (hasFrontMatterKeywords ||
+        isTocPage ||
+        (lines.length <= 8 && pageJoined.length < 360));
+
     if (pageChapters.has(pdfPageNum)) {
-      flush();
+      pushPageBreak();
       chapters.push({
         title: pageChapters.get(pdfPageNum),
         paragraphIndex: paragraphs.length,
       });
+    } else if (isShortFrontPage) {
+      // Keep every front-matter page (publisher info, epigraph, TOC, intro) strictly on its own dedicated page!
+      pushPageBreak();
     }
 
-    if (!lines || lines.length === 0) continue;
+    if (isShortFrontPage) {
+      for (const line of lines) {
+        const t = fixDropCapSpacing(line.text.trim());
+        if (!t) continue;
+        if (/^MỤC LỤC$/i.test(t)) {
+          paragraphs.push(`## ${t}`);
+        } else {
+          paragraphs.push(`:: ${t}`);
+        }
+      }
+      pushPageBreak();
+      continue;
+    }
 
     // Compute median normal leading & baseline left X margin for this page
     const gaps = [];
@@ -350,11 +405,11 @@ function reconstructBookParagraphs(pageLinesList, pageChapters) {
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
-      const text = line.text;
+      const text = fixDropCapSpacing(line.text);
       const prevLine = i > 0 ? lines[i - 1] : null;
       const gap = prevLine ? Math.abs(prevLine.y - line.y) : 0;
 
-      // STRICT heading detection: NEVER mistake normal prose sentences starting with "Phần..." or "Hồi..." for chapter headings!
+      // STRICT heading detection
       const isNumberedChapter =
         /^(CHƯƠNG|PHẦN|HỒI|CHAPTER|PART)\s+(\d+|[IVXLCDM]+|MỘT|HAI|BA|BỐN|NĂM|SÁU|BẢY|TÁM|CHÍN|MƯỜI)(\b|\s|:|-)/i.test(
           text
@@ -374,7 +429,8 @@ function reconstructBookParagraphs(pageLinesList, pageChapters) {
       const isHeading = isNumberedChapter || isKnownSectionTitle || matchesOutline;
 
       if (isHeading) {
-        flush();
+        // Always start a new chapter or major section on a fresh clean page!
+        pushPageBreak();
         paragraphs.push(`## ${text}`);
         continue;
       }
@@ -385,7 +441,6 @@ function reconstructBookParagraphs(pageLinesList, pageChapters) {
       const prevEndedCleanly = /[.!?…”»":]$/.test(buffer);
       const prevWasShort = prevLine !== null && prevLine.width < maxWidth * 0.78;
 
-      // Cross-page boundary (i === 0): only start new paragraph if buffer ended cleanly AND (indented or dialogue)
       let startNewPara = false;
       if (i === 0) {
         if (buffer && prevEndedCleanly && (isIndented || startsDialogue)) {
@@ -407,7 +462,6 @@ function reconstructBookParagraphs(pageLinesList, pageChapters) {
         flush();
         buffer = text;
       } else {
-        // Stitch smoothly into ongoing paragraph!
         if (buffer.endsWith('-') && !buffer.endsWith(' -')) {
           buffer = buffer.slice(0, -1) + text;
         } else {

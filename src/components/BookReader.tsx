@@ -400,6 +400,9 @@ export const BookReader: React.FC<BookReaderProps> = ({
             if (b.isHeading) {
               return `<h3 class="stf-heading" style="font-size:${Math.round(fontSize * 1.42)}px">${escapeHtml(b.text)}</h3>`;
             }
+            if (b.isMeta) {
+              return `<p class="stf-meta">${escapeHtml(b.text)}</p>`;
+            }
             return `<p class="stf-para ${b.continued ? 'stf-continued' : ''}">${escapeHtml(b.text)}</p>`;
           })
           .join('');
