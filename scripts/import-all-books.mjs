@@ -86,8 +86,58 @@ function encodePng(width, height, data, channels) {
   ]);
 }
 
+function sampleDominantCoverColor(width, height, data, channels) {
+  let rSum = 0;
+  let gSum = 0;
+  let bSum = 0;
+  let weightSum = 0;
+
+  // Sample grid across the cover, emphasizing the left edge & background where real book spines meet the front cover
+  const stepX = Math.max(1, Math.floor(width / 28));
+  const stepY = Math.max(1, Math.floor(height / 36));
+
+  for (let y = Math.floor(height * 0.05); y < height * 0.95; y += stepY) {
+    for (let x = Math.floor(width * 0.03); x < width * 0.95; x += stepX) {
+      const idx = (y * width + x) * channels;
+      const r = data[idx];
+      const g = channels === 1 ? r : data[idx + 1];
+      const b = channels === 1 ? r : data[idx + 2];
+
+      const maxC = Math.max(r, g, b);
+      const minC = Math.min(r, g, b);
+      const sat = maxC === 0 ? 0 : (maxC - minC) / maxC;
+      const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+
+      // Give higher weight to left-border colors and rich non-blown-out tones
+      const leftBonus = x < width * 0.22 ? 2.2 : 1.0;
+      const toneBonus = lum > 0.94 ? 0.35 : 0.7 + sat * 1.4;
+      const w = leftBonus * toneBonus;
+
+      rSum += r * w;
+      gSum += g * w;
+      bSum += b * w;
+      weightSum += w;
+    }
+  }
+
+  if (weightSum === 0) return null;
+  const r = Math.round(rSum / weightSum);
+  const g = Math.round(gSum / weightSum);
+  const b = Math.round(bSum / weightSum);
+  const toHex = (n) => Math.max(0, Math.min(255, n)).toString(16).padStart(2, '0');
+  const hex = `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+
+  // Compute perceived brightness for crisp readable spine typography
+  const perceivedLum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  const isLight = perceivedLum > 0.62;
+  return {
+    spineColor: hex,
+    spineTextColor: isLight ? '#1F1A17' : '#F8F4EC',
+    spineAccent: isLight ? '#5C4328' : '#F0D594',
+  };
+}
+
 async function extractCoverImage(doc, outPath) {
-  // Check first 3 pages for the largest embedded cover image
   for (let p = 1; p <= Math.min(3, doc.numPages); p++) {
     try {
       const page = await doc.getPage(p);
@@ -129,14 +179,20 @@ async function extractCoverImage(doc, outPath) {
         if (channels === 1 || channels === 3 || channels === 4) {
           const png = encodePng(bestImg.width, bestImg.height, bestImg.data, channels);
           fs.writeFileSync(outPath, png);
-          return true;
+          const sampled = sampleDominantCoverColor(
+            bestImg.width,
+            bestImg.height,
+            bestImg.data,
+            channels
+          );
+          return { ok: true, sampled };
         }
       }
     } catch {
       // try next page
     }
   }
-  return false;
+  return { ok: false, sampled: null };
 }
 
 const CURATED_META = [
@@ -290,10 +346,24 @@ function reconstructBookParagraphs(pageLinesList, pageChapters) {
       const prevLine = i > 0 ? lines[i - 1] : null;
       const gap = prevLine ? Math.abs(prevLine.y - line.y) : 0;
 
-      const isHeading =
-        /^(CHƯƠNG|PHẦN|HỒI|LỜI MỞ ĐẦU|MỞ ĐẦU|BẮT ĐẦU|PHÒNG \d+|CHAPTER|\d+\s+[A-ZĐÀÁẢÃẠĂẮẰẲẴẶÂẤẦẨẪẬÈÉẺẼẸÊẾỀỂỄỆÌÍỈĨỊÒÓỎÕỌÔỐỒỔỖỘƠỚỜỞỠỢÙÚỦŨỤƯỨỪỬỮỰỲÝỶỸỴ]{3,})\b/i.test(
+      // STRICT heading detection: NEVER mistake normal prose sentences starting with "Phần..." or "Hồi..." for chapter headings!
+      const isNumberedChapter =
+        /^(CHƯƠNG|PHẦN|HỒI|CHAPTER|PART)\s+(\d+|[IVXLCDM]+|MỘT|HAI|BA|BỐN|NĂM|SÁU|BẢY|TÁM|CHÍN|MƯỜI)(\b|\s|:|-)/i.test(
           text
-        ) && text.length < 65;
+        ) &&
+        text.length < 52 &&
+        !/[.,!?]$/.test(text);
+
+      const isKnownSectionTitle =
+        /^(LỜI MỞ ĐẦU|MỞ ĐẦU|LỜI GIỚI THIỆU|LỜI NÓI ĐẦU|LỜI TỰA|LỜI CẢM ƠN|MỤC LỤC|PHẦN MỞ ĐẦU|PHẦN KẾT|VĨ THANH|BẮT ĐẦU|PHÒNG \d+)$/i.test(
+          text
+        );
+
+      const matchesOutline =
+        pageChapters.has(pdfPageNum) &&
+        normalizeKey(text) === normalizeKey(pageChapters.get(pdfPageNum));
+
+      const isHeading = isNumberedChapter || isKnownSectionTitle || matchesOutline;
 
       if (isHeading) {
         flush();
@@ -359,11 +429,14 @@ for (const file of files) {
   const data = new Uint8Array(fs.readFileSync(fullPdfPath));
   const doc = await pdfjs.getDocument({ data, verbosity: 0 }).promise;
 
-  // 1. Extract real Page-1 Cover PNG (except Achilles which uses its custom collector cover SVG)
+  // 1. Extract real Page-1 Cover PNG & sample its real dominant color for the book spine!
   const coverFilePath = path.join(OUT_COVER_DIR, `${meta.id}.png`);
   let hasCoverPng = false;
+  let sampledColors = null;
   if (meta.id !== 'truong-ca-achilles') {
-    hasCoverPng = await extractCoverImage(doc, coverFilePath);
+    const res = await extractCoverImage(doc, coverFilePath);
+    hasCoverPng = res.ok;
+    sampledColors = res.sampled;
   }
 
   // 2. Extract outline & visual lines from all pages
@@ -416,6 +489,9 @@ for (const file of files) {
 
   catalog.push({
     ...meta,
+    spineColor: sampledColors?.spineColor || meta.spineColor,
+    spineAccent: sampledColors?.spineAccent || meta.spineAccent,
+    spineTextColor: sampledColors?.spineTextColor || meta.spineTextColor,
     totalPages: estimatedPages,
     coverUrl: hasCoverPng ? `./books/covers/${meta.id}.png` : undefined,
     textUrl: !isScanned ? `./books/text/${meta.id}.json` : undefined,

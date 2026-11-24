@@ -102,7 +102,7 @@ const InlineFlipBook: React.FC<{
           className="group/cover relative flex h-full w-[166px] -translate-y-2 text-left transition-transform duration-300 hover:scale-[1.03] focus:outline-none"
         >
           <div
-            className="book-sheen relative z-10 h-full flex-1 overflow-hidden rounded-l-[3px] rounded-r-[5px] shadow-[12px_18px_30px_-4px_rgba(12,8,4,0.75)] ring-1 ring-[#F4D36A]/70"
+            className="relative z-10 h-full flex-1 overflow-hidden rounded-l-[3px] rounded-r-[5px] shadow-[12px_18px_30px_-4px_rgba(12,8,4,0.75)] ring-1 ring-[#F4D36A]/70"
             style={{ backgroundColor: book.spineColor }}
           >
             <div
@@ -183,7 +183,7 @@ const InlineFlipBook: React.FC<{
           type="button"
           onClick={onToggleExpand}
           style={{ width: `${spineWidth}px` }}
-          className="spine-book-btn book-sheen relative h-full overflow-visible rounded-t-[5px] rounded-b-[2px] shadow-[5px_9px_16px_rgba(14,10,6,0.55)] focus:outline-none focus:ring-2 focus:ring-[#D4A857]"
+          className="spine-book-btn relative h-full overflow-visible rounded-t-[5px] rounded-b-[2px] shadow-[5px_9px_16px_rgba(14,10,6,0.55)] focus:outline-none focus:ring-2 focus:ring-[#D4A857]"
           title={`${book.title} — ${book.author} (~${book.totalPages} trang)`}
         >
           {/* Top 3D page-block thickness cap */}

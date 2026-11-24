@@ -3,19 +3,17 @@ import { BookItem } from '../types/book';
 
 /**
  * Compute realistic physical spine width (px) proportional to total page count.
- * - Thin novellas (~100 pages) -> ~39px
- * - Standard novels (~300 pages) -> ~53px
- * - Thick epics (~600+ pages) -> ~74px
  */
 export function getBookSpineWidth(totalPages: number): number {
   const safePages = Math.max(80, totalPages || 250);
-  return Math.round(Math.max(38, Math.min(76, 32 + safePages / 14)));
+  return Math.round(Math.max(40, Math.min(76, 34 + safePages / 14)));
 }
 
 /**
  * Photorealistic 3D Clothbound / Hardcover Spine:
- * - Thickness dynamically reflects book page count
- * - Vertical title auto-scales & wraps cleanly into 2 vertical lines if long so ZERO characters are ever clipped!
+ * - Spine color automatically matches the book's real cover color
+ * - Full author name displayed cleanly without truncation
+ * - Zero artificial diagonal sheen glare
  */
 export const RealisticBookSpine: React.FC<{
   book: BookItem;
@@ -25,26 +23,26 @@ export const RealisticBookSpine: React.FC<{
   const isAchilles = book.id === 'truong-ca-achilles';
   const pubYear = book.year || (isAchilles ? '2011' : 'PDF');
   const titleLen = book.title.length;
-  const isSlim = spineWidth < 46;
+  const isSlim = spineWidth < 48;
 
-  // Dynamic font size so even 38-char titles fit completely inside the spine without clipping!
   const titleFontSize =
     titleLen > 30
       ? isSlim
         ? 9.5
-        : 11
+        : 10.5
       : titleLen > 22
         ? isSlim
           ? 10.5
-          : 12.5
+          : 12
         : titleLen > 14
           ? isSlim
-            ? 12
-            : 14
+            ? 11.5
+            : 13.5
           : isSlim
-            ? 13.5
-            : 16;
+            ? 13
+            : 15;
 
+  const authorFontSize = book.author.length > 18 ? 6.5 : 7.5;
   const thumbSize = isSlim ? 'h-7 w-7' : 'h-9 w-9 sm:h-10 sm:w-10';
 
   return (
@@ -53,23 +51,23 @@ export const RealisticBookSpine: React.FC<{
       style={{
         backgroundColor: book.spineColor,
         color: book.spineTextColor,
+        // Clean natural matte clothbound 3D curvature (no diagonal glare!)
         backgroundImage: `
-          repeating-linear-gradient(0deg, rgba(255,255,255,0.035) 0px, rgba(255,255,255,0.035) 1px, transparent 1px, transparent 3px),
-          repeating-linear-gradient(90deg, rgba(0,0,0,0.04) 0px, rgba(0,0,0,0.04) 1px, transparent 1px, transparent 3px),
-          linear-gradient(90deg, rgba(0,0,0,0.34) 0%, rgba(255,255,255,0.2) 12%, rgba(255,255,255,0.06) 24%, rgba(0,0,0,0) 52%, rgba(0,0,0,0.18) 84%, rgba(0,0,0,0.48) 100%)
+          repeating-linear-gradient(0deg, rgba(255,255,255,0.025) 0px, rgba(255,255,255,0.025) 1px, transparent 1px, transparent 3px),
+          linear-gradient(90deg, rgba(0,0,0,0.28) 0%, rgba(255,255,255,0.12) 14%, rgba(0,0,0,0) 50%, rgba(0,0,0,0.14) 84%, rgba(0,0,0,0.36) 100%)
         `,
         boxShadow:
-          'inset 0 2px 3px rgba(255,255,255,0.3), inset 0 -3px 5px rgba(0,0,0,0.4)',
+          'inset 0 1.5px 2px rgba(255,255,255,0.22), inset 0 -2px 4px rgba(0,0,0,0.32)',
       }}
     >
       {/* Bound hardcover hinge grooves */}
-      <div className="pointer-events-none absolute inset-y-0 left-[3px] w-[1px] bg-black/28" />
-      <div className="pointer-events-none absolute inset-y-0 right-[3px] w-[1px] bg-black/28" />
+      <div className="pointer-events-none absolute inset-y-0 left-[3px] w-[1px] bg-black/22" />
+      <div className="pointer-events-none absolute inset-y-0 right-[3px] w-[1px] bg-black/22" />
 
       {/* Top Miniature Framed Cover Vignette */}
       <div
-        className={`relative z-10 ${thumbSize} shrink-0 overflow-hidden rounded-[2px] border shadow-sm`}
-        style={{ borderColor: `${book.spineAccent}BB` }}
+        className={`relative z-10 ${thumbSize} shrink-0 overflow-hidden rounded-[2px] border shadow-xs`}
+        style={{ borderColor: `${book.spineAccent}AA` }}
       >
         {isAchilles ? (
           <svg viewBox="0 0 40 40" className="h-full w-full">
@@ -95,7 +93,7 @@ export const RealisticBookSpine: React.FC<{
         ) : (
           <div
             className="flex h-full w-full items-center justify-center font-display text-[11px] font-bold"
-            style={{ backgroundColor: 'rgba(0,0,0,0.28)', color: book.spineAccent }}
+            style={{ backgroundColor: 'rgba(0,0,0,0.22)', color: book.spineAccent }}
           >
             {book.title
               .split(/\s+/)
@@ -109,20 +107,20 @@ export const RealisticBookSpine: React.FC<{
 
       {/* Embossed foil hairline */}
       <div
-        className="relative z-10 my-1 h-[1.5px] w-4/5 shrink-0 opacity-80"
+        className="relative z-10 my-1 h-[1px] w-4/5 shrink-0 opacity-75"
         style={{ backgroundColor: book.spineAccent }}
       />
 
-      {/* Full Unclipped Auto-Fitting Vertical Literary Title (wraps cleanly into 2 vertical lines when long) */}
+      {/* Full Unclipped Vertical Literary Title */}
       <div className="relative z-10 flex w-full flex-1 items-center justify-center overflow-hidden px-0.5 py-0.5">
         <span
-          className="font-display font-bold text-center drop-shadow-[0_1px_1.5px_rgba(0,0,0,0.65)]"
+          className="font-display font-bold text-center"
           style={{
             writingMode: 'vertical-rl',
             textOrientation: 'mixed',
             fontSize: `${titleFontSize}px`,
             lineHeight: 1.12,
-            letterSpacing: titleLen > 24 ? '0.03em' : '0.07em',
+            letterSpacing: titleLen > 24 ? '0.03em' : '0.06em',
             maxHeight: '100%',
             wordBreak: 'break-word',
           }}
@@ -131,17 +129,18 @@ export const RealisticBookSpine: React.FC<{
         </span>
       </div>
 
-      {/* Author + Framed Year Badge */}
-      <div className="relative z-10 flex w-full shrink-0 flex-col items-center gap-0.5 pt-1">
-        {!isSlim && (
-          <span className="max-w-full truncate px-0.5 text-[7.5px] font-semibold uppercase tracking-wider opacity-90">
-            {book.author.split(' ').slice(-1)[0]}
-          </span>
-        )}
+      {/* Full Author Name (wrapped cleanly so nothing is cut off!) + Year Badge */}
+      <div className="relative z-10 flex w-full shrink-0 flex-col items-center gap-0.5 pt-1 px-0.5">
         <span
-          className="rounded-[2px] border px-1 py-[1px] font-mono text-[8px] font-bold tracking-wider"
+          className="w-full text-center font-semibold uppercase leading-[1.15] opacity-95 break-words"
+          style={{ fontSize: `${authorFontSize}px` }}
+        >
+          {book.author}
+        </span>
+        <span
+          className="mt-0.5 rounded-[2px] border px-1 py-[0.5px] font-mono text-[7.5px] font-bold tracking-wider"
           style={{
-            borderColor: `${book.spineAccent}BB`,
+            borderColor: `${book.spineAccent}AA`,
             color: book.spineAccent,
           }}
         >
