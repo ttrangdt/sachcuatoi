@@ -2,20 +2,54 @@ import React from 'react';
 import { BookItem } from '../types/book';
 
 /**
+ * Compute realistic physical spine width (px) proportional to total page count.
+ * - Thin novellas (~100 pages) -> ~39px
+ * - Standard novels (~300 pages) -> ~53px
+ * - Thick epics (~600+ pages) -> ~74px
+ */
+export function getBookSpineWidth(totalPages: number): number {
+  const safePages = Math.max(80, totalPages || 250);
+  return Math.round(Math.max(38, Math.min(76, 32 + safePages / 14)));
+}
+
+/**
  * Photorealistic 3D Clothbound / Hardcover Spine:
- * Tall, sharp, legible vertical title, crisp top cover vignette, linen texture & 3D shading.
+ * - Thickness dynamically reflects book page count
+ * - Vertical title auto-scales & wraps cleanly into 2 vertical lines if long so ZERO characters are ever clipped!
  */
 export const RealisticBookSpine: React.FC<{
   book: BookItem;
   coverThumbUrl?: string | null;
-}> = ({ book, coverThumbUrl }) => {
+  spineWidth: number;
+}> = ({ book, coverThumbUrl, spineWidth }) => {
   const isAchilles = book.id === 'truong-ca-achilles';
-  const isNguoiRuNgu = book.id === 'nguoi-ru-ngu';
-  const pubYear = isAchilles ? '2011' : isNguoiRuNgu ? '2009' : 'PDF';
+  const pubYear = book.year || (isAchilles ? '2011' : 'PDF');
+  const titleLen = book.title.length;
+  const isSlim = spineWidth < 46;
+
+  // Dynamic font size so even 38-char titles fit completely inside the spine without clipping!
+  const titleFontSize =
+    titleLen > 30
+      ? isSlim
+        ? 9.5
+        : 11
+      : titleLen > 22
+        ? isSlim
+          ? 10.5
+          : 12.5
+        : titleLen > 14
+          ? isSlim
+            ? 12
+            : 14
+          : isSlim
+            ? 13.5
+            : 16;
+
+  const thumbSize = isSlim ? 'h-7 w-7' : 'h-9 w-9 sm:h-10 sm:w-10';
 
   return (
     <div
-      className="relative flex h-full w-full flex-col items-center justify-between overflow-hidden rounded-t-[5px] rounded-b-[2px] px-1.5 py-2.5"
+      className="relative flex h-full w-full flex-col items-center justify-between overflow-hidden rounded-t-[5px] rounded-b-[2px] px-1 py-2"
       style={{
         backgroundColor: book.spineColor,
         color: book.spineTextColor,
@@ -29,12 +63,12 @@ export const RealisticBookSpine: React.FC<{
       }}
     >
       {/* Bound hardcover hinge grooves */}
-      <div className="pointer-events-none absolute inset-y-0 left-[4px] w-[1px] bg-black/28" />
-      <div className="pointer-events-none absolute inset-y-0 right-[4px] w-[1px] bg-black/28" />
+      <div className="pointer-events-none absolute inset-y-0 left-[3px] w-[1px] bg-black/28" />
+      <div className="pointer-events-none absolute inset-y-0 right-[3px] w-[1px] bg-black/28" />
 
       {/* Top Miniature Framed Cover Vignette */}
       <div
-        className="relative z-10 h-11 w-11 sm:h-12 sm:w-12 shrink-0 overflow-hidden rounded-[2px] border shadow-sm"
+        className={`relative z-10 ${thumbSize} shrink-0 overflow-hidden rounded-[2px] border shadow-sm`}
         style={{ borderColor: `${book.spineAccent}BB` }}
       >
         {isAchilles ? (
@@ -60,27 +94,37 @@ export const RealisticBookSpine: React.FC<{
           />
         ) : (
           <div
-            className="flex h-full w-full items-center justify-center text-xs font-bold"
+            className="flex h-full w-full items-center justify-center font-display text-[11px] font-bold"
             style={{ backgroundColor: 'rgba(0,0,0,0.28)', color: book.spineAccent }}
           >
-            {book.title.slice(0, 2).toUpperCase()}
+            {book.title
+              .split(/\s+/)
+              .slice(0, 2)
+              .map((w) => w[0])
+              .join('')
+              .toUpperCase()}
           </div>
         )}
       </div>
 
       {/* Embossed foil hairline */}
       <div
-        className="relative z-10 my-1 h-[1.5px] w-4/5 opacity-80"
+        className="relative z-10 my-1 h-[1.5px] w-4/5 shrink-0 opacity-80"
         style={{ backgroundColor: book.spineAccent }}
       />
 
-      {/* Large, Ultra-Legible Vertical Literary Title */}
-      <div className="relative z-10 flex flex-1 items-center justify-center overflow-hidden py-0.5">
+      {/* Full Unclipped Auto-Fitting Vertical Literary Title (wraps cleanly into 2 vertical lines when long) */}
+      <div className="relative z-10 flex w-full flex-1 items-center justify-center overflow-hidden px-0.5 py-0.5">
         <span
-          className="font-display text-[17px] sm:text-[19px] font-bold tracking-[0.09em] leading-none drop-shadow-[0_1px_2px_rgba(0,0,0,0.65)]"
+          className="font-display font-bold text-center drop-shadow-[0_1px_1.5px_rgba(0,0,0,0.65)]"
           style={{
             writingMode: 'vertical-rl',
             textOrientation: 'mixed',
+            fontSize: `${titleFontSize}px`,
+            lineHeight: 1.12,
+            letterSpacing: titleLen > 24 ? '0.03em' : '0.07em',
+            maxHeight: '100%',
+            wordBreak: 'break-word',
           }}
         >
           {book.title.toUpperCase()}
@@ -88,12 +132,14 @@ export const RealisticBookSpine: React.FC<{
       </div>
 
       {/* Author + Framed Year Badge */}
-      <div className="relative z-10 flex w-full flex-col items-center gap-1 pt-1">
-        <span className="max-w-full truncate px-0.5 text-[8.5px] font-semibold uppercase tracking-wider opacity-95">
-          {book.author.split(' ').slice(-1)[0]}
-        </span>
+      <div className="relative z-10 flex w-full shrink-0 flex-col items-center gap-0.5 pt-1">
+        {!isSlim && (
+          <span className="max-w-full truncate px-0.5 text-[7.5px] font-semibold uppercase tracking-wider opacity-90">
+            {book.author.split(' ').slice(-1)[0]}
+          </span>
+        )}
         <span
-          className="rounded-[2px] border px-1.5 py-[1px] font-mono text-[9px] font-bold tracking-wider"
+          className="rounded-[2px] border px-1 py-[1px] font-mono text-[8px] font-bold tracking-wider"
           style={{
             borderColor: `${book.spineAccent}BB`,
             color: book.spineAccent,

@@ -23,7 +23,11 @@ import {
   BookmarkStyleId,
   PaperTheme,
 } from '../types/book';
-import { getBookCoverUrl } from '../utils/pdfEngine';
+import {
+  getBookCoverUrl,
+  loadPdfDocument,
+  renderPageToDataUrl,
+} from '../utils/pdfEngine';
 import {
   PageBlock,
   loadBookTextData,
@@ -145,6 +149,7 @@ export const BookReader: React.FC<BookReaderProps> = ({
 
   const [currentPage, setCurrentPage] = useState<number>(startPage);
   const [bookText, setBookText] = useState<BookTextData | null>(null);
+  const [scannedPdfPages, setScannedPdfPages] = useState<number>(0);
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -218,20 +223,63 @@ export const BookReader: React.FC<BookReaderProps> = ({
     let active = true;
     setLoading(true);
     setErrorMsg(null);
+    setBookText(null);
+    setScannedPdfPages(0);
 
-    loadBookTextData(book)
-      .then((data) => {
-        if (!active) return;
-        setBookText(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        if (!active) return;
-        setErrorMsg(err?.message || 'Không thể tải nội dung cuốn sách này.');
-        setLoading(false);
-      });
+    if (book.textUrl) {
+      loadBookTextData(book)
+        .then((data) => {
+          if (!active) return;
+          if (data.paragraphs.length > 0) {
+            setBookText(data);
+            setLoading(false);
+          } else {
+            return loadPdfDocument(book).then((doc) => {
+              if (!active) return;
+              setScannedPdfPages(doc.numPages);
+              setLoading(false);
+            });
+          }
+        })
+        .catch((err) => {
+          if (!active) return;
+          setErrorMsg(err?.message || 'Không thể tải nội dung cuốn sách này.');
+          setLoading(false);
+        });
+    } else {
+      // Scanned image PDF or custom uploaded PDF without pre-extracted JSON
+      loadBookTextData(book)
+        .then(async (data) => {
+          if (!active) return;
+          if (data.paragraphs.length > 10) {
+            setBookText(data);
+            setLoading(false);
+          } else {
+            const doc = await loadPdfDocument(book);
+            if (!active) return;
+            setScannedPdfPages(doc.numPages);
+            setLoading(false);
+          }
+        })
+        .catch(async () => {
+          try {
+            const doc = await loadPdfDocument(book);
+            if (!active) return;
+            setScannedPdfPages(doc.numPages);
+            setLoading(false);
+          } catch (err) {
+            if (!active) return;
+            setErrorMsg(
+              err instanceof Error
+                ? err.message
+                : 'Không thể tải nội dung cuốn sách này.'
+            );
+            setLoading(false);
+          }
+        });
+    }
 
-    if (book.id !== 'truong-ca-achilles') {
+    if (book.id !== 'truong-ca-achilles' && book.pdfUrl) {
       getBookCoverUrl(book).then((url) => {
         if (active) setCoverUrl(url);
       });
@@ -244,14 +292,25 @@ export const BookReader: React.FC<BookReaderProps> = ({
 
   // Lossless exact canvas word-wrap pagination matching StPageFlip's exact single-page size!
   const paginated = useMemo(() => {
+    if (scannedPdfPages > 0) {
+      return {
+        pages: [] as PageBlock[][],
+        totalPages: scannedPdfPages,
+        toc: [{ title: 'Bìa sách', page: 1, level: 0 }],
+        isScannedPdf: true,
+      };
+    }
     if (!bookText) return null;
-    return paginateBookText(bookText, {
-      isMobile,
-      fontSize,
-      colWidth: textColWidth,
-      colHeight: textColHeight,
-    });
-  }, [bookText, isMobile, fontSize, textColWidth, textColHeight]);
+    return {
+      ...paginateBookText(bookText, {
+        isMobile,
+        fontSize,
+        colWidth: textColWidth,
+        colHeight: textColHeight,
+      }),
+      isScannedPdf: false,
+    };
+  }, [bookText, scannedPdfPages, isMobile, fontSize, textColWidth, textColHeight]);
 
   const totalPages = paginated?.totalPages || progress.totalPages || book.totalPages;
   const toc = paginated?.toc || [{ title: 'Bìa sách', page: 1, level: 0 }];
@@ -296,6 +355,18 @@ export const BookReader: React.FC<BookReaderProps> = ({
         populatedRef.current.add(idx);
 
         const pageNum = idx + 1;
+
+        if (paginated.isScannedPdf) {
+          el.innerHTML = `<div class="stf-page-inner" style="align-items:center;justify-content:center;padding:8px;"><div style="font-size:12px;opacity:0.6;">Đang tải trang ${pageNum}...</div></div>`;
+          loadPdfDocument(book)
+            .then((doc) => renderPageToDataUrl(doc, pageNum, pageDims.width))
+            .then((imgUrl) => {
+              el.innerHTML = `<div class="stf-cover-wrap" style="background:#fff;display:flex;align-items:center;justify-content:center;"><img src="${imgUrl}" alt="Trang ${pageNum}" style="max-width:100%;max-height:100%;object-fit:contain;" /></div>`;
+            })
+            .catch(() => {});
+          continue;
+        }
+
         if (pageNum === 1) {
           // Page 1: Cover Page
           if (book.id === 'truong-ca-achilles') {
