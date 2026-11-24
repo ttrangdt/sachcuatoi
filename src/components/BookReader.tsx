@@ -23,7 +23,11 @@ import {
   PaperTheme,
 } from '../types/book';
 import { getBookCoverUrl } from '../utils/pdfEngine';
-import { loadBookTextData, paginateBookText } from '../utils/bookPagination';
+import {
+  PageBlock,
+  loadBookTextData,
+  paginateBookText,
+} from '../utils/bookPagination';
 import {
   BOOKMARK_STYLES,
   DecorativeBookmark,
@@ -88,12 +92,12 @@ const THEME_STYLES: Record<
   },
 };
 
-const PageTextColumn: React.FC<{
-  paragraphs: string[] | null;
+const PageTextColumn = React.memo<{
+  blocks: PageBlock[] | null;
   fontSize: number;
   theme: (typeof THEME_STYLES)[PaperTheme];
-}> = ({ paragraphs, fontSize, theme }) => {
-  if (!paragraphs || paragraphs.length === 0) {
+}>(({ blocks, fontSize, theme }) => {
+  if (!blocks || blocks.length === 0) {
     return (
       <div className="flex flex-1 items-center justify-center">
         <span className={`font-serif text-sm italic ${theme.mutedText}`}>
@@ -105,37 +109,41 @@ const PageTextColumn: React.FC<{
 
   return (
     <div
-      className={`flex-1 overflow-hidden py-1 font-serif leading-[1.66] ${theme.bodyText}`}
+      className={`flex-1 overflow-hidden py-1 font-serif leading-[1.62] ${theme.bodyText}`}
       style={{ fontSize: `${fontSize}px` }}
     >
-      <div className="space-y-2.5">
-        {paragraphs.map((para, idx) => {
-          if (para.startsWith('## ')) {
+      <div className="space-y-[9px]">
+        {blocks.map((block, idx) => {
+          if (block.isHeading) {
             return (
               <h3
                 key={idx}
                 className={`pt-2 pb-1 text-center font-display font-bold tracking-wide ${theme.headingText}`}
                 style={{ fontSize: `${Math.round(fontSize * 1.45)}px` }}
               >
-                {para.replace(/^##\s+/, '')}
+                {block.text}
               </h3>
             );
           }
           return (
-            <p key={idx} className="indent-6 text-justify">
-              {para}
+            <p
+              key={idx}
+              className={`text-justify ${block.continued ? 'indent-0' : 'indent-6'}`}
+            >
+              {block.text}
             </p>
           );
         })}
       </div>
     </div>
   );
-};
+});
 
 interface FlipTransitionState {
   direction: 'next' | 'prev';
   fromPage: number;
   toPage: number;
+  active: boolean;
 }
 
 export const BookReader: React.FC<BookReaderProps> = ({
@@ -282,26 +290,31 @@ export const BookReader: React.FC<BookReaderProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paginated?.totalPages]);
 
+  // Debounced progress persistence so localStorage writes NEVER cause animation-end hitch
   useEffect(() => {
     setPageInput(String(currentPage));
-    const now = Date.now();
-    const reachedEnd = totalPages > 1 && currentPage >= totalPages;
+    const timer = window.setTimeout(() => {
+      const now = Date.now();
+      const reachedEnd = totalPages > 1 && currentPage >= totalPages;
 
-    onUpdateProgress((prev) => {
-      const nextFinished = prev.isFinished || reachedEnd;
-      const nextFinishedAt = prev.finishedAt ?? (reachedEnd ? now : null);
-      if (reachedEnd && !prev.isFinished) {
-        setJustFinishedBanner(true);
-      }
-      return {
-        ...prev,
-        currentPage,
-        firstOpenedAt: prev.firstOpenedAt ?? now,
-        lastReadAt: now,
-        isFinished: nextFinished,
-        finishedAt: nextFinishedAt,
-      };
-    });
+      onUpdateProgress((prev) => {
+        const nextFinished = prev.isFinished || reachedEnd;
+        const nextFinishedAt = prev.finishedAt ?? (reachedEnd ? now : null);
+        if (reachedEnd && !prev.isFinished) {
+          setJustFinishedBanner(true);
+        }
+        return {
+          ...prev,
+          currentPage,
+          firstOpenedAt: prev.firstOpenedAt ?? now,
+          lastReadAt: now,
+          isFinished: nextFinished,
+          finishedAt: nextFinishedAt,
+        };
+      });
+    }, 280);
+
+    return () => window.clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, totalPages]);
 
@@ -346,17 +359,32 @@ export const BookReader: React.FC<BookReaderProps> = ({
 
       if (target === currentPage) return;
 
-      setFlipState({ direction, fromPage: currentPage, toPage: target });
+      setFlipState({
+        direction,
+        fromPage: currentPage,
+        toPage: target,
+        active: false,
+      });
+      // Trigger GPU CSS transition on next animation frame for 100% butter-smooth 60fps
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setFlipState((prev) => (prev ? { ...prev, active: true } : null));
+        });
+      });
     },
     [currentPage, flipState, isMobile, totalPages]
   );
 
-  const handleFlipAnimationEnd = useCallback(() => {
-    if (!flipState) return;
-    const dest = flipState.toPage;
-    setCurrentPage(dest);
-    setFlipState(null);
-  }, [flipState]);
+  const handleFlipTransitionEnd = useCallback(
+    (e: React.TransitionEvent<HTMLDivElement>) => {
+      if (e.target !== e.currentTarget || e.propertyName !== 'transform') return;
+      if (!flipState?.active) return;
+      const dest = flipState.toPage;
+      setCurrentPage(dest);
+      setFlipState(null);
+    },
+    [flipState]
+  );
 
   const goNext = useCallback(() => triggerFlip('next'), [triggerFlip]);
   const goPrev = useCallback(() => triggerFlip('prev'), [triggerFlip]);
@@ -470,7 +498,7 @@ export const BookReader: React.FC<BookReaderProps> = ({
         {loading ? (
           <div className="my-3 flex-1 animate-pulse rounded bg-black/5" />
         ) : (
-          <PageTextColumn paragraphs={paras} fontSize={fontSize} theme={theme} />
+          <PageTextColumn blocks={paras} fontSize={fontSize} theme={theme} />
         )}
         <div className={`text-center font-serif text-xs ${theme.mutedText}`}>
           {pageNum}
@@ -963,12 +991,18 @@ export const BookReader: React.FC<BookReaderProps> = ({
             {/* Mobile turning sheet */}
             {flipState && (
               <div
-                onAnimationEnd={handleFlipAnimationEnd}
-                className={`pointer-events-none absolute inset-0 z-20 overflow-hidden rounded-lg ${theme.pageBg} px-5 py-3 shadow-2xl ${
-                  flipState.direction === 'next'
-                    ? 'animate-mobile-peel-next'
-                    : 'animate-mobile-peel-prev'
-                }`}
+                onTransitionEnd={handleFlipTransitionEnd}
+                className={`pointer-events-none absolute inset-0 z-20 overflow-hidden rounded-lg ${theme.pageBg} px-5 py-3 shadow-2xl transition-all duration-400 ease-[cubic-bezier(0.22,0.61,0.36,1)]`}
+                style={{
+                  transformOrigin:
+                    flipState.direction === 'next' ? 'left center' : 'right center',
+                  transform: flipState.active
+                    ? flipState.direction === 'next'
+                      ? 'rotateY(-120deg)'
+                      : 'rotateY(120deg)'
+                    : 'rotateY(0deg)',
+                  opacity: flipState.active ? 0 : 1,
+                }}
               >
                 {renderPageFace(flipState.fromPage, 'right')}
               </div>
@@ -1039,13 +1073,18 @@ export const BookReader: React.FC<BookReaderProps> = ({
               <div className="book-crease-right pointer-events-none absolute inset-0" />
             </div>
 
-            {/* REAL SUPPLE TWO-SIDED 3D TURNING SHEET (ZERO MIRRORING, ZERO JITTER!) */}
+            {/* REAL BUTTER-SMOOTH 60FPS TWO-SIDED 3D TURNING SHEET */}
             {flipState?.direction === 'next' && (
               <div
-                onAnimationEnd={handleFlipAnimationEnd}
-                className="turning-sheet-next pointer-events-none absolute top-2.5 bottom-2.5 right-2.5 left-1/2 z-20"
+                onTransitionEnd={handleFlipTransitionEnd}
+                className="gpu-turning-sheet pointer-events-none absolute top-2.5 bottom-2.5 right-2.5 left-1/2 z-20"
+                style={{
+                  transformOrigin: 'left center',
+                  transform: flipState.active
+                    ? 'rotateY(-180deg)'
+                    : 'rotateY(0deg)',
+                }}
               >
-                {/* Front Face = Old Right Page (lifted slightly forward in Z so Chrome never Z-fights/mirrors) */}
                 <div
                   className={`sheet-face-front absolute inset-0 rounded-r-md ${theme.pageBg} shadow-2xl`}
                 >
@@ -1055,7 +1094,6 @@ export const BookReader: React.FC<BookReaderProps> = ({
                     <div className="sheet-curl-shadow-front pointer-events-none absolute inset-0" />
                   </div>
                 </div>
-                {/* Back Face = New Left Page (cleanly separated in Z, revealed smoothly past 90°) */}
                 <div
                   className={`sheet-face-back absolute inset-0 rounded-l-md ${theme.pageBg} shadow-2xl`}
                 >
@@ -1070,10 +1108,15 @@ export const BookReader: React.FC<BookReaderProps> = ({
 
             {flipState?.direction === 'prev' && (
               <div
-                onAnimationEnd={handleFlipAnimationEnd}
-                className="turning-sheet-prev pointer-events-none absolute top-2.5 bottom-2.5 left-2.5 right-1/2 z-20"
+                onTransitionEnd={handleFlipTransitionEnd}
+                className="gpu-turning-sheet pointer-events-none absolute top-2.5 bottom-2.5 left-2.5 right-1/2 z-20"
+                style={{
+                  transformOrigin: 'right center',
+                  transform: flipState.active
+                    ? 'rotateY(180deg)'
+                    : 'rotateY(0deg)',
+                }}
               >
-                {/* Front Face = Old Left Page */}
                 <div
                   className={`sheet-face-front absolute inset-0 rounded-l-md ${theme.pageBg} shadow-2xl`}
                 >
@@ -1083,7 +1126,6 @@ export const BookReader: React.FC<BookReaderProps> = ({
                     <div className="sheet-curl-shadow-front pointer-events-none absolute inset-0" />
                   </div>
                 </div>
-                {/* Back Face = New Right Page */}
                 <div
                   className={`sheet-face-back absolute inset-0 rounded-r-md ${theme.pageBg} shadow-2xl`}
                 >

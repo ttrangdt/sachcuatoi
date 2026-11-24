@@ -18,8 +18,70 @@
 }
 
 /* =========================================================
-   ARCHITECTURAL WOOD BOOKCASE — 3 VIVID TIME-OF-DAY MOODS
+   REALISTIC 3D HARDWOOD CABINET FRAMES, DEPTH CHEEKS & SURFACES
    ========================================================= */
+.cabinet-frame-morning {
+  border-left: 16px solid #e6dac6;
+  border-right: 16px solid #e6dac6;
+  background: #e6dac6;
+  box-shadow:
+    0 28px 60px -14px rgba(34, 28, 18, 0.34),
+    0 8px 18px -6px rgba(34, 28, 18, 0.18),
+    inset 2px 0 0 rgba(255, 255, 255, 0.7),
+    inset -2px 0 0 rgba(160, 140, 114, 0.45);
+}
+
+.cabinet-frame-golden {
+  border-left: 16px solid #7e4524;
+  border-right: 16px solid #7e4524;
+  background: #7e4524;
+  box-shadow:
+    0 30px 64px -14px rgba(42, 14, 4, 0.54),
+    inset 2px 0 0 rgba(255, 212, 152, 0.28),
+    inset -2px 0 0 rgba(36, 12, 4, 0.55);
+}
+
+.cabinet-frame-night {
+  border-left: 16px solid #241610;
+  border-right: 16px solid #241610;
+  background: #241610;
+  box-shadow:
+    0 34px 74px -12px rgba(0, 0, 0, 0.85),
+    inset 2px 0 0 rgba(255, 206, 134, 0.14),
+    inset -2px 0 0 rgba(0, 0, 0, 0.65);
+}
+
+/* Angled inner 3D wooden side cheeks showing real physical shelf depth */
+.shelf-inner-cheek-left {
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.24) 0%, rgba(0, 0, 0, 0.06) 70%, transparent 100%);
+  clip-path: polygon(0 0, 100% 6%, 100% 94%, 0 100%);
+}
+
+.shelf-inner-cheek-right {
+  background: linear-gradient(270deg, rgba(0, 0, 0, 0.28) 0%, rgba(0, 0, 0, 0.08) 70%, transparent 100%);
+  clip-path: polygon(0 6%, 100% 0, 100% 100%, 0 94%);
+}
+
+/* Horizontal top depth surface of each shelf plank (where books sit!) */
+.plank-surface-morning {
+  background: linear-gradient(180deg, #dcd0bc 0%, #f3ecdf 100%);
+}
+
+.plank-surface-golden {
+  background: linear-gradient(180deg, #633318 0%, #a86136 100%);
+}
+
+.plank-surface-night {
+  background: linear-gradient(180deg, #1b110c 0%, #3d281c 100%);
+}
+
+/* GPU-accelerated silky 60fps turning sheet */
+.gpu-turning-sheet {
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+  will-change: transform;
+  transition: transform 0.64s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
 
 /* --- 1. MORNING DAYLIGHT (Bright Sunlit Warm Oak & Crisp Cream) --- */
 .wood-cornice-morning {

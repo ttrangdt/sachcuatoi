@@ -19,63 +19,46 @@ interface BookshelfProps {
   onAddBookClick?: () => void;
 }
 
-/** Realistic wooden vertical divider pilaster with architectural molding */
-const WoodCabinetDivider: React.FC<{ mood: RoomMood }> = ({ mood }) => (
-  <div
-    className={`relative h-full w-5 sm:w-7 shrink-0 z-20 transition-all duration-700 ${
-      mood === 'evening'
-        ? 'wood-pillar-night'
-        : mood === 'golden'
-          ? 'wood-pillar-golden'
-          : 'wood-pillar-morning'
-    }`}
-    aria-hidden="true"
-  />
-);
-
-/** Crisp 3D companion clothbound hardcover spines with contact shadows */
+/** Realistic 3D Hardwood Companion Spine filling ~86% of shelf height */
 const ClothCompanionSpine: React.FC<{
   color: string;
   accent: string;
-  heightClass: string;
+  heightPct?: string;
   widthClass: string;
   symbol?: 'leaf' | 'star' | 'rose' | 'moon';
-}> = ({ color, accent, heightClass, widthClass, symbol = 'leaf' }) => (
+}> = ({ color, accent, heightPct = 'h-[86%]', widthClass, symbol = 'leaf' }) => (
   <div
-    className={`relative shrink-0 overflow-hidden rounded-t-[4px] rounded-b-[1px] shadow-[4px_8px_14px_rgba(18,12,6,0.46)] ${heightClass} ${widthClass}`}
+    className={`relative shrink-0 overflow-hidden rounded-t-[4px] rounded-b-[1px] shadow-[4px_8px_14px_rgba(12,8,4,0.5)] ${heightPct} ${widthClass}`}
     style={{
       backgroundColor: color,
       backgroundImage: `
         repeating-linear-gradient(0deg, rgba(255,255,255,0.04) 0px, rgba(255,255,255,0.04) 1px, transparent 1px, transparent 3px),
-        linear-gradient(90deg, rgba(0,0,0,0.32) 0%, rgba(255,255,255,0.2) 12%, rgba(0,0,0,0) 50%, rgba(0,0,0,0.38) 100%)
+        linear-gradient(90deg, rgba(0,0,0,0.34) 0%, rgba(255,255,255,0.22) 12%, rgba(0,0,0,0) 50%, rgba(0,0,0,0.4) 100%)
       `,
     }}
     aria-hidden="true"
   >
     <div className="pointer-events-none absolute inset-y-0 left-[3px] w-[1px] bg-black/25" />
     <div className="pointer-events-none absolute inset-y-0 right-[3px] w-[1px] bg-black/25" />
-    <div className="mx-1.5 mt-3 h-[2px] opacity-75" style={{ backgroundColor: accent }} />
-    <div className="mt-4 flex justify-center opacity-70">
+    <div className="mx-1.5 mt-3.5 h-[2px] opacity-75" style={{ backgroundColor: accent }} />
+    <div className="mt-5 flex justify-center opacity-70">
       <span
-        className="h-2.5 w-2.5 rounded-full border"
+        className="h-3 w-3 rounded-full border"
         style={{ borderColor: accent }}
       />
     </div>
-    <div className="my-4 mx-auto h-10 w-[1px] opacity-40" style={{ backgroundColor: accent }} />
+    <div className="my-5 mx-auto h-12 w-[1px] opacity-40" style={{ backgroundColor: accent }} />
     <div className="flex justify-center opacity-75">
-      <span className="text-[8px]" style={{ color: accent }}>
+      <span className="text-[9px]" style={{ color: accent }}>
         {symbol === 'star' ? '✦' : symbol === 'moon' ? '☾' : symbol === 'rose' ? '✿' : '❖'}
       </span>
     </div>
-    <div className="absolute inset-x-1.5 bottom-3 h-[2px] opacity-75" style={{ backgroundColor: accent }} />
+    <div className="absolute inset-x-1.5 bottom-3.5 h-[2px] opacity-75" style={{ backgroundColor: accent }} />
   </div>
 );
 
 /**
- * Interactive 3D Book on Shelf (clean, ZERO floating bookmark clutter!):
- * - Stands sharply spine-out with miniature cover art & clothbound texture.
- * - Click spine -> rotates smoothly IN PLACE ON THE SHELF into full Front Cover.
- * - Click cover -> opens BookReader.
+ * Interactive 3D Book on Shelf — tall (~92% of shelf bay height!), crisp, large legible spine & cover.
  */
 const InlineFlipBook: React.FC<{
   book: BookItem;
@@ -112,12 +95,12 @@ const InlineFlipBook: React.FC<{
     };
   }, [book, isAchilles, coverUrl]);
 
-  const spineWidth = isAchilles ? 52 : 56;
-  const coverWidth = 142;
+  const spineWidth = isAchilles ? 64 : 68;
+  const coverWidth = 172;
 
   return (
     <div
-      className="relative flex flex-col items-center transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
+      className="relative flex h-[92%] flex-col items-center justify-end transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
       style={{
         width: `${isExpanded ? coverWidth : spineWidth}px`,
         zIndex: isExpanded ? 35 : isThisHovered ? 28 : 10,
@@ -144,14 +127,14 @@ const InlineFlipBook: React.FC<{
         <button
           type="button"
           onClick={onOpenReader}
-          className="group/cover relative flex h-[176px] sm:h-[192px] lg:h-[204px] w-[142px] -translate-y-2.5 text-left transition-transform duration-300 hover:scale-[1.03] focus:outline-none"
+          className="group/cover relative flex h-full w-[172px] -translate-y-2 text-left transition-transform duration-300 hover:scale-[1.03] focus:outline-none"
         >
           <div
-            className="book-sheen relative z-10 h-full flex-1 overflow-hidden rounded-l-[3px] rounded-r-[5px] shadow-[10px_16px_28px_-4px_rgba(12,8,4,0.72)] ring-1 ring-[#F4D36A]/70"
+            className="book-sheen relative z-10 h-full flex-1 overflow-hidden rounded-l-[3px] rounded-r-[5px] shadow-[12px_18px_30px_-4px_rgba(12,8,4,0.75)] ring-1 ring-[#F4D36A]/70"
             style={{ backgroundColor: book.spineColor }}
           >
             <div
-              className="pointer-events-none absolute inset-y-0 left-0 z-20 w-2.5"
+              className="pointer-events-none absolute inset-y-0 left-0 z-20 w-3"
               style={{
                 background:
                   'linear-gradient(90deg, rgba(255,255,255,0.24) 0%, rgba(0,0,0,0.08) 45%, rgba(0,0,0,0.26) 85%, rgba(255,255,255,0.1) 100%)',
@@ -167,27 +150,27 @@ const InlineFlipBook: React.FC<{
               />
             ) : (
               <div
-                className="flex h-full flex-col justify-between p-3 pl-4"
+                className="flex h-full flex-col justify-between p-3.5 pl-4"
                 style={{ color: book.spineTextColor }}
               >
-                <p className="font-display text-base font-bold leading-tight">
+                <p className="font-display text-lg font-bold leading-tight">
                   {book.title}
                 </p>
-                <p className="font-serif text-[10px] italic opacity-85">
+                <p className="font-serif text-xs italic opacity-85">
                   {book.author}
                 </p>
               </div>
             )}
 
-            <div className="absolute inset-x-1.5 bottom-2 z-30 flex justify-center">
-              <span className="inline-flex items-center gap-1 rounded-full bg-[#1C120D]/90 px-2.5 py-1 text-[10px] font-semibold text-[#F8E2A6] shadow-lg ring-1 ring-[#F4D36A]/50 transition group-hover/cover:bg-[#8E2C2C] group-hover/cover:text-white">
-                <BookOpen className="h-3 w-3" />
+            <div className="absolute inset-x-2 bottom-2.5 z-30 flex justify-center">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#1C120D]/92 px-3 py-1 text-[11px] font-semibold text-[#F8E2A6] shadow-lg ring-1 ring-[#F4D36A]/55 transition group-hover/cover:bg-[#8E2C2C] group-hover/cover:text-white">
+                <BookOpen className="h-3.5 w-3.5" />
                 Đọc sách
               </span>
             </div>
           </div>
 
-          <div className="relative z-0 my-[2px] -ml-[2px] w-[12px] shrink-0 overflow-hidden rounded-r-[2px] border-y border-r border-black/25 shadow-md">
+          <div className="relative z-0 my-[2px] -ml-[2px] w-[14px] shrink-0 overflow-hidden rounded-r-[2px] border-y border-r border-black/25 shadow-md">
             {isAchilles ? (
               <AchillesSprayedEdge />
             ) : (
@@ -206,11 +189,11 @@ const InlineFlipBook: React.FC<{
           type="button"
           onClick={onToggleExpand}
           style={{ width: `${spineWidth}px` }}
-          className="spine-book-btn book-sheen relative overflow-visible rounded-t-[5px] rounded-b-[2px] shadow-[5px_8px_16px_rgba(14,10,6,0.52)] focus:outline-none focus:ring-2 focus:ring-[#D4A857]"
+          className="spine-book-btn book-sheen relative h-full overflow-visible rounded-t-[5px] rounded-b-[2px] shadow-[6px_10px_18px_rgba(14,10,6,0.58)] focus:outline-none focus:ring-2 focus:ring-[#D4A857]"
         >
           {/* Top 3D page-block thickness edge */}
           <div
-            className="pointer-events-none absolute -top-[4px] left-[3px] right-[3px] h-[4px] rounded-t-[2px]"
+            className="pointer-events-none absolute -top-[5px] left-[3px] right-[3px] h-[5px] rounded-t-[2px]"
             style={{
               background:
                 'linear-gradient(90deg, #EAE3D5 0%, #FAF6EE 50%, #D9CFC0 100%)',
@@ -230,6 +213,98 @@ const InlineFlipBook: React.FC<{
           </div>
         </div>
       )}
+    </div>
+  );
+};
+
+/** Realistic 3D Sculptural Hardwood Standing Bookcase Unit */
+const StandingBookcaseFrame: React.FC<{
+  mood: RoomMood;
+  children: React.ReactNode;
+}> = ({ mood, children }) => {
+  const frameClass =
+    mood === 'evening'
+      ? 'cabinet-frame-night'
+      : mood === 'golden'
+        ? 'cabinet-frame-golden'
+        : 'cabinet-frame-morning';
+  const corniceClass =
+    mood === 'evening'
+      ? 'wood-cornice-night'
+      : mood === 'golden'
+        ? 'wood-cornice-golden'
+        : 'wood-cornice-morning';
+
+  return (
+    <div
+      className={`${frameClass} relative flex h-[92%] w-full max-w-[660px] flex-col rounded-t-[6px] transition-all duration-700`}
+    >
+      {/* Carved Overhanging Crown Molding */}
+      <div
+        className={`${corniceClass} -mx-2.5 sm:-mx-3.5 h-5 sm:h-6 shrink-0 rounded-t-[5px] transition-all duration-700`}
+      />
+
+      {/* Inner Cabinet Body with 3D Recessed Shelves */}
+      <div className="relative flex flex-1 min-h-0 flex-col overflow-hidden">
+        {children}
+      </div>
+
+      {/* Stepped Hardwood Plinth Base */}
+      <div
+        className={`${corniceClass} -mx-1.5 h-4 sm:h-5 shrink-0 transition-all duration-700`}
+      />
+    </div>
+  );
+};
+
+/** Single 3D Shelf Compartment with Angled Inner Side Cheeks, Top Surface Ledge & Front Edge */
+const ShelfTierBay: React.FC<{
+  mood: RoomMood;
+  children: React.ReactNode;
+}> = ({ mood, children }) => {
+  const bayClass =
+    mood === 'evening'
+      ? 'shelf-bay-night'
+      : mood === 'golden'
+        ? 'shelf-bay-golden'
+        : 'shelf-bay-morning';
+  const topSurfaceClass =
+    mood === 'evening'
+      ? 'plank-surface-night'
+      : mood === 'golden'
+        ? 'plank-surface-golden'
+        : 'plank-surface-morning';
+  const frontEdgeClass =
+    mood === 'evening'
+      ? 'wood-plank-night'
+      : mood === 'golden'
+        ? 'wood-plank-golden'
+        : 'wood-plank-morning';
+
+  return (
+    <div className="relative flex flex-1 min-h-0 flex-col">
+      {/* Recessed Interior Bay with Angled 3D Side Cheeks */}
+      <div
+        className={`${bayClass} relative flex flex-1 min-h-0 items-end justify-center px-5 sm:px-8 pt-2.5 pb-0 transition-all duration-700`}
+      >
+        {/* Left & right angled inner cabinet depth walls */}
+        <div className="shelf-inner-cheek-left pointer-events-none absolute inset-y-0 left-0 w-4 sm:w-5" />
+        <div className="shelf-inner-cheek-right pointer-events-none absolute inset-y-0 right-0 w-4 sm:w-5" />
+
+        {/* Warm recessed LED downlight cone in Night mode */}
+        {mood === 'evening' && (
+          <div className="shelf-downlight pointer-events-none absolute inset-x-4 top-0 h-32" />
+        )}
+
+        {/* Books standing directly on the shelf surface with subtle ground contact shadow */}
+        <div className="relative z-10 flex h-full w-full items-end justify-center gap-1.5 sm:gap-2 pb-[2px]">
+          {children}
+        </div>
+      </div>
+
+      {/* 3D Double-Layer Shelf Plank: Horizontal Top Depth Surface + Front Vertical Edge */}
+      <div className={`${topSurfaceClass} relative z-10 h-[7px] w-full shrink-0 transition-all duration-700`} />
+      <div className={`${frontEdgeClass} relative z-10 h-[14px] sm:h-[16px] w-full shrink-0 transition-all duration-700`} />
     </div>
   );
 };
@@ -282,28 +357,11 @@ export const Bookshelf: React.FC<BookshelfProps> = ({
   });
   const finishedBooks = books.filter((b) => progressMap[b.id]?.isFinished);
 
-  const basePercent = 16 - activeCabinet * 68;
-
-  const bayClass =
-    roomMood === 'evening'
-      ? 'shelf-bay-night'
-      : roomMood === 'golden'
-        ? 'shelf-bay-golden'
-        : 'shelf-bay-morning';
-
-  const plankClass =
-    roomMood === 'evening'
-      ? 'wood-plank-night'
-      : roomMood === 'golden'
-        ? 'wood-plank-golden'
-        : 'wood-plank-morning';
-
-  const corniceClass =
-    roomMood === 'evening'
-      ? 'wood-cornice-night'
-      : roomMood === 'golden'
-        ? 'wood-cornice-golden'
-        : 'wood-cornice-morning';
+  // Narrower sculptural cabinets (58% slot with generous visible room wall gaps between cabinets!)
+  // activeCabinet = 0 -> +21%
+  // activeCabinet = 1 -> -37% (center cabinet centered, 21% left & right showing room wall + peeking edges of neighbor cabinets!)
+  // activeCabinet = 2 -> -95%
+  const basePercent = 21 - activeCabinet * 58;
 
   return (
     <div
@@ -316,16 +374,9 @@ export const Bookshelf: React.FC<BookshelfProps> = ({
       onPointerLeave={handlePointerUp}
       onClick={() => setExpandedBookKey(null)}
     >
-      {/* Architectural Molded Crown Cornice + Black Iron Ladder Rail */}
+      {/* 3-CABINET SCULPTURAL ROOM PANORAMA (Visible room atmosphere around & between cabinets!) */}
       <div
-        className={`${corniceClass} relative z-30 h-5 sm:h-6 w-full shrink-0 transition-all duration-700`}
-      >
-        <div className="pointer-events-none absolute inset-x-0 -bottom-2 h-[4px] bg-gradient-to-b from-[#2E2D30] via-[#151518] to-[#08080A] shadow-md" />
-      </div>
-
-      {/* 3-CABINET BUILT-IN ARCHITECTURAL LIBRARY WALL */}
-      <div
-        className="flex flex-1 min-h-0 items-stretch"
+        className="flex flex-1 min-h-0 items-end"
         style={{
           transform: `translate3d(calc(${basePercent}% + ${dragOffset}px), 0, 0)`,
           transition: isDragging
@@ -341,27 +392,86 @@ export const Bookshelf: React.FC<BookshelfProps> = ({
               setExpandedBookKey(null);
             }
           }}
-          className={`relative flex h-full w-[68%] shrink-0 transition-opacity duration-500 ${
-            activeCabinet === 0 ? 'opacity-100' : 'opacity-90 cursor-pointer'
+          className={`flex h-full w-[58%] shrink-0 items-end justify-center px-5 sm:px-10 transition-all duration-700 ${
+            activeCabinet === 0
+              ? 'scale-100 opacity-100'
+              : 'scale-[0.9] opacity-80 hover:opacity-95 cursor-pointer'
+          }`}
+          style={{ transformOrigin: 'right bottom' }}
+        >
+          <StandingBookcaseFrame mood={roomMood}>
+            <ShelfTierBay mood={roomMood}>
+              <ClothCompanionSpine color="#7A9E90" accent="#F5EEDB" heightPct="h-[85%]" widthClass="w-9 sm:w-10" symbol="leaf" />
+              <ClothCompanionSpine color="#746D98" accent="#E8DDF5" heightPct="h-[90%]" widthClass="w-9 sm:w-10" symbol="moon" />
+              {readingBooks.map((book) => {
+                const key = `left-${book.id}`;
+                return (
+                  <InlineFlipBook
+                    key={key}
+                    book={book}
+                    progress={progressMap[book.id]}
+                    isExpanded={expandedBookKey === key}
+                    isThisHovered={hoveredBookKey === key}
+                    onHoverChange={(h) => setHoveredBookKey(h ? key : null)}
+                    onToggleExpand={() =>
+                      setExpandedBookKey((cur) => (cur === key ? null : key))
+                    }
+                    onOpenReader={() =>
+                      onOpenBook(
+                        book,
+                        progressMap[book.id]?.bookmarkedPage ||
+                          progressMap[book.id]?.currentPage
+                      )
+                    }
+                  />
+                );
+              })}
+              <ClothCompanionSpine color="#D4848E" accent="#FFF0E6" heightPct="h-[84%]" widthClass="w-9 sm:w-10" symbol="rose" />
+            </ShelfTierBay>
+
+            <ShelfTierBay mood={roomMood}>
+              <ClothCompanionSpine color="#4E6F88" accent="#E6EDF4" heightPct="h-[86%]" widthClass="w-10" symbol="star" />
+              <ClothCompanionSpine color="#3C6B5B" accent="#F2D992" heightPct="h-[91%]" widthClass="w-10" symbol="leaf" />
+              <ClothCompanionSpine color="#9E624A" accent="#F7E5C8" heightPct="h-[84%]" widthClass="w-9" symbol="rose" />
+              <ClothCompanionSpine color="#544B6E" accent="#E4D6F5" heightPct="h-[88%]" widthClass="w-10" symbol="moon" />
+            </ShelfTierBay>
+
+            <ShelfTierBay mood={roomMood}>
+              <ClothCompanionSpine color="#A56958" accent="#FCEAD2" heightPct="h-[84%]" widthClass="w-10" symbol="leaf" />
+              <ClothCompanionSpine color="#637E72" accent="#EDF5EE" heightPct="h-[88%]" widthClass="w-10" symbol="star" />
+              <ClothCompanionSpine color="#8C7A6B" accent="#F5EDE0" heightPct="h-[82%]" widthClass="w-9" symbol="rose" />
+            </ShelfTierBay>
+          </StandingBookcaseFrame>
+        </section>
+
+        {/* CABINET 1 (CENTER): MAIN PERSONAL LIBRARY */}
+        <section
+          onClick={() => {
+            if (activeCabinet !== 1) {
+              setActiveCabinet(1);
+              setExpandedBookKey(null);
+            }
+          }}
+          className={`flex h-full w-[58%] shrink-0 items-end justify-center px-5 sm:px-10 transition-all duration-700 ${
+            activeCabinet === 1
+              ? 'scale-100 opacity-100'
+              : 'scale-[0.9] opacity-80 hover:opacity-95 cursor-pointer'
           }`}
         >
-          <WoodCabinetDivider mood={roomMood} />
-          <div className="flex flex-1 flex-col">
-            {[0, 1, 2].map((tier) => (
-              <div key={tier} className="relative flex flex-1 min-h-0 flex-col justify-end">
-                <div
-                  className={`${bayClass} relative flex flex-1 items-end justify-center gap-1.5 sm:gap-2 px-4 sm:px-8 pb-0.5 transition-all duration-700`}
-                >
-                  {/* Warm recessed cabinet downlight strip in Night mode */}
-                  {roomMood === 'evening' && (
-                    <div className="shelf-downlight pointer-events-none absolute inset-x-6 top-0 h-28" />
-                  )}
+          <StandingBookcaseFrame mood={roomMood}>
+            {[0, 1, 2].map((tier) => {
+              const tierBooks =
+                tier === 0 ? books.slice(0, 5) : tier === 1 ? books.slice(5, 10) : books.slice(10);
+
+              return (
+                <ShelfTierBay key={tier} mood={roomMood}>
                   {tier === 0 && (
                     <>
-                      <ClothCompanionSpine color="#88A89A" accent="#F5EEDB" heightClass="h-[154px] sm:h-[170px]" widthClass="w-8 sm:w-9" symbol="leaf" />
-                      <ClothCompanionSpine color="#7B749E" accent="#E8DDF5" heightClass="h-[160px] sm:h-[176px]" widthClass="w-8 sm:w-9" symbol="moon" />
-                      {readingBooks.map((book) => {
-                        const key = `left-${book.id}`;
+                      <ClothCompanionSpine color="#B5654D" accent="#FBE6C2" heightPct="h-[86%]" widthClass="w-9 sm:w-10" symbol="leaf" />
+                      <ClothCompanionSpine color="#457A6B" accent="#F2E4C8" heightPct="h-[90%]" widthClass="w-9 sm:w-10" symbol="star" />
+
+                      {tierBooks.map((book) => {
+                        const key = `center-${book.id}`;
                         return (
                           <InlineFlipBook
                             key={key}
@@ -380,220 +490,27 @@ export const Bookshelf: React.FC<BookshelfProps> = ({
                                   progressMap[book.id]?.currentPage
                               )
                             }
+                            onDelete={
+                              book.isCustom && onDeleteCustomBook
+                                ? () => onDeleteCustomBook(book.id)
+                                : undefined
+                            }
                           />
                         );
                       })}
-                      <ClothCompanionSpine color="#D88A94" accent="#FFF0E6" heightClass="h-[150px] sm:h-[166px]" widthClass="w-8 sm:w-9" symbol="rose" />
+
+                      <ClothCompanionSpine color="#D68E9C" accent="#FFF4EC" heightPct="h-[88%]" widthClass="w-9 sm:w-10" symbol="rose" />
+                      <ClothCompanionSpine color="#7B739C" accent="#EDE4FA" heightPct="h-[84%]" widthClass="w-9 sm:w-10" symbol="moon" />
                     </>
                   )}
+
                   {tier === 1 && (
                     <>
-                      <ClothCompanionSpine color="#4E6F88" accent="#E6EDF4" heightClass="h-[146px] sm:h-[160px]" widthClass="w-9" symbol="star" />
-                      <ClothCompanionSpine color="#3C6B5B" accent="#F2D992" heightClass="h-[156px] sm:h-[172px]" widthClass="w-9" symbol="leaf" />
-                      <ClothCompanionSpine color="#9E624A" accent="#F7E5C8" heightClass="h-[142px] sm:h-[156px]" widthClass="w-8" symbol="rose" />
-                      <ClothCompanionSpine color="#544B6E" accent="#E4D6F5" heightClass="h-[150px] sm:h-[164px]" widthClass="w-9" symbol="moon" />
-                    </>
-                  )}
-                  {tier === 2 && (
-                    <>
-                      <ClothCompanionSpine color="#A56958" accent="#FCEAD2" heightClass="h-[138px] sm:h-[152px]" widthClass="w-9" symbol="leaf" />
-                      <ClothCompanionSpine color="#637E72" accent="#EDF5EE" heightClass="h-[146px] sm:h-[160px]" widthClass="w-9" symbol="star" />
-                      <ClothCompanionSpine color="#8C7A6B" accent="#F5EDE0" heightClass="h-[134px] sm:h-[148px]" widthClass="w-8" symbol="rose" />
-                    </>
-                  )}
-                </div>
-                <div className={`${plankClass} relative z-10 h-4 sm:h-[19px] w-full shrink-0 transition-all duration-700`} />
-              </div>
-            ))}
-          </div>
-        </section>
+                      <ClothCompanionSpine color="#94624B" accent="#F7E3C6" heightPct="h-[85%]" widthClass="w-9 sm:w-10" symbol="leaf" />
+                      <ClothCompanionSpine color="#7C9A8E" accent="#F3F7F2" heightPct="h-[90%]" widthClass="w-9 sm:w-10" symbol="rose" />
 
-        {/* CABINET 1 (CENTER): MAIN LIBRARY */}
-        <section
-          onClick={() => {
-            if (activeCabinet !== 1) {
-              setActiveCabinet(1);
-              setExpandedBookKey(null);
-            }
-          }}
-          className={`relative flex h-full w-[68%] shrink-0 transition-opacity duration-500 ${
-            activeCabinet === 1 ? 'opacity-100' : 'opacity-90 cursor-pointer'
-          }`}
-        >
-          <WoodCabinetDivider mood={roomMood} />
-          <div className="flex flex-1 flex-col">
-            {[0, 1, 2].map((tier) => {
-              const tierBooks =
-                tier === 0 ? books.slice(0, 6) : tier === 1 ? books.slice(6, 12) : books.slice(12);
-
-              return (
-                <div key={tier} className="relative flex flex-1 min-h-0 flex-col justify-end">
-                  <div
-                    className={`${bayClass} relative flex flex-1 items-end justify-center gap-1.5 sm:gap-2 px-4 sm:px-8 pb-0.5 transition-all duration-700`}
-                  >
-                    {roomMood === 'evening' && (
-                      <div className="shelf-downlight pointer-events-none absolute inset-x-6 top-0 h-28" />
-                    )}
-
-                    {tier === 0 && (
-                      <>
-                        <ClothCompanionSpine color="#B5654D" accent="#FBE6C2" heightClass="h-[152px] sm:h-[168px]" widthClass="w-8 sm:w-9" symbol="leaf" />
-                        <ClothCompanionSpine color="#457A6B" accent="#F2E4C8" heightClass="h-[162px] sm:h-[178px]" widthClass="w-8 sm:w-9" symbol="star" />
-
-                        {tierBooks.map((book) => {
-                          const key = `center-${book.id}`;
-                          return (
-                            <InlineFlipBook
-                              key={key}
-                              book={book}
-                              progress={progressMap[book.id]}
-                              isExpanded={expandedBookKey === key}
-                              isThisHovered={hoveredBookKey === key}
-                              onHoverChange={(h) => setHoveredBookKey(h ? key : null)}
-                              onToggleExpand={() =>
-                                setExpandedBookKey((cur) => (cur === key ? null : key))
-                              }
-                              onOpenReader={() =>
-                                onOpenBook(
-                                  book,
-                                  progressMap[book.id]?.bookmarkedPage ||
-                                    progressMap[book.id]?.currentPage
-                                )
-                              }
-                              onDelete={
-                                book.isCustom && onDeleteCustomBook
-                                  ? () => onDeleteCustomBook(book.id)
-                                  : undefined
-                              }
-                            />
-                          );
-                        })}
-
-                        <ClothCompanionSpine color="#D68E9C" accent="#FFF4EC" heightClass="h-[156px] sm:h-[172px]" widthClass="w-8 sm:w-9" symbol="rose" />
-                        <ClothCompanionSpine color="#7B739C" accent="#EDE4FA" heightClass="h-[148px] sm:h-[164px]" widthClass="w-8 sm:w-9" symbol="moon" />
-                        <ClothCompanionSpine color="#53728F" accent="#E6EFF8" heightClass="h-[154px] sm:h-[170px]" widthClass="w-8 sm:w-9" symbol="star" />
-                      </>
-                    )}
-
-                    {tier === 1 && (
-                      <>
-                        <ClothCompanionSpine color="#94624B" accent="#F7E3C6" heightClass="h-[148px] sm:h-[162px]" widthClass="w-8 sm:w-9" symbol="leaf" />
-                        <ClothCompanionSpine color="#7C9A8E" accent="#F3F7F2" heightClass="h-[156px] sm:h-[170px]" widthClass="w-8 sm:w-9" symbol="rose" />
-
-                        {tierBooks.map((book) => {
-                          const key = `center-${book.id}`;
-                          return (
-                            <InlineFlipBook
-                              key={key}
-                              book={book}
-                              progress={progressMap[book.id]}
-                              isExpanded={expandedBookKey === key}
-                              isThisHovered={hoveredBookKey === key}
-                              onHoverChange={(h) => setHoveredBookKey(h ? key : null)}
-                              onToggleExpand={() =>
-                                setExpandedBookKey((cur) => (cur === key ? null : key))
-                              }
-                              onOpenReader={() =>
-                                onOpenBook(
-                                  book,
-                                  progressMap[book.id]?.bookmarkedPage ||
-                                    progressMap[book.id]?.currentPage
-                                )
-                              }
-                              onDelete={
-                                book.isCustom && onDeleteCustomBook
-                                  ? () => onDeleteCustomBook(book.id)
-                                  : undefined
-                              }
-                            />
-                          );
-                        })}
-
-                        {onAddBookClick && (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onAddBookClick();
-                            }}
-                            className={`mx-2 mb-1 flex h-[140px] w-14 flex-col items-center justify-center rounded-t-[4px] border-2 border-dashed transition ${
-                              roomMood === 'evening'
-                                ? 'border-amber-200/35 bg-white/5 text-amber-100/75 hover:border-amber-200/70 hover:bg-white/10'
-                                : 'border-[#8D7B64]/60 bg-white/25 text-[#5C4E3C] hover:border-[#5A452D] hover:bg-white/55'
-                            }`}
-                            title="Thêm sách PDF mới"
-                            aria-label="Thêm sách PDF mới"
-                          >
-                            <Plus className="h-5 w-5" />
-                          </button>
-                        )}
-
-                        <ClothCompanionSpine color="#355F56" accent="#EED38B" heightClass="h-[154px] sm:h-[168px]" widthClass="w-8 sm:w-9" symbol="moon" />
-                        <ClothCompanionSpine color="#B87A6D" accent="#FDEEE4" heightClass="h-[146px] sm:h-[160px]" widthClass="w-8 sm:w-9" symbol="star" />
-                      </>
-                    )}
-
-                    {tier === 2 && (
-                      <>
-                        <ClothCompanionSpine color="#6A4248" accent="#F0D298" heightClass="h-[138px] sm:h-[152px]" widthClass="w-9" symbol="rose" />
-                        <ClothCompanionSpine color="#455B73" accent="#DCE8F2" heightClass="h-[146px] sm:h-[160px]" widthClass="w-9" symbol="star" />
-                        <ClothCompanionSpine color="#8A6848" accent="#F8E7C8" heightClass="h-[136px] sm:h-[150px]" widthClass="w-9" symbol="leaf" />
-                        <ClothCompanionSpine color="#4E6A58" accent="#E8F0E2" heightClass="h-[142px] sm:h-[156px]" widthClass="w-9" symbol="moon" />
-                        <ClothCompanionSpine color="#9E564E" accent="#FCE2C6" heightClass="h-[134px] sm:h-[148px]" widthClass="w-8" symbol="rose" />
-                      </>
-                    )}
-                  </div>
-                  <div className={`${plankClass} relative z-10 h-4 sm:h-[19px] w-full shrink-0 transition-all duration-700`} />
-                </div>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* CABINET 2 (RIGHT): FINISHED BOOKS + BLACK IRON LIBRARY LADDER */}
-        <section
-          onClick={() => {
-            if (activeCabinet !== 2) {
-              setActiveCabinet(2);
-              setExpandedBookKey(null);
-            }
-          }}
-          className={`relative flex h-full w-[68%] shrink-0 transition-opacity duration-500 ${
-            activeCabinet === 2 ? 'opacity-100' : 'opacity-90 cursor-pointer'
-          }`}
-        >
-          <WoodCabinetDivider mood={roomMood} />
-
-          <div className="relative flex flex-1 flex-col">
-            {/* Wrought-Iron Rolling Library Ladder */}
-            <div
-              className="pointer-events-none absolute inset-y-0 right-6 sm:right-12 z-30 hidden md:flex w-28 flex-col justify-between py-2"
-              aria-hidden="true"
-            >
-              <div className="absolute inset-y-0 left-0 w-[6px] rounded-full bg-gradient-to-r from-[#2D2D30] via-[#121215] to-[#26262A] shadow-lg" />
-              <div className="absolute inset-y-0 right-0 w-[6px] rounded-full bg-gradient-to-r from-[#2D2D30] via-[#121215] to-[#26262A] shadow-lg" />
-              {[0, 1, 2, 3, 4, 5, 6].map((rung) => (
-                <div
-                  key={rung}
-                  className="h-[5px] w-full bg-gradient-to-b from-[#343438] to-[#121215] shadow-md"
-                />
-              ))}
-            </div>
-
-            {[0, 1, 2].map((tier) => (
-              <div key={tier} className="relative flex flex-1 min-h-0 flex-col justify-end">
-                <div
-                  className={`${bayClass} relative flex flex-1 items-end justify-center gap-1.5 sm:gap-2 px-4 sm:px-8 pb-0.5 transition-all duration-700`}
-                >
-                  {roomMood === 'evening' && (
-                    <div className="shelf-downlight pointer-events-none absolute inset-x-6 top-0 h-28" />
-                  )}
-
-                  {tier === 0 && (
-                    <>
-                      <ClothCompanionSpine color="#3B6258" accent="#EED492" heightClass="h-[154px] sm:h-[170px]" widthClass="w-8 sm:w-9" symbol="leaf" />
-                      {finishedBooks.map((book) => {
-                        const key = `right-${book.id}`;
+                      {tierBooks.map((book) => {
+                        const key = `center-${book.id}`;
                         return (
                           <InlineFlipBook
                             key={key}
@@ -601,39 +518,116 @@ export const Bookshelf: React.FC<BookshelfProps> = ({
                             progress={progressMap[book.id]}
                             isExpanded={expandedBookKey === key}
                             isThisHovered={hoveredBookKey === key}
-                            showFinishedTag
                             onHoverChange={(h) => setHoveredBookKey(h ? key : null)}
                             onToggleExpand={() =>
                               setExpandedBookKey((cur) => (cur === key ? null : key))
                             }
-                            onOpenReader={() => onOpenBook(book, 1)}
+                            onOpenReader={() =>
+                              onOpenBook(
+                                book,
+                                progressMap[book.id]?.bookmarkedPage ||
+                                  progressMap[book.id]?.currentPage
+                              )
+                            }
+                            onDelete={
+                              book.isCustom && onDeleteCustomBook
+                                ? () => onDeleteCustomBook(book.id)
+                                : undefined
+                            }
                           />
                         );
                       })}
-                      <ClothCompanionSpine color="#8C515C" accent="#F6DFC4" heightClass="h-[150px] sm:h-[166px]" widthClass="w-8 sm:w-9" symbol="rose" />
-                      <ClothCompanionSpine color="#536884" accent="#E4EEF8" heightClass="h-[158px] sm:h-[174px]" widthClass="w-8 sm:w-9" symbol="star" />
+
+                      {onAddBookClick && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onAddBookClick();
+                          }}
+                          className={`mx-1.5 flex h-[84%] w-14 flex-col items-center justify-center rounded-t-[4px] border-2 border-dashed transition ${
+                            roomMood === 'evening'
+                              ? 'border-amber-200/35 bg-white/5 text-amber-100/75 hover:border-amber-200/70 hover:bg-white/10'
+                              : 'border-[#8D7B64]/60 bg-white/25 text-[#5C4E3C] hover:border-[#5A452D] hover:bg-white/55'
+                          }`}
+                          title="Thêm sách PDF mới"
+                          aria-label="Thêm sách PDF mới"
+                        >
+                          <Plus className="h-5 w-5" />
+                        </button>
+                      )}
+
+                      <ClothCompanionSpine color="#355F56" accent="#EED38B" heightPct="h-[88%]" widthClass="w-9 sm:w-10" symbol="moon" />
+                      <ClothCompanionSpine color="#B87A6D" accent="#FDEEE4" heightPct="h-[84%]" widthClass="w-9 sm:w-10" symbol="star" />
                     </>
                   )}
-                  {tier === 1 && (
-                    <>
-                      <ClothCompanionSpine color="#A16F52" accent="#FCE8C8" heightClass="h-[146px] sm:h-[160px]" widthClass="w-9" symbol="moon" />
-                      <ClothCompanionSpine color="#5D7D6D" accent="#EEF6EC" heightClass="h-[154px] sm:h-[168px]" widthClass="w-9" symbol="leaf" />
-                      <ClothCompanionSpine color="#6F5B82" accent="#EFE4FA" heightClass="h-[144px] sm:h-[158px]" widthClass="w-8" symbol="star" />
-                    </>
-                  )}
+
                   {tier === 2 && (
                     <>
-                      <ClothCompanionSpine color="#7A4C48" accent="#F5DAC0" heightClass="h-[138px] sm:h-[152px]" widthClass="w-9" symbol="rose" />
-                      <ClothCompanionSpine color="#405E68" accent="#DDF0F2" heightClass="h-[144px] sm:h-[158px]" widthClass="w-9" symbol="leaf" />
+                      <ClothCompanionSpine color="#6A4248" accent="#F0D298" heightPct="h-[84%]" widthClass="w-10" symbol="rose" />
+                      <ClothCompanionSpine color="#455B73" accent="#DCE8F2" heightPct="h-[89%]" widthClass="w-10" symbol="star" />
+                      <ClothCompanionSpine color="#8A6848" accent="#F8E7C8" heightPct="h-[83%]" widthClass="w-10" symbol="leaf" />
+                      <ClothCompanionSpine color="#4E6A58" accent="#E8F0E2" heightPct="h-[87%]" widthClass="w-10" symbol="moon" />
+                      <ClothCompanionSpine color="#9E564E" accent="#FCE2C6" heightPct="h-[82%]" widthClass="w-9" symbol="rose" />
                     </>
                   )}
-                </div>
-                <div className={`${plankClass} relative z-10 h-4 sm:h-[19px] w-full shrink-0 transition-all duration-700`} />
-              </div>
-            ))}
-          </div>
+                </ShelfTierBay>
+              );
+            })}
+          </StandingBookcaseFrame>
+        </section>
 
-          <WoodCabinetDivider mood={roomMood} />
+        {/* CABINET 2 (RIGHT): FINISHED BOOKS */}
+        <section
+          onClick={() => {
+            if (activeCabinet !== 2) {
+              setActiveCabinet(2);
+              setExpandedBookKey(null);
+            }
+          }}
+          className={`flex h-full w-[58%] shrink-0 items-end justify-center px-5 sm:px-10 transition-all duration-700 ${
+            activeCabinet === 2
+              ? 'scale-100 opacity-100'
+              : 'scale-[0.9] opacity-80 hover:opacity-95 cursor-pointer'
+          }`}
+          style={{ transformOrigin: 'left bottom' }}
+        >
+          <StandingBookcaseFrame mood={roomMood}>
+            <ShelfTierBay mood={roomMood}>
+              <ClothCompanionSpine color="#3B6258" accent="#EED492" heightPct="h-[86%]" widthClass="w-9 sm:w-10" symbol="leaf" />
+              {finishedBooks.map((book) => {
+                const key = `right-${book.id}`;
+                return (
+                  <InlineFlipBook
+                    key={key}
+                    book={book}
+                    progress={progressMap[book.id]}
+                    isExpanded={expandedBookKey === key}
+                    isThisHovered={hoveredBookKey === key}
+                    showFinishedTag
+                    onHoverChange={(h) => setHoveredBookKey(h ? key : null)}
+                    onToggleExpand={() =>
+                      setExpandedBookKey((cur) => (cur === key ? null : key))
+                    }
+                    onOpenReader={() => onOpenBook(book, 1)}
+                  />
+                );
+              })}
+              <ClothCompanionSpine color="#8C515C" accent="#F6DFC4" heightPct="h-[84%]" widthClass="w-9 sm:w-10" symbol="rose" />
+              <ClothCompanionSpine color="#536884" accent="#E4EEF8" heightPct="h-[89%]" widthClass="w-9 sm:w-10" symbol="star" />
+            </ShelfTierBay>
+
+            <ShelfTierBay mood={roomMood}>
+              <ClothCompanionSpine color="#A16F52" accent="#FCE8C8" heightPct="h-[85%]" widthClass="w-10" symbol="moon" />
+              <ClothCompanionSpine color="#5D7D6D" accent="#EEF6EC" heightPct="h-[90%]" widthClass="w-10" symbol="leaf" />
+              <ClothCompanionSpine color="#6F5B82" accent="#EFE4FA" heightPct="h-[84%]" widthClass="w-9" symbol="star" />
+            </ShelfTierBay>
+
+            <ShelfTierBay mood={roomMood}>
+              <ClothCompanionSpine color="#7A4C48" accent="#F5DAC0" heightPct="h-[84%]" widthClass="w-10" symbol="rose" />
+              <ClothCompanionSpine color="#405E68" accent="#DDF0F2" heightPct="h-[88%]" widthClass="w-10" symbol="leaf" />
+            </ShelfTierBay>
+          </StandingBookcaseFrame>
         </section>
       </div>
     </div>
