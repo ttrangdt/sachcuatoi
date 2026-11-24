@@ -257,6 +257,22 @@
   box-shadow: inset 0 8px 18px rgba(0, 0, 0, 0.65);
 }
 
+/* Unclipped in-place 3D front cover pop reveal */
+@keyframes coverRevealPop {
+  0% {
+    opacity: 0;
+    transform: perspective(1200px) rotateY(-40deg) scale(0.84) translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: perspective(1200px) rotateY(0deg) scale(1) translateY(-8px);
+  }
+}
+
+.animate-cover-reveal {
+  animation: coverRevealPop 0.38s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
 /* Crisp 3D Book Spine Hover (clean matte finish, no diagonal glare) */
 .spine-book-btn {
   transition:

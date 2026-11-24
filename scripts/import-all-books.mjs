@@ -195,6 +195,13 @@ async function extractCoverImage(doc, outPath) {
   return { ok: false, sampled: null };
 }
 
+const MONG_VUOT_SERIES = {
+  id: 'mong-vuot-qua-den',
+  name: 'Móng Vuốt Quạ Đen',
+  boxColor: '#1E1A22',
+  boxAccent: '#DFB664',
+};
+
 const CURATED_META = [
   { match: 'achilles', id: 'truong-ca-achilles', title: 'Trường Ca Achilles', author: 'Madeline Miller', genre: 'Thần thoại · Tiểu thuyết', year: '2011', spineColor: '#851A2E', spineAccent: '#F4D36A', spineTextColor: '#F7DC88' },
   { match: 'ba ngoai', id: 'ba-ngoai-toi-gui-loi-xin-loi', title: 'Bà Ngoại Tôi Gửi Lời Xin Lỗi', author: 'Fredrik Backman', genre: 'Tiểu thuyết · Gia đình', year: '2013', spineColor: '#9E4B5A', spineAccent: '#F6DFC2', spineTextColor: '#FFF5EB' },
@@ -203,20 +210,21 @@ const CURATED_META = [
   { match: 'cay cam ngot', id: 'cay-cam-ngot-cua-toi', title: 'Cây Cam Ngọt Của Tôi', author: 'José Mauro de Vasconcelos', genre: 'Kinh điển · Tuổi thơ', year: '1968', spineColor: '#C86432', spineAccent: '#FCE5B4', spineTextColor: '#FFF7EC' },
   { match: 'pyjama', id: 'chu-be-mang-pyjama-soc', title: 'Chú Bé Mang Pyjama Sọc', author: 'John Boyne', genre: 'Tiểu thuyết lịch sử', year: '2006', spineColor: '#46586C', spineAccent: '#DCE6F0', spineTextColor: '#F5F8FB' },
   { match: 'chung toi dau', id: 'chung-toi-dau-voi-cac-ban', title: 'Chúng Tôi Đấu Với Các Bạn', author: 'Fredrik Backman', genre: 'Tiểu thuyết · Tâm lý', year: '2017', spineColor: '#294054', spineAccent: '#DFC592', spineTextColor: '#F2F6FA' },
+  { match: 'con hoang', id: 'con-hoang', title: 'Con Hoang', author: 'Lê Hồng Nguyên', genre: 'Văn học Việt Nam', year: '2020', spineColor: '#4B3E35', spineAccent: '#EAD2AC', spineTextColor: '#FAF4EC' },
   { match: 'brooklyn', id: 'cay-brooklyn-xanh-biec', title: 'Cây Brooklyn Xanh Biếc', author: 'Betty Smith', genre: 'Kinh điển · Trưởng thành', year: '1943', spineColor: '#2C5E4A', spineAccent: '#EED9A4', spineTextColor: '#F2FAF5' },
-  { match: 'giang ho hiem ac', id: 'giang-ho-hiem-ac', title: 'Giang Hồ Hiểm Ác', author: 'Leigh Bardugo', genre: 'Kỳ ảo · Grishaverse', year: '2016', spineColor: '#3B283C', spineAccent: '#E5BC74', spineTextColor: '#F8EFF9' },
+  { match: 'sau ke bat hao', id: 'sau-ke-bat-hao', title: 'Sáu Kẻ Bất Hảo', author: 'Leigh Bardugo', genre: 'Kỳ ảo · Móng Vuốt Quạ Đen', year: '2015', spineColor: '#252129', spineAccent: '#DFB15E', spineTextColor: '#F7EFE4', series: { ...MONG_VUOT_SERIES, order: 1 } },
+  { match: 'phi vu bat kha', id: 'phi-vu-bat-kha', title: 'Phi Vụ Bất Khả', author: 'Leigh Bardugo', genre: 'Kỳ ảo · Móng Vuốt Quạ Đen', year: '2015', spineColor: '#4A2029', spineAccent: '#EBC272', spineTextColor: '#FBF2EE', series: { ...MONG_VUOT_SERIES, order: 2 } },
+  { match: 'muu ma chuoc quy', id: 'muu-ma-chuoc-quy', title: 'Mưu Ma Chước Quỷ', author: 'Leigh Bardugo', genre: 'Kỳ ảo · Móng Vuốt Quạ Đen', year: '2016', spineColor: '#242938', spineAccent: '#E6B868', spineTextColor: '#F4F2EC', series: { ...MONG_VUOT_SERIES, order: 3 } },
+  { match: 'giang ho hiem ac', id: 'giang-ho-hiem-ac', title: 'Giang Hồ Hiểm Ác', author: 'Leigh Bardugo', genre: 'Kỳ ảo · Móng Vuốt Quạ Đen', year: '2016', spineColor: '#3B283C', spineAccent: '#E5BC74', spineTextColor: '#F8EFF9', series: { ...MONG_VUOT_SERIES, order: 4 } },
   { match: 'hai so phan', id: 'hai-so-phan', title: 'Hai Số Phận', author: 'Jeffrey Archer', genre: 'Kinh điển · Cuộc đời', year: '1979', spineColor: '#5B3A29', spineAccent: '#E8C584', spineTextColor: '#FAF2E8' },
   { match: 'london', id: 'hieu-sach-cuoi-cung-o-london', title: 'Hiệu Sách Cuối Cùng Ở London', author: 'Madeline Martin', genre: 'Tiểu thuyết lịch sử', year: '2021', spineColor: '#6C323B', spineAccent: '#F2D498', spineTextColor: '#FCF3F0' },
   { match: 'paris', id: 'hieu-sach-nho-o-paris', title: 'Hiệu Sách Nhỏ Ở Paris', author: 'Nina George', genre: 'Lãng mạn · Chữa lành', year: '2013', spineColor: '#54688A', spineAccent: '#F6E2B8', spineTextColor: '#F5F8FC' },
-  { match: 'muu ma chuoc quy', id: 'muu-ma-chuoc-quy', title: 'Mưu Ma Chước Quỷ', author: 'Leigh Bardugo', genre: 'Kỳ ảo · Grishaverse', year: '2016', spineColor: '#242938', spineAccent: '#E6B868', spineTextColor: '#F4F2EC' },
   { match: 'muoi', id: 'muoi-su-hoi-sinh', title: 'Muối - Sự Hồi Sinh Nơi Sâu Thẳm Vụn Vỡ', author: 'Tôn Tần', genre: 'Tản văn · Chữa lành', year: '2022', spineColor: '#5E7A82', spineAccent: '#F4EAE0', spineTextColor: '#F8FBFB' },
   { match: 'ngan mat troi', id: 'ngan-mat-troi-ruc-ro', title: 'Ngàn Mặt Trời Rực Rỡ', author: 'Khaled Hosseini', genre: 'Tiểu thuyết · Nhân văn', year: '2007', spineColor: '#A8482B', spineAccent: '#FBE0A2', spineTextColor: '#FFF6EB' },
   { match: 'ove', id: 'nguoi-dan-ong-mang-ten-ove', title: 'Người Đàn Ông Mang Tên Ove', author: 'Fredrik Backman', genre: 'Tiểu thuyết · Hài ấm áp', year: '2012', spineColor: '#3B647A', spineAccent: '#F5DFB0', spineTextColor: '#F4F9FC' },
   { match: 'nguoi ru ngu', id: 'nguoi-ru-ngu', title: 'Người Ru Ngủ', author: 'Donato Carrisi', genre: 'Trinh thám · Tâm lý', year: '2009', spineColor: '#1E2A38', spineAccent: '#C5D1DD', spineTextColor: '#F0F4F8' },
   { match: 'ngay thang nam', id: 'ngay-thang-nam', title: 'Ngày Tháng Năm', author: 'Diêm Liên Khoa', genre: 'Văn học Trung Quốc', year: '1997', spineColor: '#7A5B3E', spineAccent: '#F2DEC0', spineTextColor: '#FAF5EE' },
-  { match: 'phi vu bat kha', id: 'phi-vu-bat-kha', title: 'Phi Vụ Bất Khả', author: 'Leigh Bardugo', genre: 'Kỳ ảo · Grishaverse', year: '2015', spineColor: '#4A2029', spineAccent: '#EBC272', spineTextColor: '#FBF2EE' },
   { match: 'qua chuong', id: 'qua-chuong-ac-mong', title: 'Quả Chuông Ác Mộng', author: 'Sylvia Plath', genre: 'Kinh điển · Tâm lý', year: '1963', spineColor: '#665378', spineAccent: '#EFE2FA', spineTextColor: '#F8F4FC' },
-  { match: 'sau ke bat hao', id: 'sau-ke-bat-hao', title: 'Sáu Kẻ Bất Hảo', author: 'Leigh Bardugo', genre: 'Kỳ ảo · Grishaverse', year: '2015', spineColor: '#252129', spineAccent: '#DFB15E', spineTextColor: '#F7EFE4' },
   { match: 'auschwitz', id: 'tho-xam-o-auschwitz', title: 'Thợ Xăm Ở Auschwitz', author: 'Heather Morris', genre: 'Tiểu thuyết lịch sử', year: '2018', spineColor: '#4D4742', spineAccent: '#DFC7A2', spineTextColor: '#F6F2EC' },
   { match: 'thu vien nua dem', id: 'thu-vien-nua-dem', title: 'Thư Viện Nửa Đêm', author: 'Matt Haig', genre: 'Kỳ ảo · Triết lý sống', year: '2020', spineColor: '#1E3C47', spineAccent: '#F0D084', spineTextColor: '#F2F9FA' },
   { match: 'thi tran nho', id: 'thi-tran-nho-giac-mo-lon', title: 'Thị Trấn Nhỏ Giấc Mơ Lớn', author: 'Fredrik Backman', genre: 'Tiểu thuyết · Thị trấn', year: '2016', spineColor: '#2E4D42', spineAccent: '#E8D29B', spineTextColor: '#F3FAF6' },
@@ -505,6 +513,36 @@ for (const file of files) {
   });
 }
 
+// Auto-detect any future series sharing a common prefix (e.g. "Tên Truyện - Tập 1", "Tên Truyện - Tập 2")
+const prefixBuckets = new Map();
+for (const b of catalog) {
+  if (b.series) continue;
+  const m = b.title.match(/^(.+?)\s*(?:[-–—:]\s*)?(?:Tập|Phần|Quyển|Book|Vol\.?)\s*(\d+)$/i);
+  if (m) {
+    const baseName = m[1].trim();
+    const volNum = parseInt(m[2], 10);
+    const key = normalizeKey(baseName).replace(/\s+/g, '-');
+    const arr = prefixBuckets.get(key) || [];
+    arr.push({ book: b, baseName, volNum });
+    prefixBuckets.set(key, arr);
+  }
+}
+for (const [key, items] of prefixBuckets.entries()) {
+  if (items.length >= 2) {
+    items.sort((a, b) => a.volNum - b.volNum);
+    const first = items[0].book;
+    for (const item of items) {
+      item.book.series = {
+        id: key,
+        name: item.baseName,
+        order: item.volNum,
+        boxColor: first.spineColor,
+        boxAccent: first.spineAccent,
+      };
+    }
+  }
+}
+
 // Write src/data/defaultBooks.ts cleanly
 const tsLines = [
   `import { BookItem } from '../types/book';`,
@@ -526,7 +564,9 @@ const tsLines = [
     spineAccent: ${JSON.stringify(b.spineAccent)},
     spineTextColor: ${JSON.stringify(b.spineTextColor)},
     totalPages: ${b.totalPages},
-    addedAt: ${1700000000000 + (idx + 1) * 1000},
+    addedAt: ${1700000000000 + (idx + 1) * 1000},${
+      b.series ? `\n    series: ${JSON.stringify(b.series)},` : ''
+    }
   },`
   ),
   `];`,

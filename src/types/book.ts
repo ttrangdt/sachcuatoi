@@ -30,6 +30,14 @@ export interface BookTextData {
   paragraphs: string[];
 }
 
+export interface BookSeriesInfo {
+  id: string;
+  name: string;
+  order: number;
+  boxColor: string;
+  boxAccent: string;
+}
+
 export interface BookItem {
   id: string;
   title: string;
@@ -46,7 +54,8 @@ export interface BookItem {
   spineTextColor: string;
   totalPages: number;
   addedAt: number;
-  cabinetIndex?: 0 | 1 | 2; // 0 = left, 1 = center, 2 = right
+  series?: BookSeriesInfo;
+  cabinetIndex?: 0 | 1 | 2;
 }
 
 export interface BookProgress {
