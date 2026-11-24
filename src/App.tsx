@@ -1,20 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import {
-  Award,
-  BookMarked,
-  BookOpen,
-  Library,
-  Plus,
-  Search,
-  Sparkles,
-} from 'lucide-react';
+import { BookOpen, Feather, Plus, X } from 'lucide-react';
 import { DEFAULT_BOOKS } from './data/defaultBooks';
-import {
-  BookItem,
-  BookProgress,
-  LibraryTab,
-  PaperTheme,
-} from './types/book';
+import { BookItem, BookProgress, PaperTheme } from './types/book';
 import {
   deleteCustomPdfBlob,
   getOrCreateProgress,
@@ -30,11 +17,11 @@ import { loadPdfDocument } from './utils/pdfEngine';
 import { Bookshelf } from './components/Bookshelf';
 import { BookReader } from './components/BookReader';
 import { FinishedArchive } from './components/FinishedArchive';
-import { DecorativeBookmark } from './components/DecorativeBookmark';
 import {
   AmbientRoomEffects,
-  ROOM_MOODS,
+  PullChainSwitch,
   RoomMood,
+  getLocalTimeMood,
 } from './components/AmbientRoomEffects';
 
 const SPINE_PALETTE = [
@@ -53,12 +40,12 @@ export default function App() {
     () => loadAllProgress()
   );
   const [prefs, setPrefs] = useState(() => loadPrefs());
-  const [activeTab, setActiveTab] = useState<LibraryTab>('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [roomMood, setRoomMood] = useState<RoomMood>('morning');
-  const [parallax, setParallax] = useState({ x: 0, y: 0 });
 
-  // Full open book reader
+  // Automatically initialized from local time of day!
+  const [roomMood, setRoomMood] = useState<RoomMood>(() => getLocalTimeMood());
+  const [parallax, setParallax] = useState({ x: 0, y: 0 });
+  const [showJournal, setShowJournal] = useState(false);
+
   const [activeBook, setActiveBook] = useState<{
     book: BookItem;
     startPage?: number;
@@ -95,7 +82,13 @@ export default function App() {
     });
   };
 
+  const handleCycleMood = () => {
+    const order: RoomMood[] = ['morning', 'golden', 'evening'];
+    setRoomMood((cur) => order[(order.indexOf(cur) + 1) % order.length]);
+  };
+
   const handleStartReading = (book: BookItem, startPage?: number) => {
+    setShowJournal(false);
     setActiveBook({ book, startPage });
   };
 
@@ -133,7 +126,6 @@ export default function App() {
       }
 
       setCustomBooks((prev) => [...prev, newBook]);
-      setActiveTab('all');
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -155,48 +147,11 @@ export default function App() {
     [allBooks, progressMap]
   );
 
-  const readingBooks = useMemo(
-    () =>
-      allBooks.filter((b) => {
-        const p = progressMap[b.id];
-        return p && !p.isFinished && (p.bookmarkedPage || p.currentPage > 1);
-      }),
-    [allBooks, progressMap]
-  );
-
-  const visibleShelfBooks = useMemo(() => {
-    const base = activeTab === 'reading' ? readingBooks : allBooks;
-    const q = searchQuery.trim().toLowerCase();
-    if (!q) return base;
-    return base.filter(
-      (b) =>
-        b.title.toLowerCase().includes(q) ||
-        b.author.toLowerCase().includes(q) ||
-        b.genre.toLowerCase().includes(q)
-    );
-  }, [activeTab, allBooks, readingBooks, searchQuery]);
-
-  const continueBook = useMemo(() => {
-    const candidates = readingBooks
-      .map((book) => ({ book, progress: progressMap[book.id] }))
-      .filter((x) => x.progress?.lastReadAt)
-      .sort(
-        (a, b) => (b.progress.lastReadAt || 0) - (a.progress.lastReadAt || 0)
-      );
-    return candidates[0] || null;
-  }, [readingBooks, progressMap]);
-
   const isEvening = roomMood === 'evening';
-  const moodBgClass =
-    roomMood === 'golden'
-      ? 'room-mood-golden'
-      : roomMood === 'evening'
-        ? 'room-mood-evening'
-        : 'room-mood-morning';
 
   return (
     <div
-      className={`${moodBgClass} relative h-dvh overflow-hidden flex flex-col transition-all duration-1000`}
+      className="relative h-dvh overflow-hidden flex flex-col"
       onMouseMove={(e) => {
         if (window.innerWidth < 768) return;
         const x = (e.clientX / window.innerWidth - 0.5) * 2;
@@ -204,213 +159,107 @@ export default function App() {
         setParallax({ x, y });
       }}
     >
-      {/* Dreamy Fairy-Tale Reading Room Background & Mood Effects */}
+      {/* Unified Library Room Background */}
       <AmbientRoomEffects mood={roomMood} parallax={parallax} />
 
-      {/* Slim Floating Top Bar */}
-      <header
-        className={`relative z-30 shrink-0 border-b backdrop-blur-md transition-colors duration-700 ${
-          isEvening
-            ? 'border-white/10 bg-[#15152C]/78 text-[#F2ECFA]'
-            : roomMood === 'golden'
-              ? 'border-[#E6C5A8]/70 bg-[#FDF3E8]/78 text-[#36241B]'
-              : 'border-[#C9DFD8]/70 bg-[#F4FAF8]/78 text-[#22342E]'
-        }`}
-      >
-        <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-2 px-3 sm:px-5 py-1.5">
-          {/* Brand + Vivid Mood Switcher */}
-          <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#4A314D] text-[#F9DF96] shadow-xs">
-              <Library className="h-3.5 w-3.5" />
-            </div>
-            <h1 className="font-display text-lg sm:text-xl font-bold leading-none">
-              Tủ Sách Của Tôi
-            </h1>
+      {/* Physical Brass Pull-Chain Switch in Top-Left Corner (replaces 3 buttons!) */}
+      {!activeBook && (
+        <PullChainSwitch mood={roomMood} onPull={handleCycleMood} />
+      )}
 
-            {/* 3 Vivid Fairy-Tale Room Moods */}
-            <div
-              className={`inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 ml-1 ${
-                isEvening
-                  ? 'border-white/15 bg-white/8'
-                  : 'border-black/10 bg-white/70'
-              }`}
-              title="Đổi không gian ánh sáng phòng đọc"
-            >
-              {ROOM_MOODS.map((m) => {
-                const active = roomMood === m.id;
-                return (
-                  <button
-                    key={m.id}
-                    type="button"
-                    onClick={() => setRoomMood(m.id)}
-                    className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold transition ${
-                      active
-                        ? isEvening
-                          ? 'bg-[#6F58C9] text-white shadow-xs'
-                          : roomMood === 'golden'
-                            ? 'bg-[#C96B36] text-white shadow-xs'
-                            : 'bg-[#3B6B5C] text-white shadow-xs'
-                        : isEvening
-                          ? 'text-slate-300 hover:text-white'
-                          : 'text-[#55505C] hover:text-[#1D1B22]'
-                    }`}
-                  >
-                    <span
-                      className="h-2 w-2 rounded-full"
-                      style={{ backgroundColor: m.dotColor }}
-                    />
-                    <span className="hidden sm:inline">{m.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Center Tabs */}
-          <nav
-            className={`inline-flex items-center gap-1 rounded-xl border p-0.5 ${
+      {/* Minimal Floating Top-Right Leather Reading Journal & Add PDF Icon (replaces generic tabs!) */}
+      {!activeBook && (
+        <div className="fixed top-3 right-3 sm:right-5 z-40 flex items-center gap-2">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="application/pdf"
+            onChange={handleUploadPdf}
+            className="hidden"
+          />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className={`flex h-9 w-9 items-center justify-center rounded-full border shadow-md backdrop-blur-md transition hover:scale-105 ${
               isEvening
-                ? 'border-white/15 bg-white/8'
-                : 'border-black/10 bg-white/60'
+                ? 'border-[#E5C16C]/35 bg-[#241A13]/85 text-[#F6E2B3]'
+                : 'border-[#C9B79B] bg-[#FAF6EE]/88 text-[#463222]'
             }`}
+            title="Thêm sách PDF mới"
+            aria-label="Thêm sách PDF mới"
           >
-            <button
-              type="button"
-              onClick={() => setActiveTab('all')}
-              className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] font-semibold transition ${
-                activeTab === 'all'
-                  ? 'bg-[#4A314D] text-white shadow-xs'
-                  : isEvening
-                    ? 'text-slate-300 hover:bg-white/10'
-                    : 'text-[#4D4754] hover:bg-white/80'
-              }`}
-            >
-              <Library className="h-3 w-3" />
-              <span>Tủ sách ({allBooks.length})</span>
-            </button>
+            <Plus className="h-4 w-4" />
+          </button>
 
-            <button
-              type="button"
-              onClick={() => setActiveTab('reading')}
-              className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] font-semibold transition ${
-                activeTab === 'reading'
-                  ? 'bg-[#4A314D] text-white shadow-xs'
-                  : isEvening
-                    ? 'text-slate-300 hover:bg-white/10'
-                    : 'text-[#4D4754] hover:bg-white/80'
-              }`}
-            >
-              <BookMarked className="h-3 w-3" />
-              <span>Đang đọc ({readingBooks.length})</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('finished')}
-              className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] font-semibold transition ${
-                activeTab === 'finished'
-                  ? 'bg-[#2C6B50] text-white shadow-xs'
-                  : isEvening
-                    ? 'text-slate-300 hover:bg-white/10'
-                    : 'text-[#4D4754] hover:bg-white/80'
-              }`}
-            >
-              <Award className="h-3 w-3" />
-              <span>Đã đọc xong ({finishedBooks.length})</span>
-            </button>
-          </nav>
-
-          {/* Right Tools: Search + Upload PDF */}
-          <div className="flex items-center gap-1.5">
-            {activeTab !== 'finished' && (
-              <div className="relative hidden md:block w-36 lg:w-44">
-                <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3 w-3 -translate-y-1/2 opacity-60" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Tìm sách..."
-                  className={`w-full rounded-lg border py-1 pl-7 pr-2 text-[11px] focus:outline-none ${
-                    isEvening
-                      ? 'border-white/15 bg-white/10 text-white placeholder:text-slate-400'
-                      : 'border-black/10 bg-white/85 text-[#232026] placeholder:text-[#847E8B]'
-                  }`}
-                />
-              </div>
-            )}
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="application/pdf"
-              onChange={handleUploadPdf}
-              className="hidden"
-            />
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
-              className="inline-flex items-center gap-1 rounded-lg bg-[#4A314D] px-2.5 py-1 text-[11px] font-medium text-[#FDF6E9] shadow-xs transition hover:bg-[#5E3E62] disabled:opacity-60"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">
-                {uploading ? 'Đang thêm...' : 'Thêm PDF'}
+          <button
+            type="button"
+            onClick={() => setShowJournal(true)}
+            className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-2 text-xs font-medium shadow-md backdrop-blur-md transition hover:scale-105 ${
+              isEvening
+                ? 'border-[#E5C16C]/40 bg-[#2C1E14]/90 text-[#F7E4B6]'
+                : 'border-[#C9B79B] bg-[#FAF6EE]/90 text-[#3F2C1E]'
+            }`}
+            title="Mở Sổ Nhật Ký Đọc Sách"
+          >
+            <Feather className="h-3.5 w-3.5 text-[#C48B3B]" />
+            <span className="hidden sm:inline font-serif">Nhật ký đọc</span>
+            {finishedBooks.length > 0 && (
+              <span className="rounded-full bg-[#24664B] px-1.5 py-0.2 text-[10px] font-bold text-white">
+                {finishedBooks.length}
               </span>
-            </button>
-          </div>
+            )}
+          </button>
         </div>
-      </header>
+      )}
 
-      {/* Main Viewport-Fitted 3-Bookcase Room Stage */}
-      <main className="relative z-10 mx-auto flex w-full max-w-[1440px] flex-1 min-h-0 flex-col px-1 sm:px-4 pt-2 pb-0">
-        {continueBook && activeTab !== 'finished' && (
+      {/* Full-Screen Built-In 3-Cabinet Library Wall */}
+      <main className="relative z-10 flex flex-1 min-h-0 w-full flex-col pt-1 sm:pt-2 pb-0">
+        <Bookshelf
+          books={allBooks}
+          progressMap={progressMap}
+          roomMood={roomMood}
+          onOpenBook={handleStartReading}
+          onDeleteCustomBook={handleDeleteCustomBook}
+          onAddBookClick={() => fileInputRef.current?.click()}
+        />
+      </main>
+
+      {/* Cozy Library Wooden Baseboard & Floor */}
+      <div
+        className={`${
+          isEvening
+            ? 'room-floor-evening border-[#160F0B]'
+            : 'room-floor-day border-[#5B3B25]'
+        } relative z-20 h-5 sm:h-7 shrink-0 w-full border-t transition-colors duration-700`}
+      />
+
+      {/* Bespoke Leather-Bound Reading Journal Modal (for Finished Books Archive & Reading Stats) */}
+      {showJournal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4 backdrop-blur-sm"
+          onClick={() => setShowJournal(false)}
+        >
           <div
-            className={`mx-auto mb-1.5 flex w-full max-w-2xl shrink-0 items-center justify-between gap-2 rounded-full border px-3.5 py-1 backdrop-blur-md ${
-              isEvening
-                ? 'border-white/15 bg-white/10 text-slate-100'
-                : 'border-black/10 bg-white/75 text-[#302836]'
-            }`}
+            className="relative flex max-h-[86vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border-4 border-[#5C3D28] bg-[#FAF4E8] text-[#241B14] shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center gap-2 min-w-0">
-              <div className="h-6 w-4 shrink-0 flex items-center justify-center">
-                <DecorativeBookmark
-                  styleId={continueBook.progress.bookmarkStyle}
-                  size="sm"
-                />
+            <div className="flex items-center justify-between border-b border-[#E2D4BC] bg-[#F2E8D5] px-6 py-4">
+              <div className="flex items-center gap-2.5">
+                <BookOpen className="h-5 w-5 text-[#7A4B2A]" />
+                <h2 className="font-display text-2xl font-bold">
+                  Sổ Nhật Ký Đọc Sách
+                </h2>
               </div>
-              <div className="truncate text-[11px]">
-                <Sparkles className="mr-1 inline h-3 w-3 text-[#C98B44]" />
-                Đọc tiếp{' '}
-                <strong className="font-display text-sm">
-                  {continueBook.book.title}
-                </strong>{' '}
-                <span className="opacity-75">
-                  — Trang{' '}
-                  {continueBook.progress.bookmarkedPage ||
-                    continueBook.progress.currentPage}
-                </span>
-              </div>
+              <button
+                type="button"
+                onClick={() => setShowJournal(false)}
+                className="rounded-lg p-1.5 text-[#6B5A4C] hover:bg-[#E5D7BF]"
+              >
+                <X className="h-5 w-5" />
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={() =>
-                handleStartReading(
-                  continueBook.book,
-                  continueBook.progress.bookmarkedPage ||
-                    continueBook.progress.currentPage
-                )
-              }
-              className="inline-flex items-center gap-1 rounded-full bg-[#4A314D] px-2.5 py-1 text-[10px] font-semibold text-white transition hover:bg-[#5F3F63]"
-            >
-              <BookOpen className="h-3 w-3" />
-              Đọc tiếp
-            </button>
-          </div>
-        )}
-
-        <div className="flex flex-1 min-h-0 flex-col">
-          {activeTab === 'finished' ? (
-            <div className="mx-auto w-full max-w-5xl flex-1 overflow-y-auto px-3 pb-8 pt-2">
+            <div className="flex-1 overflow-y-auto p-5">
               <FinishedArchive
                 books={finishedBooks}
                 progressMap={progressMap}
@@ -426,27 +275,9 @@ export default function App() {
                 }}
               />
             </div>
-          ) : (
-            <Bookshelf
-              books={visibleShelfBooks}
-              progressMap={progressMap}
-              roomMood={roomMood}
-              onOpenBook={handleStartReading}
-              onDeleteCustomBook={handleDeleteCustomBook}
-              onAddBookClick={() => fileInputRef.current?.click()}
-            />
-          )}
+          </div>
         </div>
-      </main>
-
-      {/* Dark Walnut Floorboard Base */}
-      <div
-        className={`${
-          isEvening
-            ? 'room-floor-evening border-[#160F0B]'
-            : 'room-floor-day border-[#5B3B25]'
-        } relative z-10 h-5 sm:h-7 shrink-0 w-full border-t transition-colors duration-700`}
-      />
+      )}
 
       {/* Full Realistic Reflow Book Reader */}
       {activeBook && (

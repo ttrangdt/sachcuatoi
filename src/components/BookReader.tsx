@@ -56,7 +56,7 @@ const THEME_STYLES: Record<
 > = {
   cream: {
     label: 'Kem ấm',
-    backdrop: 'bg-[#251A13]',
+    backdrop: 'bg-[#231912]',
     pageBg: 'bg-[#FCF8EE]',
     bodyText: 'text-[#2C221A]',
     mutedText: 'text-[#7C6A58]',
@@ -80,10 +80,10 @@ const THEME_STYLES: Record<
   },
   night: {
     label: 'Đèn đêm',
-    backdrop: 'bg-[#0F101A]',
-    pageBg: 'bg-[#1B1C27]',
-    bodyText: 'text-[#DDD8CE]',
-    mutedText: 'text-[#918B9C]',
+    backdrop: 'bg-[#0B0C14]',
+    pageBg: 'bg-[#171822]',
+    bodyText: 'text-[#CFC9BE]',
+    mutedText: 'text-[#847E90]',
     headingText: 'text-[#F3D89B]',
   },
 };
@@ -132,6 +132,12 @@ const PageTextColumn: React.FC<{
   );
 };
 
+interface FlipTransitionState {
+  direction: 'next' | 'prev';
+  fromPage: number;
+  toPage: number;
+}
+
 export const BookReader: React.FC<BookReaderProps> = ({
   book,
   progress,
@@ -147,6 +153,7 @@ export const BookReader: React.FC<BookReaderProps> = ({
     initialPage || progress.bookmarkedPage || progress.currentPage || 1;
 
   const [currentPage, setCurrentPage] = useState<number>(startPage);
+  const [flipState, setFlipState] = useState<FlipTransitionState | null>(null);
   const [bookText, setBookText] = useState<BookTextData | null>(null);
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -154,9 +161,6 @@ export const BookReader: React.FC<BookReaderProps> = ({
 
   const [isMobile, setIsMobile] = useState<boolean>(() =>
     typeof window !== 'undefined' ? window.innerWidth < 860 : false
-  );
-  const [flipDirection, setFlipDirection] = useState<'next' | 'prev' | null>(
-    null
   );
   const [showToc, setShowToc] = useState<boolean>(false);
   const [showBookmarkPanel, setShowBookmarkPanel] = useState<boolean>(false);
@@ -167,12 +171,20 @@ export const BookReader: React.FC<BookReaderProps> = ({
   const [pageInput, setPageInput] = useState<string>(String(startPage));
   const [justFinishedBanner, setJustFinishedBanner] = useState<boolean>(false);
 
+  // Night-mode warm cursor reading spotlight coordinates (relative to open book)
+  const [spotlight, setSpotlight] = useState<{ x: number; y: number; active: boolean }>({
+    x: 0,
+    y: 0,
+    active: false,
+  });
+
   const touchStartX = useRef<number | null>(null);
   const prevTotalRef = useRef<number>(progress.totalPages || book.totalPages);
+  const flipTimerRef = useRef<number | null>(null);
   const measureColRef = useRef<HTMLDivElement | null>(null);
   const [colDims, setColDims] = useState<{ width: number; height: number }>(() => ({
-    width: typeof window !== 'undefined' && window.innerWidth < 860 ? 340 : 460,
-    height: typeof window !== 'undefined' ? Math.max(420, window.innerHeight * 0.68) : 540,
+    width: typeof window !== 'undefined' && window.innerWidth < 860 ? 340 : 540,
+    height: typeof window !== 'undefined' ? Math.max(460, window.innerHeight * 0.72) : 600,
   }));
 
   useEffect(() => {
@@ -181,7 +193,6 @@ export const BookReader: React.FC<BookReaderProps> = ({
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  // Measure actual rendered page text area so every page fills ~90-94% height cleanly
   useEffect(() => {
     const el = measureColRef.current;
     if (!el || typeof ResizeObserver === 'undefined') return;
@@ -200,7 +211,6 @@ export const BookReader: React.FC<BookReaderProps> = ({
     return () => ro.disconnect();
   }, [isMobile]);
 
-  // Track firstOpenedAt + lastReadAt
   useEffect(() => {
     const now = Date.now();
     onUpdateProgress((prev) => ({
@@ -211,7 +221,6 @@ export const BookReader: React.FC<BookReaderProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [book.id]);
 
-  // Load extracted clean text & cover
   useEffect(() => {
     let active = true;
     setLoading(true);
@@ -237,10 +246,10 @@ export const BookReader: React.FC<BookReaderProps> = ({
 
     return () => {
       active = false;
+      if (flipTimerRef.current) window.clearTimeout(flipTimerRef.current);
     };
   }, [book]);
 
-  // Smartly reflow book pages using measured page column width & height
   const paginated = useMemo(() => {
     if (!bookText) return null;
     return paginateBookText(bookText, {
@@ -254,7 +263,6 @@ export const BookReader: React.FC<BookReaderProps> = ({
   const totalPages = paginated?.totalPages || progress.totalPages || book.totalPages;
   const toc = paginated?.toc || [{ title: 'Bìa sách', page: 1, level: 0 }];
 
-  // Preserve reading ratio smoothly when fontSize / screen layout repaginates
   useEffect(() => {
     if (!paginated) return;
     const oldTotal = prevTotalRef.current;
@@ -274,7 +282,6 @@ export const BookReader: React.FC<BookReaderProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paginated?.totalPages]);
 
-  // Persist current page & auto-detect finishing the book
   useEffect(() => {
     setPageInput(String(currentPage));
     const now = Date.now();
@@ -298,27 +305,59 @@ export const BookReader: React.FC<BookReaderProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, totalPages]);
 
-  const goNext = useCallback(() => {
-    setFlipDirection('next');
-    window.setTimeout(() => setFlipDirection(null), 460);
-    setCurrentPage((p) => {
-      if (isMobile) return Math.min(totalPages, p + 1);
-      if (p <= 1) return Math.min(totalPages, 2);
-      const left = p % 2 === 0 ? p : p - 1;
-      return Math.min(totalPages, left + 2);
-    });
-  }, [isMobile, totalPages]);
+  /** Helper: get [leftPageNum, rightPageNum] for a desktop spread anchor */
+  const getSpreadNums = useCallback(
+    (anchor: number): [number | null, number | null] => {
+      if (anchor <= 1) return [null, 1];
+      const left = anchor % 2 === 0 ? anchor : anchor - 1;
+      const right = left + 1 <= totalPages ? left + 1 : null;
+      return [left, right];
+    },
+    [totalPages]
+  );
 
-  const goPrev = useCallback(() => {
-    setFlipDirection('prev');
-    window.setTimeout(() => setFlipDirection(null), 460);
-    setCurrentPage((p) => {
-      if (isMobile) return Math.max(1, p - 1);
-      if (p <= 2) return 1;
-      const left = p % 2 === 0 ? p : p - 1;
-      return Math.max(1, left - 2);
-    });
-  }, [isMobile]);
+  /** Real Two-Sided Smooth 3D Page Flip */
+  const triggerFlip = useCallback(
+    (direction: 'next' | 'prev') => {
+      if (flipState) return; // avoid overlapping flips mid-air
+
+      let target = currentPage;
+      if (direction === 'next') {
+        if (currentPage >= totalPages) return;
+        if (isMobile) {
+          target = Math.min(totalPages, currentPage + 1);
+        } else if (currentPage <= 1) {
+          target = Math.min(totalPages, 2);
+        } else {
+          const left = currentPage % 2 === 0 ? currentPage : currentPage - 1;
+          target = Math.min(totalPages, left + 2);
+        }
+      } else {
+        if (currentPage <= 1) return;
+        if (isMobile) {
+          target = Math.max(1, currentPage - 1);
+        } else if (currentPage <= 2) {
+          target = 1;
+        } else {
+          const left = currentPage % 2 === 0 ? currentPage : currentPage - 1;
+          target = Math.max(1, left - 2);
+        }
+      }
+
+      if (target === currentPage) return;
+
+      setFlipState({ direction, fromPage: currentPage, toPage: target });
+      const duration = isMobile ? 380 : 580;
+      flipTimerRef.current = window.setTimeout(() => {
+        setCurrentPage(target);
+        setFlipState(null);
+      }, duration);
+    },
+    [currentPage, flipState, isMobile, totalPages]
+  );
+
+  const goNext = useCallback(() => triggerFlip('next'), [triggerFlip]);
+  const goPrev = useCallback(() => triggerFlip('prev'), [triggerFlip]);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -342,47 +381,121 @@ export const BookReader: React.FC<BookReaderProps> = ({
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [goNext, goPrev, onClose]);
 
-  const leftPageNum = isMobile
-    ? null
-    : currentPage <= 1
-      ? null
-      : currentPage % 2 === 0
-        ? currentPage
-        : currentPage - 1;
-
-  const rightPageNum = isMobile
-    ? currentPage
-    : currentPage <= 1
-      ? 1
-      : leftPageNum && leftPageNum + 1 <= totalPages
-        ? leftPageNum + 1
-        : null;
-
-  const leftParagraphs =
-    paginated && leftPageNum && leftPageNum >= 2
-      ? paginated.pages[leftPageNum - 2] || null
-      : null;
-
-  const rightParagraphs =
-    paginated && rightPageNum && rightPageNum >= 2
-      ? paginated.pages[rightPageNum - 2] || null
-      : null;
-
+  const theme = THEME_STYLES[paperTheme];
   const activeChapter = [...toc]
     .reverse()
     .find((item) => item.page <= currentPage);
 
+  // Render any single page face cleanly (Cover or Text)
+  const renderPageFace = (pageNum: number | null, side: 'left' | 'right') => {
+    if (pageNum === null) {
+      if (side === 'left') {
+        // Inside front cover title plate
+        return (
+          <div className="flex h-full flex-col justify-between rounded border border-[#D8C6AB]/60 p-8 text-[#2A1F18]">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#9A7A58]">
+                Thư viện cá nhân · Tủ Sách Của Tôi
+              </p>
+              <h2 className="mt-6 font-display text-4xl font-bold leading-tight">
+                {book.title}
+              </h2>
+              <p className="mt-2 font-serif text-base italic text-[#6B5B4E]">
+                {book.author}
+              </p>
+              <div className="my-5 h-px w-16 bg-[#C28E48]" />
+              <p className="font-serif text-sm leading-relaxed text-[#4C3D31]">
+                {book.description}
+              </p>
+            </div>
+            <div className="space-y-1 text-xs text-[#7D6853]">
+              <p>{book.genre}</p>
+              <p>{totalPages} trang ({fontSize}px)</p>
+            </div>
+          </div>
+        );
+      }
+      return (
+        <div className="flex h-full items-center justify-center">
+          <span className={`font-serif text-sm italic ${theme.mutedText}`}>
+            — Hết cuốn sách —
+          </span>
+        </div>
+      );
+    }
+
+    if (pageNum === 1) {
+      return (
+        <div className="flex h-full flex-col justify-between">
+          <div className={`text-right text-[11px] font-serif ${theme.mutedText}`}>
+            Bìa sách
+          </div>
+          <div className="flex flex-1 items-center justify-center py-2">
+            {book.id === 'truong-ca-achilles' ? (
+              <div className="h-full max-h-[68vh] aspect-[2/3] overflow-hidden rounded shadow-xl">
+                <AchillesCoverArt />
+              </div>
+            ) : coverUrl ? (
+              <img
+                src={coverUrl}
+                alt={book.title}
+                className="max-h-full max-w-full rounded object-contain shadow-lg"
+              />
+            ) : (
+              <div className="text-center font-display text-3xl font-bold">
+                {book.title}
+              </div>
+            )}
+          </div>
+          <div className={`text-center font-serif text-xs ${theme.mutedText}`}>
+            1
+          </div>
+        </div>
+      );
+    }
+
+    const paras = paginated?.pages[pageNum - 2] || null;
+    return (
+      <div className="flex h-full flex-col justify-between">
+        <div
+          className={`flex items-center justify-between text-[11px] font-serif ${theme.mutedText}`}
+        >
+          <span className="truncate">{side === 'left' ? book.title : book.author}</span>
+          <span className="truncate opacity-75">
+            {side === 'left' ? activeChapter?.title || '' : ''}
+          </span>
+        </div>
+        {loading ? (
+          <div className="my-3 flex-1 animate-pulse rounded bg-black/5" />
+        ) : (
+          <PageTextColumn paragraphs={paras} fontSize={fontSize} theme={theme} />
+        )}
+        <div className={`text-center font-serif text-xs ${theme.mutedText}`}>
+          {pageNum}
+        </div>
+      </div>
+    );
+  };
+
+  // Compute Base Left/Right pages & Turning Sheet Front/Back faces for real two-sided 3D flip
+  const [curLeft, curRight] = getSpreadNums(currentPage);
+  const [destLeft, destRight] = flipState
+    ? getSpreadNums(flipState.toPage)
+    : [curLeft, curRight];
+
+  const baseLeftNum =
+    flipState?.direction === 'prev' ? destLeft : curLeft;
+  const baseRightNum =
+    flipState?.direction === 'next' ? destRight : curRight;
+
   const activeBookmark =
     progress.bookmarks.find(
-      (b) =>
-        b.page === currentPage ||
-        b.page === leftPageNum ||
-        b.page === rightPageNum
+      (b) => b.page === currentPage || b.page === curLeft || b.page === curRight
     ) ||
     (progress.bookmarkedPage &&
     (progress.bookmarkedPage === currentPage ||
-      progress.bookmarkedPage === leftPageNum ||
-      progress.bookmarkedPage === rightPageNum)
+      progress.bookmarkedPage === curLeft ||
+      progress.bookmarkedPage === curRight)
       ? {
           id: 'primary',
           page: progress.bookmarkedPage,
@@ -455,7 +568,6 @@ export const BookReader: React.FC<BookReaderProps> = ({
     }
   };
 
-  const theme = THEME_STYLES[paperTheme];
   const progressPercent = Math.round((currentPage / Math.max(1, totalPages)) * 100);
 
   return (
@@ -463,7 +575,7 @@ export const BookReader: React.FC<BookReaderProps> = ({
       className={`fixed inset-0 z-50 flex flex-col ${theme.backdrop} text-[#F7F1E5] select-none`}
     >
       {/* Top Reader Toolbar */}
-      <header className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 bg-black/30 px-3 sm:px-6 py-2 backdrop-blur-md">
+      <header className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 bg-black/30 px-3 sm:px-6 py-1.5 backdrop-blur-md">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <button
             type="button"
@@ -484,13 +596,9 @@ export const BookReader: React.FC<BookReaderProps> = ({
           </div>
         </div>
 
-        {/* Right Controls: Font Size A-/A+, TOC, Enchanted Bookmark, Theme, Finished */}
+        {/* Right Controls */}
         <div className="flex items-center gap-1.5 sm:gap-2">
-          {/* Font Size Adjuster */}
-          <div
-            className="inline-flex items-center rounded-lg border border-white/15 bg-white/5 p-0.5"
-            title="Chỉnh cỡ chữ đọc sách"
-          >
+          <div className="inline-flex items-center rounded-lg border border-white/15 bg-white/5 p-0.5">
             <button
               type="button"
               onClick={() => onChangeFontSize(Math.max(13, fontSize - 1))}
@@ -514,7 +622,6 @@ export const BookReader: React.FC<BookReaderProps> = ({
             </button>
           </div>
 
-          {/* TOC */}
           <button
             type="button"
             onClick={() => {
@@ -531,7 +638,6 @@ export const BookReader: React.FC<BookReaderProps> = ({
             <span className="hidden sm:inline">Mục lục</span>
           </button>
 
-          {/* Enchanted Bookmark Studio */}
           <button
             type="button"
             onClick={() => {
@@ -552,7 +658,6 @@ export const BookReader: React.FC<BookReaderProps> = ({
             </span>
           </button>
 
-          {/* Paper Theme */}
           <button
             type="button"
             onClick={() => {
@@ -571,7 +676,6 @@ export const BookReader: React.FC<BookReaderProps> = ({
             <span className="hidden md:inline">{theme.label}</span>
           </button>
 
-          {/* Mark Finished */}
           <button
             type="button"
             onClick={handleToggleFinished}
@@ -589,9 +693,8 @@ export const BookReader: React.FC<BookReaderProps> = ({
         </div>
       </header>
 
-      {/* Finished Banner */}
       {justFinishedBanner && (
-        <div className="flex items-center justify-between bg-[#1F4E3D] px-5 py-2 text-xs text-[#E7F8EE]">
+        <div className="flex items-center justify-between bg-[#1F4E3D] px-5 py-1.5 text-xs text-[#E7F8EE]">
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-[#F3D37A]" />
             <span>
@@ -615,9 +718,9 @@ export const BookReader: React.FC<BookReaderProps> = ({
         </div>
       )}
 
-      {/* Main Reading Stage */}
+      {/* Main Immersive Large-Format Reading Stage */}
       <div
-        className="relative flex flex-1 items-center justify-center overflow-hidden px-2 py-3 sm:px-8 sm:py-5"
+        className="relative flex flex-1 items-center justify-center overflow-hidden px-2 py-2 sm:px-5 sm:py-3"
         onTouchStart={(e) => {
           touchStartX.current = e.touches[0].clientX;
         }}
@@ -631,12 +734,12 @@ export const BookReader: React.FC<BookReaderProps> = ({
       >
         {/* TOC Drawer */}
         {showToc && (
-          <aside className="absolute inset-y-0 left-0 z-30 flex w-72 sm:w-80 flex-col border-r border-[#C9B393]/30 bg-[#FAF5EC] text-[#221A14] shadow-2xl">
+          <aside className="absolute inset-y-0 left-0 z-40 flex w-72 sm:w-80 flex-col border-r border-[#C9B393]/30 bg-[#FAF5EC] text-[#221A14] shadow-2xl">
             <div className="flex items-center justify-between border-b border-[#E3D5BF] px-5 py-3.5">
               <div>
                 <h2 className="font-display text-xl font-bold">Mục lục</h2>
                 <p className="text-[11px] text-[#7A6451]">
-                  {toc.length} phần · {totalPages} trang ({fontSize}px)
+                  {toc.length} phần · {totalPages} trang
                 </p>
               </div>
               <button
@@ -679,16 +782,16 @@ export const BookReader: React.FC<BookReaderProps> = ({
           </aside>
         )}
 
-        {/* Enchanted 9-Style Bookmark Studio Drawer */}
+        {/* Bookmark Studio Drawer */}
         {showBookmarkPanel && (
-          <aside className="absolute inset-y-0 right-0 z-30 flex w-80 sm:w-[400px] flex-col border-l border-[#C9B393]/30 bg-[#FAF5EC] text-[#221A14] shadow-2xl">
+          <aside className="absolute inset-y-0 right-0 z-40 flex w-80 sm:w-[400px] flex-col border-l border-[#C9B393]/30 bg-[#FAF5EC] text-[#221A14] shadow-2xl">
             <div className="flex items-center justify-between border-b border-[#E3D5BF] px-5 py-3.5">
               <div>
                 <h2 className="font-display text-xl font-bold">
                   Bộ sưu tập Bookmark ✨
                 </h2>
                 <p className="text-[11px] text-[#7A6451]">
-                  Chọn thẻ kẹp lấp lánh để đánh dấu trang {currentPage}
+                  Kẹp tại chính giữa gáy sách trang {currentPage}
                 </p>
               </div>
               <button
@@ -732,14 +835,11 @@ export const BookReader: React.FC<BookReaderProps> = ({
               </div>
 
               <div>
-                <label className="mb-1 block text-xs font-semibold text-[#4B3A2D]">
-                  Ghi chú ngắn (tuỳ chọn)
-                </label>
                 <input
                   type="text"
                   value={bookmarkNote}
                   onChange={(e) => setBookmarkNote(e.target.value)}
-                  placeholder="VD: Đoạn văn rất đẹp..."
+                  placeholder="Ghi chú ngắn (tuỳ chọn)..."
                   className="w-full rounded-lg border border-[#D8C7AE] bg-white px-3 py-2 text-xs text-[#221A14] placeholder:text-[#A5937F] focus:border-[#8E2C5A] focus:outline-none"
                 />
               </div>
@@ -750,10 +850,9 @@ export const BookReader: React.FC<BookReaderProps> = ({
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#8E2C5A] px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-[#722047]"
               >
                 <Sparkles className="h-4 w-4" />
-                Kẹp bookmark lấp lánh tại trang {currentPage}
+                Kẹp bookmark tại trang {currentPage}
               </button>
 
-              {/* Saved Bookmarks */}
               <div className="border-t border-[#E3D5BF] pt-3">
                 <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-[#7A6451]">
                   Các trang đã đánh dấu ({progress.bookmarks.length})
@@ -805,82 +904,44 @@ export const BookReader: React.FC<BookReaderProps> = ({
           </aside>
         )}
 
-        {/* Left Arrow (Desktop) */}
+        {/* Left Page Turn Button */}
         <button
           type="button"
           onClick={goPrev}
-          disabled={currentPage <= 1}
-          className="hidden sm:flex mr-3 lg:mr-6 h-12 w-12 shrink-0 items-center justify-center rounded-full border border-white/15 bg-black/30 text-[#F5EAD6] transition hover:bg-black/55 disabled:opacity-25"
+          disabled={currentPage <= 1 || Boolean(flipState)}
+          className="hidden sm:flex mr-2 lg:mr-4 h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/15 bg-black/30 text-[#F5EAD6] transition hover:bg-black/55 disabled:opacity-20"
           aria-label="Lật trang trước"
         >
-          <ChevronLeft className="h-6 w-6" />
+          <ChevronLeft className="h-5 w-5" />
         </button>
 
-        {/* THE REALISTIC REFLOW OPEN BOOK */}
+        {/* ============================================================
+            THE LARGE-FORMAT REALISTIC OPEN BOOK
+           ============================================================ */}
         {errorMsg ? (
           <div className="rounded-2xl bg-[#FAF5EC] p-8 text-center text-[#221A14] shadow-xl">
             <BookOpen className="mx-auto h-10 w-10 text-[#8E2C2C]" />
             <p className="mt-3 font-medium">{errorMsg}</p>
           </div>
         ) : isMobile ? (
-          /* Mobile Single Page Book */
-          <div
-            className={`relative flex h-full max-h-[80vh] w-full max-w-[440px] flex-col rounded-xl border-4 border-[#4A2E1D] ${theme.pageBg} shadow-[0_22px_50px_rgba(0,0,0,0.65)] ${
-              flipDirection === 'next'
-                ? 'animate-mobile-next'
-                : flipDirection === 'prev'
-                  ? 'animate-mobile-prev'
-                  : ''
-            }`}
-          >
+          /* Mobile Single Page Book with underneath next-page reveal */
+          <div className="flip-stage relative h-[82vh] w-full max-w-[460px] rounded-xl border-4 border-[#4A2E1D] shadow-[0_22px_50px_rgba(0,0,0,0.65)] overflow-visible">
+            {/* Bookmark peeking cleanly from top-center edge (never covers text!) */}
             {activeBookmark && (
-              <div className="pointer-events-none absolute -top-3 right-4 z-30">
-                <DecorativeBookmark styleId={activeBookmark.style} size="md" />
+              <div className="pointer-events-none absolute -top-9 left-1/2 z-30 -translate-x-1/2">
+                <DecorativeBookmark styleId={activeBookmark.style} size="sm" />
               </div>
             )}
 
-            <div
-              className={`flex items-center justify-between px-4 pt-3 text-[10px] font-serif ${theme.mutedText}`}
-            >
-              <span className="truncate max-w-[65%]">{book.title}</span>
-              <span>
-                {currentPage === 1 ? 'Bìa sách' : `Trang ${currentPage}`}
-              </span>
-            </div>
-
+            {/* Base destination page visible underneath during flip */}
             <div
               ref={measureColRef}
-              className="relative flex flex-1 flex-col overflow-hidden px-5 py-2"
+              className={`relative flex h-full w-full flex-col overflow-hidden rounded-lg ${theme.pageBg} px-5 py-3`}
             >
-              {currentPage === 1 ? (
-                <div className="flex flex-1 items-center justify-center">
-                  {book.id === 'truong-ca-achilles' ? (
-                    <div className="h-full max-h-[60vh] aspect-[2/3] overflow-hidden rounded shadow-lg">
-                      <AchillesCoverArt />
-                    </div>
-                  ) : coverUrl ? (
-                    <img
-                      src={coverUrl}
-                      alt={book.title}
-                      className="max-h-full max-w-full rounded object-contain shadow-md"
-                    />
-                  ) : (
-                    <div className="text-center font-display text-2xl font-bold">
-                      {book.title}
-                    </div>
-                  )}
-                </div>
-              ) : loading ? (
-                <div className="flex-1 animate-pulse rounded bg-black/5" />
-              ) : (
-                <PageTextColumn
-                  paragraphs={rightParagraphs}
-                  fontSize={fontSize}
-                  theme={theme}
-                />
+              {renderPageFace(
+                flipState ? flipState.toPage : currentPage,
+                'right'
               )}
-
-              {/* Tap left/right edges */}
               <button
                 type="button"
                 onClick={goPrev}
@@ -897,161 +958,134 @@ export const BookReader: React.FC<BookReaderProps> = ({
               />
             </div>
 
-            <div
-              className={`pb-2.5 text-center font-serif text-xs ${theme.mutedText}`}
-            >
-              {currentPage} / {totalPages}
-            </div>
-          </div>
-        ) : (
-          /* Desktop 2-Page Spread */
-          <div className="flip-stage relative flex h-full max-h-[82vh] w-full max-w-[1080px] rounded-xl bg-[#462B1B] p-2.5 shadow-[0_32px_70px_-12px_rgba(0,0,0,0.75)] ring-1 ring-white/10">
-            {activeBookmark && (
+            {/* Mobile turning sheet */}
+            {flipState && (
               <div
-                className={`pointer-events-none absolute -top-4 z-30 ${
-                  activeBookmark.page === leftPageNum ? 'left-14' : 'right-14'
+                className={`pointer-events-none absolute inset-0 z-20 overflow-hidden rounded-lg ${theme.pageBg} px-5 py-3 shadow-2xl ${
+                  flipState.direction === 'next'
+                    ? 'animate-mobile-peel-next'
+                    : 'animate-mobile-peel-prev'
                 }`}
               >
-                <DecorativeBookmark styleId={activeBookmark.style} size="lg" />
+                {renderPageFace(flipState.fromPage, 'right')}
+              </div>
+            )}
+          </div>
+        ) : (
+          /* Desktop Large 2-Page Spread (94vw / max 1320px / 84vh) with REAL 2-sided 3D page turn */
+          <div
+            className="flip-stage relative flex h-[84vh] max-h-[900px] w-[92vw] max-w-[1320px] rounded-xl bg-[#462B1B] p-2.5 shadow-[0_36px_80px_-14px_rgba(0,0,0,0.82)] ring-1 ring-white/10"
+            onMouseMove={(e) => {
+              if (paperTheme !== 'night') return;
+              const rect = e.currentTarget.getBoundingClientRect();
+              setSpotlight({
+                x: e.clientX - rect.left,
+                y: e.clientY - rect.top,
+                active: true,
+              });
+            }}
+            onMouseLeave={() =>
+              setSpotlight((s) => (s.active ? { ...s, active: false } : s))
+            }
+          >
+            {/* NIGHT MODE WARM CURSOR READING SPOTLIGHT (vầng sáng đèn đọc quanh con trỏ chuột) */}
+            {paperTheme === 'night' && spotlight.active && (
+              <div
+                className="pointer-events-none absolute inset-2.5 z-30 rounded-md transition-opacity duration-150"
+                style={{
+                  background: `radial-gradient(circle 190px at ${spotlight.x}px ${spotlight.y}px, rgba(255, 226, 158, 0.24) 0%, rgba(255, 210, 130, 0.08) 46%, transparent 74%)`,
+                  mixBlendMode: 'screen',
+                }}
+              />
+            )}
+
+            {/* ENCHANTED CENTER-SPINE BOOKMARK (ZERO TEXT OVERLAP! Runs down the center gutter & dangles below book!) */}
+            {activeBookmark && (
+              <div className="pointer-events-none absolute inset-y-0 left-1/2 z-30 -translate-x-1/2 flex flex-col items-center">
+                {/* Tiny golden clasp peeking at top of spine */}
+                <div className="-mt-2.5 h-3 w-5 rounded-t-full border border-[#F5D680] bg-gradient-to-b from-[#FFEAA6] to-[#B88428] shadow" />
+                {/* Thin golden silk ribbon running strictly inside the center gutter between the 2 pages */}
+                <div className="w-[3px] flex-1 bg-gradient-to-b from-[#E5BD60] via-[#C89632] to-[#E5BD60] opacity-85 shadow-[0_0_6px_rgba(0,0,0,0.45)]" />
+                {/* Ornate jewel bookmark hanging gracefully BELOW the bottom edge of the open book */}
+                <div className="-mt-2 translate-y-4">
+                  <DecorativeBookmark styleId={activeBookmark.style} size="md" />
+                </div>
               </div>
             )}
 
-            {/* Left Page */}
+            {/* BASE LEFT PAGE (Static) */}
             <div
               onClick={() => {
-                if (currentPage > 1) goPrev();
+                if (currentPage > 1 && !flipState) goPrev();
               }}
-              className={`relative flex h-full w-1/2 cursor-pointer flex-col justify-between overflow-hidden rounded-l-md ${theme.pageBg} px-8 py-5`}
+              className={`relative flex h-full w-1/2 cursor-pointer flex-col overflow-hidden rounded-l-md ${theme.pageBg} px-10 py-6`}
             >
-              {currentPage <= 1 ? (
-                <div className="flex h-full flex-col justify-between rounded border border-[#D8C6AB]/70 p-7 text-[#2A1F18]">
-                  <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#9A7A58]">
-                      Thư viện cá nhân · Tủ Sách Của Tôi
-                    </p>
-                    <h2 className="mt-6 font-display text-4xl font-bold leading-tight">
-                      {book.title}
-                    </h2>
-                    <p className="mt-2 font-serif text-base italic text-[#6B5B4E]">
-                      {book.author}
-                    </p>
-                    <div className="my-5 h-px w-16 bg-[#C28E48]" />
-                    <p className="font-serif text-sm leading-relaxed text-[#4C3D31]">
-                      {book.description}
-                    </p>
-                  </div>
-                  <div className="space-y-1 text-xs text-[#7D6853]">
-                    <p>Thể loại: {book.genre}</p>
-                    <p>
-                      Tổng số trang hiện tại: {totalPages} trang (cỡ chữ {fontSize}px)
-                    </p>
-                    <p className="pt-2 italic">
-                      Nhấn sang trang phải hoặc phím → để bắt đầu lật sách.
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <div
-                    className={`flex items-center justify-between text-[11px] font-serif ${theme.mutedText}`}
-                  >
-                    <span className="truncate">{book.title}</span>
-                    <span className="truncate opacity-75">
-                      {activeChapter?.title || ''}
-                    </span>
-                  </div>
-                  {loading ? (
-                    <div className="my-3 flex-1 animate-pulse rounded bg-black/5" />
-                  ) : (
-                    <PageTextColumn
-                      paragraphs={leftParagraphs}
-                      fontSize={fontSize}
-                      theme={theme}
-                    />
-                  )}
-                  <div
-                    className={`text-center font-serif text-xs ${theme.mutedText}`}
-                  >
-                    {leftPageNum}
-                  </div>
-                </>
-              )}
+              {renderPageFace(baseLeftNum, 'left')}
               <div className="book-crease-left pointer-events-none absolute inset-0" />
             </div>
 
-            {/* Right Page */}
+            {/* BASE RIGHT PAGE (Static — already shows destination right page underneath during Next flip!) */}
             <div
+              ref={measureColRef}
               onClick={() => {
-                if (currentPage < totalPages) goNext();
+                if (currentPage < totalPages && !flipState) goNext();
               }}
-              className={`relative flex h-full w-1/2 cursor-pointer flex-col justify-between overflow-hidden rounded-r-md ${theme.pageBg} px-8 py-5 ${
-                flipDirection === 'next'
-                  ? 'animate-flip-next'
-                  : flipDirection === 'prev'
-                    ? 'animate-flip-prev'
-                    : ''
-              }`}
+              className={`relative flex h-full w-1/2 cursor-pointer flex-col overflow-hidden rounded-r-md ${theme.pageBg} px-10 py-6`}
             >
-              <div
-                className={`flex items-center justify-between text-[11px] font-serif ${theme.mutedText}`}
-              >
-                <span className="truncate opacity-75">{book.author}</span>
-                <span>{rightPageNum === 1 ? 'Bìa sách' : ''}</span>
-              </div>
-
-              <div ref={measureColRef} className="flex flex-1 flex-col overflow-hidden">
-                {rightPageNum === 1 ? (
-                  <div className="flex flex-1 items-center justify-center py-2">
-                    {book.id === 'truong-ca-achilles' ? (
-                      <div className="h-full max-h-[64vh] aspect-[2/3] overflow-hidden rounded shadow-xl">
-                        <AchillesCoverArt />
-                      </div>
-                    ) : coverUrl ? (
-                      <img
-                        src={coverUrl}
-                        alt={book.title}
-                        className="max-h-full max-w-full rounded object-contain shadow-lg"
-                      />
-                    ) : (
-                      <div className="text-center font-display text-3xl font-bold">
-                        {book.title}
-                      </div>
-                    )}
-                  </div>
-                ) : loading ? (
-                  <div className="my-3 flex-1 animate-pulse rounded bg-black/5" />
-                ) : (
-                  <PageTextColumn
-                    paragraphs={rightParagraphs}
-                    fontSize={fontSize}
-                    theme={theme}
-                  />
-                )}
-              </div>
-
-              <div
-                className={`text-center font-serif text-xs ${theme.mutedText}`}
-              >
-                {rightPageNum
-                  ? rightPageNum === 1
-                    ? 'Bìa trước'
-                    : rightPageNum
-                  : ''}
-              </div>
+              {renderPageFace(baseRightNum, 'right')}
               <div className="book-crease-right pointer-events-none absolute inset-0" />
             </div>
+
+            {/* REAL TWO-SIDED 3D TURNING SHEET (Next: flips from right -> left; Prev: flips from left -> right) */}
+            {flipState?.direction === 'next' && (
+              <div className="turning-sheet-next pointer-events-none absolute top-2.5 bottom-2.5 right-2.5 left-1/2 z-20">
+                {/* Front Face = Old Right Page */}
+                <div
+                  className={`sheet-face-front absolute inset-0 flex flex-col overflow-hidden rounded-r-md ${theme.pageBg} px-10 py-6 shadow-xl`}
+                >
+                  {renderPageFace(curRight, 'right')}
+                  <div className="book-crease-right pointer-events-none absolute inset-0" />
+                </div>
+                {/* Back Face = New Left Page (revealed smoothly as sheet crosses 90°) */}
+                <div
+                  className={`sheet-face-back absolute inset-0 flex flex-col overflow-hidden rounded-l-md ${theme.pageBg} px-10 py-6 shadow-xl`}
+                >
+                  {renderPageFace(destLeft, 'left')}
+                  <div className="book-crease-left pointer-events-none absolute inset-0" />
+                </div>
+              </div>
+            )}
+
+            {flipState?.direction === 'prev' && (
+              <div className="turning-sheet-prev pointer-events-none absolute top-2.5 bottom-2.5 left-2.5 right-1/2 z-20">
+                {/* Front Face = Old Left Page */}
+                <div
+                  className={`sheet-face-front absolute inset-0 flex flex-col overflow-hidden rounded-l-md ${theme.pageBg} px-10 py-6 shadow-xl`}
+                >
+                  {renderPageFace(curLeft, 'left')}
+                  <div className="book-crease-left pointer-events-none absolute inset-0" />
+                </div>
+                {/* Back Face = New Right Page */}
+                <div
+                  className={`sheet-face-back absolute inset-0 flex flex-col overflow-hidden rounded-r-md ${theme.pageBg} px-10 py-6 shadow-xl`}
+                >
+                  {renderPageFace(destRight, 'right')}
+                  <div className="book-crease-right pointer-events-none absolute inset-0" />
+                </div>
+              </div>
+            )}
           </div>
         )}
 
-        {/* Right Arrow (Desktop) */}
+        {/* Right Page Turn Button */}
         <button
           type="button"
           onClick={goNext}
-          disabled={currentPage >= totalPages}
-          className="hidden sm:flex ml-3 lg:ml-6 h-12 w-12 shrink-0 items-center justify-center rounded-full border border-white/15 bg-black/30 text-[#F5EAD6] transition hover:bg-black/55 disabled:opacity-25"
+          disabled={currentPage >= totalPages || Boolean(flipState)}
+          className="hidden sm:flex ml-2 lg:ml-4 h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/15 bg-black/30 text-[#F5EAD6] transition hover:bg-black/55 disabled:opacity-20"
           aria-label="Lật trang sau"
         >
-          <ChevronRight className="h-6 w-6" />
+          <ChevronRight className="h-5 w-5" />
         </button>
       </div>
 
@@ -1062,7 +1096,7 @@ export const BookReader: React.FC<BookReaderProps> = ({
             <button
               type="button"
               onClick={goPrev}
-              disabled={currentPage <= 1}
+              disabled={currentPage <= 1 || Boolean(flipState)}
               className="flex sm:hidden h-8 w-8 items-center justify-center rounded-lg border border-white/15 bg-white/10 disabled:opacity-30"
             >
               <ChevronLeft className="h-4 w-4" />
@@ -1087,7 +1121,7 @@ export const BookReader: React.FC<BookReaderProps> = ({
             <button
               type="button"
               onClick={goNext}
-              disabled={currentPage >= totalPages}
+              disabled={currentPage >= totalPages || Boolean(flipState)}
               className="flex sm:hidden h-8 w-8 items-center justify-center rounded-lg border border-white/15 bg-white/10 disabled:opacity-30"
             >
               <ChevronRight className="h-4 w-4" />
