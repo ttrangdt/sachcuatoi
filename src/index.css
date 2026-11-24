@@ -671,6 +671,119 @@
   animation: bookmarkShimmer 4.5s ease-in-out infinite;
 }
 
+/* Floating Motes, Fireflies, Celestial Pulse, Clouds, Petals, Bokeh & Shooting Stars */
+@keyframes celestialPulse {
+  0%,
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.06);
+    filter: brightness(1.12);
+  }
+}
+
+.celestial-pulse {
+  animation: celestialPulse 5.5s ease-in-out infinite;
+}
+
+@keyframes rayShimmer {
+  0%,
+  100% {
+    opacity: 0.78;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.ray-shimmer {
+  animation: rayShimmer 6.5s ease-in-out infinite;
+}
+
+@keyframes cloudDrift {
+  0% {
+    transform: translateX(-15vw);
+  }
+  100% {
+    transform: translateX(120vw);
+  }
+}
+
+.cloud-drift {
+  animation: cloudDrift linear infinite;
+}
+
+@keyframes bokehFloat {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(0.92);
+    opacity: 0.45;
+  }
+  50% {
+    transform: translate3d(14px, -20px, 0) scale(1.14);
+    opacity: 0.88;
+  }
+}
+
+.bokeh-float {
+  animation: bokehFloat ease-in-out infinite;
+}
+
+@keyframes petalDrift {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.85;
+  }
+  50% {
+    transform: translate3d(48px, 46vh, 0) rotate(140deg);
+    opacity: 0.78;
+  }
+  88% {
+    opacity: 0.65;
+  }
+  100% {
+    transform: translate3d(-18px, 98vh, 0) rotate(290deg);
+    opacity: 0;
+  }
+}
+
+.petal-drift {
+  animation: petalDrift ease-in-out infinite;
+}
+
+@keyframes shootingStar {
+  0%,
+  78% {
+    transform: translate3d(0, 0, 0) rotate(-32deg) scaleX(0.2);
+    opacity: 0;
+  }
+  82% {
+    opacity: 1;
+  }
+  94% {
+    transform: translate3d(-260px, 165px, 0) rotate(-32deg) scaleX(1.3);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate3d(-320px, 200px, 0) rotate(-32deg) scaleX(0.3);
+    opacity: 0;
+  }
+}
+
+.shooting-star {
+  width: 90px;
+  height: 2px;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #fffdf0 0%, rgba(255, 242, 186, 0.7) 35%, transparent 100%);
+  box-shadow: 0 0 12px 2px rgba(255, 244, 194, 0.85);
+  animation: shootingStar ease-out infinite;
+}
+
 /* Floating Motes & Fireflies */
 @keyframes floatMote {
   0% {
