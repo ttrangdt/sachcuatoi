@@ -209,6 +209,20 @@ const BEARTOWN_SERIES = {
   boxAccent: '#D8E6F2',
 };
 
+const NGUOI_ECH_SERIES = {
+  id: 'nguoi-ech',
+  name: 'Người Ếch',
+  boxColor: '#223328',
+  boxAccent: '#CFE09E',
+};
+
+const CERULEAN_SERIES = {
+  id: 'cerulean-sea',
+  name: 'Biển Xanh Thẳm',
+  boxColor: '#1D495C',
+  boxAccent: '#F3DFAC',
+};
+
 const CURATED_META = [
   { match: 'achilles', id: 'truong-ca-achilles', title: 'Trường Ca Achilles', author: 'Madeline Miller', genre: 'Thần thoại · Tiểu thuyết', year: '2011', spineColor: '#851A2E', spineAccent: '#F4D36A', spineTextColor: '#F7DC88' },
   { match: 'ba ngoai', id: 'ba-ngoai-toi-gui-loi-xin-loi', title: 'Bà Ngoại Tôi Gửi Lời Xin Lỗi', author: 'Fredrik Backman', genre: 'Tiểu thuyết · Gia đình', year: '2013', spineColor: '#9E4B5A', spineAccent: '#F6DFC2', spineTextColor: '#FFF5EB' },
@@ -244,6 +258,23 @@ const CURATED_META = [
   { match: 'nguoi-dua-dieu', id: 'nguoi-dua-dieu', title: 'Người Đua Diều', author: 'Khaled Hosseini', genre: 'Kinh điển · Nhân văn', year: '2003', spineColor: '#3D5D73', spineAccent: '#F3DAB0', spineTextColor: '#F5F9FC' },
   { match: 'hoathan', id: 'hoa-than', title: 'Hóa Thân', author: 'Franz Kafka', genre: 'Kinh điển · Văn học Đức', year: '1915', spineColor: '#3A3A38', spineAccent: '#DFC79A', spineTextColor: '#F5F2EB' },
   { match: 'suoinguon', id: 'suoi-nguon', title: 'Suối Nguồn', author: 'Ayn Rand', genre: 'Kinh điển · Triết lý', year: '1943', spineColor: '#2B4257', spineAccent: '#EBC878', spineTextColor: '#F5F7FA' },
+  { match: 'bach da hanh', id: 'bach-da-hanh', title: 'Bạch Dạ Hành', author: 'Higashino Keigo', genre: 'Trinh thám · Tâm lý', year: '1999', spineColor: '#2A3342', spineAccent: '#E2D4B0', spineTextColor: '#F3F6FA' },
+  { match: 'evelyn hugo', id: 'bay-nguoi-chong-cua-evelyn-hugo', title: 'Bảy Người Chồng Của Evelyn Hugo', author: 'Taylor Jenkins Reid', genre: 'Tiểu thuyết · Hollywood', year: '2017', spineColor: '#1E5B45', spineAccent: '#F5D98A', spineTextColor: '#F5FBF8' },
+  { match: 'chet giua mua he', id: 'chet-giua-mua-he', title: 'Chết Giữa Mùa Hè', author: 'Yukio Mishima', genre: 'Văn học Nhật Bản', year: '1953', spineColor: '#3D5263', spineAccent: '#ECD7A8', spineTextColor: '#F5F8FB' },
+  { match: 'circe', id: 'circe', title: 'Circe', author: 'Madeline Miller', genre: 'Thần thoại · Tiểu thuyết', year: '2018', spineColor: '#263D38', spineAccent: '#EBC26E', spineTextColor: '#F8F3E6' },
+  { match: 'co hau gai', id: 'co-hau-gai', title: 'Cô Hầu Gái', author: 'Freida McFadden', genre: 'Trinh thám · Giật gân', year: '2022', spineColor: '#2D2A38', spineAccent: '#E6B87A', spineTextColor: '#F6F3FA' },
+  { match: 'duoi canh cua tham thi', id: 'duoi-canh-cua-tham-thi', title: 'Dưới Cánh Cửa Thầm Thì', author: 'T. J. Klune', genre: 'Kỳ ảo · Chữa lành', year: '2021', spineColor: '#364E59', spineAccent: '#F2DDA8', spineTextColor: '#F5F9FB' },
+  { match: 'kieu hanh va dinh kien', id: 'kieu-hanh-va-dinh-kien', title: 'Kiêu Hãnh Và Định Kiến', author: 'Jane Austen', genre: 'Kinh điển · Lãng mạn', year: '1813', spineColor: '#5C4454', spineAccent: '#F2DCC0', spineTextColor: '#FAF5F8' },
+  { match: 'ke trom ca chua', id: 'ke-trom-ca-chua', title: 'Kẻ Trộm Cà Chua', author: 'Barbara Constantine', genre: 'Tiểu thuyết · Chữa lành', year: '2012', spineColor: '#A64638', spineAccent: '#F8E2B4', spineTextColor: '#FFF7F2' },
+  { match: 'ngoi nha ben bo bien xanh tham', id: 'ngoi-nha-ben-bo-bien-xanh-tham', title: 'Ngôi Nhà Bên Bờ Biển Xanh Thẳm', author: 'T. J. Klune', genre: 'Kỳ ảo · Chữa lành', year: '2020', spineColor: '#215B70', spineAccent: '#F6DF9C', spineTextColor: '#F2FAFC', series: { ...CERULEAN_SERIES, order: 1 } },
+  { match: 'dau do ngoai khoi xa', id: 'dau-do-ngoai-khoi-xa', title: 'Đâu Đó Ngoài Khơi Xa', author: 'T. J. Klune', genre: 'Kỳ ảo · Chữa lành', year: '2024', spineColor: '#1B4B62', spineAccent: '#F3D992', spineTextColor: '#F2FAFC', series: { ...CERULEAN_SERIES, order: 2 } },
+  { match: 'nguoi tot lau tren', id: 'nguoi-tot-lau-tren', title: 'Người Tốt Lầu Trên', author: 'Kevin Chen', genre: 'Văn học Đài Loan', year: '2022', spineColor: '#4E584B', spineAccent: '#EAE0C4', spineTextColor: '#F6F8F5' },
+  { match: 'nguoi ech tro lai', id: 'nguoi-ech-tro-lai', title: 'Người Ếch Trở Lại', author: 'Shichiri Nakayama', genre: 'Trinh thám · Người Ếch', year: '2016', spineColor: '#243B2E', spineAccent: '#D8E39A', spineTextColor: '#F3F8F4', series: { ...NGUOI_ECH_SERIES, order: 2 } },
+  { match: 'nguoi ech', id: 'nguoi-ech', title: 'Người Ếch', author: 'Shichiri Nakayama', genre: 'Trinh thám · Người Ếch', year: '2010', spineColor: '#2B4232', spineAccent: '#D5E09C', spineTextColor: '#F3F8F4', series: { ...NGUOI_ECH_SERIES, order: 1 } },
+  { match: 'rung na-uy', id: 'rung-na-uy', title: 'Rừng Na-Uy', author: 'Haruki Murakami', genre: 'Kinh điển · Văn học Nhật', year: '1987', spineColor: '#7A2A2E', spineAccent: '#EEDCB8', spineTextColor: '#FBF5F2' },
+  { match: 'su menh hail mary', id: 'su-menh-hail-mary', title: 'Sứ Mệnh Hail Mary', author: 'Andy Weir', genre: 'Khoa học viễn tưởng', year: '2021', spineColor: '#1E2A3D', spineAccent: '#F0C76E', spineTextColor: '#F3F6FA' },
+  { match: 'va roi chang con ai', id: 'va-roi-chang-con-ai', title: 'Và Rồi Chẳng Còn Ai', author: 'Agatha Christie', genre: 'Trinh thám · Kinh điển', year: '1939', spineColor: '#36323B', spineAccent: '#E2C99A', spineTextColor: '#F6F4F8' },
+  { match: 'vung dat quy tha ma bat', id: 'vung-dat-quy-tha-ma-bat', title: 'Vùng Đất Quỷ Tha Ma Bắt', author: 'Kevin Chen', genre: 'Văn học Đài Loan', year: '2019', spineColor: '#4A3832', spineAccent: '#E8CCA2', spineTextColor: '#FAF4EE' },
   { match: 'loai tom hat', id: 'xa-ngoai-kia-noi-loai-tom-hat', title: 'Xa Ngoài Kia Nơi Loài Tôm Hát', author: 'Delia Owens', genre: 'Tiểu thuyết · Thiên nhiên', year: '2018', spineColor: '#2D5954', spineAccent: '#EBD392', spineTextColor: '#F2FAF8' },
 ];
 
@@ -613,6 +644,12 @@ for (const file of files) {
       })
     );
     estimatedPages = Math.max(90, Math.round(totalChars / 1450));
+  } else {
+    // Scanned-image PDF: copy to public/books/<id>.pdf so BookReader can render pages visually
+    const destPdfPath = path.join('d:/sachcuatoi/public/books', `${meta.id}.pdf`);
+    if (!fs.existsSync(destPdfPath)) {
+      fs.copyFileSync(fullPdfPath, destPdfPath);
+    }
   }
 
   console.log(

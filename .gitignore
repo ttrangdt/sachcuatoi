@@ -25,3 +25,5 @@ Thumbs.db
 
 # Raw source PDFs (already bundled in public/books/)
 sach/
+# Oversized (>100MB GitHub limit) local scanned PDF
+public/books/dau-do-ngoai-khoi-xa.pdf
