@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { PageFlip } from 'page-flip/dist/js/page-flip.module.js';
 import {
   ArrowLeft,
   Bookmark,
@@ -32,7 +33,6 @@ import {
   BOOKMARK_STYLES,
   DecorativeBookmark,
 } from './DecorativeBookmark';
-import { AchillesCoverArt } from './AchillesArtwork';
 import { formatReadingDuration } from '../utils/timeFormat';
 
 interface BookReaderProps {
@@ -47,103 +47,86 @@ interface BookReaderProps {
   initialPage?: number;
 }
 
-const THEME_STYLES: Record<
+const THEME_VARS: Record<
   PaperTheme,
   {
     label: string;
     backdrop: string;
     pageBg: string;
-    bodyText: string;
-    mutedText: string;
-    headingText: string;
+    bodyColor: string;
+    mutedColor: string;
+    headingColor: string;
   }
 > = {
   cream: {
     label: 'Kem ấm',
     backdrop: 'bg-[#231912]',
-    pageBg: 'bg-[#FCF8EE]',
-    bodyText: 'text-[#2C221A]',
-    mutedText: 'text-[#7C6A58]',
-    headingText: 'text-[#3A2317]',
+    pageBg: '#FCF8EE',
+    bodyColor: '#2C221A',
+    mutedColor: '#7C6A58',
+    headingColor: '#3A2317',
   },
   white: {
     label: 'Trắng sáng',
     backdrop: 'bg-[#1D1E22]',
-    pageBg: 'bg-[#FFFFFF]',
-    bodyText: 'text-[#1F2329]',
-    mutedText: 'text-[#6A717C]',
-    headingText: 'text-[#14171C]',
+    pageBg: '#FFFFFF',
+    bodyColor: '#1F2329',
+    mutedColor: '#6A717C',
+    headingColor: '#14171C',
   },
   sepia: {
     label: 'Giấy cổ',
     backdrop: 'bg-[#2C1E14]',
-    pageBg: 'bg-[#F3E5CA]',
-    bodyText: 'text-[#362617]',
-    mutedText: 'text-[#7A5E42]',
-    headingText: 'text-[#4C2C16]',
+    pageBg: '#F3E5CA',
+    bodyColor: '#362617',
+    mutedColor: '#7A5E42',
+    headingColor: '#4C2C16',
   },
   night: {
     label: 'Đèn đêm',
     backdrop: 'bg-[#0B0C14]',
-    pageBg: 'bg-[#171822]',
-    bodyText: 'text-[#CFC9BE]',
-    mutedText: 'text-[#847E90]',
-    headingText: 'text-[#F3D89B]',
+    pageBg: '#171822',
+    bodyColor: '#CFC9BE',
+    mutedColor: '#847E90',
+    headingColor: '#F3D89B',
   },
 };
 
-const PageTextColumn = React.memo<{
-  blocks: PageBlock[] | null;
-  fontSize: number;
-  theme: (typeof THEME_STYLES)[PaperTheme];
-}>(({ blocks, fontSize, theme }) => {
-  if (!blocks || blocks.length === 0) {
-    return (
-      <div className="flex flex-1 items-center justify-center">
-        <span className={`font-serif text-sm italic ${theme.mutedText}`}>
-          — Hết cuốn sách —
-        </span>
-      </div>
-    );
-  }
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
 
-  return (
-    <div
-      className={`flex-1 overflow-hidden py-1 font-serif leading-[1.62] ${theme.bodyText}`}
-      style={{ fontSize: `${fontSize}px` }}
-    >
-      <div className="space-y-[9px]">
-        {blocks.map((block, idx) => {
-          if (block.isHeading) {
-            return (
-              <h3
-                key={idx}
-                className={`pt-2 pb-1 text-center font-display font-bold tracking-wide ${theme.headingText}`}
-                style={{ fontSize: `${Math.round(fontSize * 1.45)}px` }}
-              >
-                {block.text}
-              </h3>
-            );
-          }
-          return (
-            <p
-              key={idx}
-              className={`text-justify ${block.continued ? 'indent-0' : 'indent-6'}`}
-            >
-              {block.text}
-            </p>
-          );
-        })}
-      </div>
-    </div>
-  );
-});
-
-interface FlipTransitionState {
-  direction: 'next' | 'prev';
-  fromPage: number;
-  toPage: number;
-  active: boolean;
+function buildAchillesCoverSvgHtml(): string {
+  return `
+    <svg viewBox="0 0 320 480" style="width:100%;height:100%;display:block;" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="acBg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#9C2338"/><stop offset="50%" stop-color="#851A2E"/><stop offset="100%" stop-color="#6B1224"/>
+        </linearGradient>
+        <pattern id="acWaves" width="48" height="24" patternUnits="userSpaceOnUse">
+          <path d="M0 12 Q12 2 24 12 T48 12" fill="none" stroke="#D96B7C" stroke-width="1.2" opacity="0.45"/>
+          <path d="M0 18 Q12 8 24 18 T48 18" fill="none" stroke="#E58997" stroke-width="0.9" opacity="0.35"/>
+        </pattern>
+        <linearGradient id="acGold" x1="0.15" y1="0.05" x2="0.85" y2="0.95">
+          <stop offset="0%" stop-color="#FCE786"/><stop offset="30%" stop-color="#E7BD49"/><stop offset="65%" stop-color="#C9962B"/><stop offset="100%" stop-color="#D8AA3F"/>
+        </linearGradient>
+      </defs>
+      <rect width="320" height="480" fill="url(#acBg)"/>
+      <rect width="320" height="480" fill="url(#acWaves)"/>
+      <text x="160" y="36" text-anchor="middle" fill="#F4D36A" font-size="11" font-weight="700" letter-spacing="2.2" font-family="Be Vietnam Pro,sans-serif">#1 NEW YORK TIMES BESTSELLER</text>
+      <path d="M92 220 C92 200 135 198 148 228 L151 285 C151 294 169 294 169 285 L172 228 C185 198 228 200 228 220 L226 355 L94 355 Z" fill="#1C1610"/>
+      <path fill-rule="evenodd" d="M160 66 C92 66 56 122 56 196 C56 266 64 342 74 378 C78 390 100 392 128 386 L132 332 C120 326 112 314 112 296 L110 264 C98 258 92 246 94 232 C96 214 114 205 132 212 C144 216 148 228 148 242 L148 282 C148 292 172 292 172 282 L172 242 C172 228 176 216 188 212 C206 205 224 214 226 232 C228 246 222 258 210 264 L208 296 C208 314 200 326 188 332 L192 386 C220 392 242 390 246 378 C256 342 264 266 264 196 C264 122 228 66 160 66 Z" fill="url(#acGold)"/>
+      <text x="160" y="112" text-anchor="middle" fill="#24190C" font-size="30" font-style="italic" font-family="Cormorant Garamond,Georgia,serif">The</text>
+      <text x="160" y="151" text-anchor="middle" fill="#23180B" font-size="33" font-weight="600" letter-spacing="2.2" font-family="Newsreader,Georgia,serif">SONG OF</text>
+      <text x="160" y="190" text-anchor="middle" fill="#23180B" font-size="35" font-weight="600" letter-spacing="2.8" font-family="Newsreader,Georgia,serif">ACHILLES</text>
+      <text x="160" y="394" text-anchor="middle" fill="#F4D36A" font-size="9.5" font-weight="600" letter-spacing="2.2" font-family="Be Vietnam Pro,sans-serif">A NOVEL · TRƯỜNG CA ACHILLES</text>
+      <text x="160" y="436" text-anchor="middle" fill="#F4D36A" font-size="21" font-weight="600" letter-spacing="4" font-family="Newsreader,Georgia,serif">MADELINE MILLER</text>
+    </svg>
+  `;
 }
 
 export const BookReader: React.FC<BookReaderProps> = ({
@@ -161,15 +144,18 @@ export const BookReader: React.FC<BookReaderProps> = ({
     initialPage || progress.bookmarkedPage || progress.currentPage || 1;
 
   const [currentPage, setCurrentPage] = useState<number>(startPage);
-  const [flipState, setFlipState] = useState<FlipTransitionState | null>(null);
   const [bookText, setBookText] = useState<BookTextData | null>(null);
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const [isMobile, setIsMobile] = useState<boolean>(() =>
-    typeof window !== 'undefined' ? window.innerWidth < 860 : false
-  );
+  const [viewport, setViewport] = useState(() => ({
+    w: typeof window !== 'undefined' ? window.innerWidth : 1280,
+    h: typeof window !== 'undefined' ? window.innerHeight : 800,
+  }));
+
+  const isMobile = viewport.w < 860;
+
   const [showToc, setShowToc] = useState<boolean>(false);
   const [showBookmarkPanel, setShowBookmarkPanel] = useState<boolean>(false);
   const [selectedStyle, setSelectedStyle] = useState<BookmarkStyleId>(
@@ -178,46 +164,45 @@ export const BookReader: React.FC<BookReaderProps> = ({
   const [bookmarkNote, setBookmarkNote] = useState<string>('');
   const [pageInput, setPageInput] = useState<string>(String(startPage));
   const [justFinishedBanner, setJustFinishedBanner] = useState<boolean>(false);
+  const [spotlight, setSpotlight] = useState<{
+    x: number;
+    y: number;
+    active: boolean;
+  }>({ x: 0, y: 0, active: false });
 
-  // Night-mode warm cursor reading spotlight coordinates (relative to open book)
-  const [spotlight, setSpotlight] = useState<{ x: number; y: number; active: boolean }>({
-    x: 0,
-    y: 0,
-    active: false,
-  });
-
-  const touchStartX = useRef<number | null>(null);
+  const flipContainerRef = useRef<HTMLDivElement | null>(null);
+  const pageFlipRef = useRef<PageFlip | null>(null);
+  const pageNodesRef = useRef<HTMLElement[]>([]);
+  const populatedRef = useRef<Set<number>>(new Set());
+  const currentPageRef = useRef<number>(startPage);
   const prevTotalRef = useRef<number>(progress.totalPages || book.totalPages);
-  const flipTimerRef = useRef<number | null>(null);
-  const measureColRef = useRef<HTMLDivElement | null>(null);
-  const [colDims, setColDims] = useState<{ width: number; height: number }>(() => ({
-    width: typeof window !== 'undefined' && window.innerWidth < 860 ? 340 : 540,
-    height: typeof window !== 'undefined' ? Math.max(460, window.innerHeight * 0.72) : 600,
-  }));
 
   useEffect(() => {
-    const onResize = () => setIsMobile(window.innerWidth < 860);
+    currentPageRef.current = currentPage;
+  }, [currentPage]);
+
+  useEffect(() => {
+    const onResize = () =>
+      setViewport({ w: window.innerWidth, h: window.innerHeight });
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  useEffect(() => {
-    const el = measureColRef.current;
-    if (!el || typeof ResizeObserver === 'undefined') return;
-    const ro = new ResizeObserver((entries) => {
-      const rect = entries[0]?.contentRect;
-      if (rect && rect.width > 120 && rect.height > 180) {
-        setColDims((prev) =>
-          Math.abs(prev.width - rect.width) > 10 ||
-          Math.abs(prev.height - rect.height) > 10
-            ? { width: rect.width, height: rect.height }
-            : prev
-        );
-      }
-    });
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, [isMobile]);
+  // Compute crisp single-page dimensions for StPageFlip
+  const pageDims = useMemo(() => {
+    const availH = Math.max(460, Math.min(820, viewport.h - 126));
+    if (isMobile) {
+      const w = Math.max(300, Math.min(440, viewport.w - 24));
+      return { width: Math.floor(w), height: Math.floor(availH) };
+    }
+    const maxSpreadW = Math.min(1240, viewport.w - 130);
+    const singleW = Math.max(380, Math.floor(maxSpreadW / 2));
+    return { width: singleW, height: Math.floor(availH) };
+  }, [viewport, isMobile]);
+
+  // Text column interior size (subtracting horizontal/vertical padding & header/footer)
+  const textColWidth = pageDims.width - (isMobile ? 44 : 76);
+  const textColHeight = pageDims.height - 92;
 
   useEffect(() => {
     const now = Date.now();
@@ -254,49 +239,193 @@ export const BookReader: React.FC<BookReaderProps> = ({
 
     return () => {
       active = false;
-      if (flipTimerRef.current) window.clearTimeout(flipTimerRef.current);
     };
   }, [book]);
 
+  // Lossless exact canvas word-wrap pagination matching StPageFlip's exact single-page size!
   const paginated = useMemo(() => {
     if (!bookText) return null;
     return paginateBookText(bookText, {
       isMobile,
       fontSize,
-      colWidth: colDims.width,
-      colHeight: colDims.height,
+      colWidth: textColWidth,
+      colHeight: textColHeight,
     });
-  }, [bookText, isMobile, fontSize, colDims.width, colDims.height]);
+  }, [bookText, isMobile, fontSize, textColWidth, textColHeight]);
 
   const totalPages = paginated?.totalPages || progress.totalPages || book.totalPages;
   const toc = paginated?.toc || [{ title: 'Bìa sách', page: 1, level: 0 }];
 
+  // Preserve reading ratio when fontSize or screen size changes
   useEffect(() => {
     if (!paginated) return;
     const oldTotal = prevTotalRef.current;
     const newTotal = paginated.totalPages;
     if (oldTotal > 1 && newTotal !== oldTotal) {
-      setCurrentPage((p) => {
-        if (p <= 1) return 1;
-        const ratio = (p - 1) / (oldTotal - 1);
-        return Math.max(2, Math.min(newTotal, Math.round(ratio * (newTotal - 1)) + 1));
-      });
+      const cur = currentPageRef.current;
+      const next =
+        cur <= 1
+          ? 1
+          : Math.max(
+              2,
+              Math.min(
+                newTotal,
+                Math.round(((cur - 1) / (oldTotal - 1)) * (newTotal - 1)) + 1
+              )
+            );
+      setCurrentPage(next);
+      currentPageRef.current = next;
     }
     prevTotalRef.current = newTotal;
-    onUpdateProgress((prev) => ({
-      ...prev,
-      totalPages: newTotal,
-    }));
+    onUpdateProgress((prev) => ({ ...prev, totalPages: newTotal }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paginated?.totalPages]);
 
-  // Debounced progress persistence so localStorage writes NEVER cause animation-end hitch
+  // Populate HTML for a window of pages around centerIdx (0-based) for instant 0ms rendering
+  const populateWindow = useCallback(
+    (centerIdx: number) => {
+      if (!paginated) return;
+      const nodes = pageNodesRef.current;
+      const start = Math.max(0, centerIdx - 6);
+      const end = Math.min(nodes.length - 1, centerIdx + 8);
+
+      for (let idx = start; idx <= end; idx++) {
+        if (populatedRef.current.has(idx)) continue;
+        const el = nodes[idx];
+        if (!el) continue;
+        populatedRef.current.add(idx);
+
+        const pageNum = idx + 1;
+        if (pageNum === 1) {
+          // Page 1: Cover Page
+          if (book.id === 'truong-ca-achilles') {
+            el.innerHTML = `<div class="stf-cover-wrap">${buildAchillesCoverSvgHtml()}</div>`;
+          } else if (coverUrl) {
+            el.innerHTML = `<div class="stf-cover-wrap"><img src="${coverUrl}" alt="${escapeHtml(book.title)}" style="width:100%;height:100%;object-fit:cover;object-position:top;" /></div>`;
+          } else {
+            el.innerHTML = `<div class="stf-cover-wrap stf-cover-fallback" style="background:${book.spineColor};color:${book.spineTextColor}">
+              <div style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;opacity:0.75">${escapeHtml(book.genre)}</div>
+              <div style="font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:700;line-height:1.15">${escapeHtml(book.title)}</div>
+              <div style="font-family:'Newsreader',serif;font-style:italic;opacity:0.85">${escapeHtml(book.author)}</div>
+            </div>`;
+          }
+          continue;
+        }
+
+        const blocks: PageBlock[] = paginated.pages[idx - 1] || [];
+        const isLeft = idx % 2 === 1;
+        const runningHeader = isLeft
+          ? escapeHtml(book.title)
+          : escapeHtml(book.author);
+
+        const bodyHtml = blocks
+          .map((b) => {
+            if (b.isHeading) {
+              return `<h3 class="stf-heading" style="font-size:${Math.round(fontSize * 1.42)}px">${escapeHtml(b.text)}</h3>`;
+            }
+            return `<p class="stf-para ${b.continued ? 'stf-continued' : ''}">${escapeHtml(b.text)}</p>`;
+          })
+          .join('');
+
+        el.innerHTML = `
+          <div class="stf-page-inner ${isMobile ? 'stf-mobile-pad' : 'stf-desktop-pad'}">
+            <div class="stf-running-header">${runningHeader}</div>
+            <div class="stf-body" style="font-size:${fontSize}px">${bodyHtml}</div>
+            <div class="stf-page-num">${pageNum}</div>
+          </div>
+        `;
+      }
+    },
+    [paginated, book, coverUrl, fontSize, isMobile]
+  );
+
+  // Mount / Re-mount StPageFlip cleanly when book, fontSize, or page dimensions change
+  useEffect(() => {
+    const container = flipContainerRef.current;
+    if (!container || !paginated) return;
+
+    // Clean up previous instance
+    if (pageFlipRef.current) {
+      try {
+        pageFlipRef.current.destroy();
+      } catch {
+        // ignore
+      }
+      pageFlipRef.current = null;
+    }
+
+    container.innerHTML = '';
+    populatedRef.current.clear();
+
+    const bookEl = document.createElement('div');
+    bookEl.className = 'stf-book-root';
+    container.appendChild(bookEl);
+
+    const nodes: HTMLElement[] = [];
+    for (let i = 0; i < paginated.totalPages; i++) {
+      const pageDiv = document.createElement('div');
+      pageDiv.className = i === 0 ? 'stf-page stf-hard-cover' : 'stf-page';
+      if (i === 0) pageDiv.setAttribute('data-density', 'hard');
+      bookEl.appendChild(pageDiv);
+      nodes.push(pageDiv);
+    }
+    pageNodesRef.current = nodes;
+
+    const initialIdx = Math.max(
+      0,
+      Math.min(paginated.totalPages - 1, currentPageRef.current - 1)
+    );
+    populateWindow(initialIdx);
+
+    const pf = new PageFlip(bookEl, {
+      width: pageDims.width,
+      height: pageDims.height,
+      size: 'fixed',
+      drawShadow: true,
+      maxShadowOpacity: 0.44,
+      flippingTime: 820,
+      usePortrait: isMobile,
+      showCover: true,
+      showPageCorners: true,
+      useMouseEvents: true,
+      swipeDistance: 25,
+      clickEventForward: false,
+      mobileScrollSupport: false,
+      startPage: initialIdx,
+    });
+
+    pf.loadFromHTML(nodes);
+    pf.on('flip', (e) => {
+      const newIdx = Number(e.data) || 0;
+      populateWindow(newIdx);
+      setCurrentPage(newIdx + 1);
+    });
+
+    pageFlipRef.current = pf;
+
+    return () => {
+      try {
+        pf.destroy();
+      } catch {
+        // ignore
+      }
+      pageFlipRef.current = null;
+    };
+  }, [paginated, pageDims.width, pageDims.height, isMobile, populateWindow]);
+
+  // If coverUrl loads after initial mount, refresh page 0 cleanly
+  useEffect(() => {
+    if (!coverUrl || book.id === 'truong-ca-achilles') return;
+    populatedRef.current.delete(0);
+    populateWindow(0);
+  }, [coverUrl, book.id, populateWindow]);
+
+  // Debounced progress persistence
   useEffect(() => {
     setPageInput(String(currentPage));
     const timer = window.setTimeout(() => {
       const now = Date.now();
       const reachedEnd = totalPages > 1 && currentPage >= totalPages;
-
       onUpdateProgress((prev) => {
         const nextFinished = prev.isFinished || reachedEnd;
         const nextFinishedAt = prev.finishedAt ?? (reachedEnd ? now : null);
@@ -312,82 +441,34 @@ export const BookReader: React.FC<BookReaderProps> = ({
           finishedAt: nextFinishedAt,
         };
       });
-    }, 280);
-
+    }, 300);
     return () => window.clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, totalPages]);
 
-  /** Helper: get [leftPageNum, rightPageNum] for a desktop spread anchor */
-  const getSpreadNums = useCallback(
-    (anchor: number): [number | null, number | null] => {
-      if (anchor <= 1) return [null, 1];
-      const left = anchor % 2 === 0 ? anchor : anchor - 1;
-      const right = left + 1 <= totalPages ? left + 1 : null;
-      return [left, right];
+  const goNext = useCallback(() => {
+    const pf = pageFlipRef.current;
+    if (!pf) return;
+    populateWindow(currentPageRef.current + 1);
+    pf.flipNext('bottom');
+  }, [populateWindow]);
+
+  const goPrev = useCallback(() => {
+    const pf = pageFlipRef.current;
+    if (!pf) return;
+    populateWindow(Math.max(0, currentPageRef.current - 3));
+    pf.flipPrev('bottom');
+  }, [populateWindow]);
+
+  const jumpToPage = useCallback(
+    (targetPage: number) => {
+      const clamped = Math.max(1, Math.min(totalPages, targetPage));
+      populateWindow(clamped - 1);
+      setCurrentPage(clamped);
+      pageFlipRef.current?.turnToPage(clamped - 1);
     },
-    [totalPages]
+    [totalPages, populateWindow]
   );
-
-  /** Real Two-Sided Smooth 3D Page Flip */
-  const triggerFlip = useCallback(
-    (direction: 'next' | 'prev') => {
-      if (flipState) return; // avoid overlapping flips mid-air
-
-      let target = currentPage;
-      if (direction === 'next') {
-        if (currentPage >= totalPages) return;
-        if (isMobile) {
-          target = Math.min(totalPages, currentPage + 1);
-        } else if (currentPage <= 1) {
-          target = Math.min(totalPages, 2);
-        } else {
-          const left = currentPage % 2 === 0 ? currentPage : currentPage - 1;
-          target = Math.min(totalPages, left + 2);
-        }
-      } else {
-        if (currentPage <= 1) return;
-        if (isMobile) {
-          target = Math.max(1, currentPage - 1);
-        } else if (currentPage <= 2) {
-          target = 1;
-        } else {
-          const left = currentPage % 2 === 0 ? currentPage : currentPage - 1;
-          target = Math.max(1, left - 2);
-        }
-      }
-
-      if (target === currentPage) return;
-
-      setFlipState({
-        direction,
-        fromPage: currentPage,
-        toPage: target,
-        active: false,
-      });
-      // Trigger GPU CSS transition on next animation frame for 100% butter-smooth 60fps
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          setFlipState((prev) => (prev ? { ...prev, active: true } : null));
-        });
-      });
-    },
-    [currentPage, flipState, isMobile, totalPages]
-  );
-
-  const handleFlipTransitionEnd = useCallback(
-    (e: React.TransitionEvent<HTMLDivElement>) => {
-      if (e.target !== e.currentTarget || e.propertyName !== 'transform') return;
-      if (!flipState?.active) return;
-      const dest = flipState.toPage;
-      setCurrentPage(dest);
-      setFlipState(null);
-    },
-    [flipState]
-  );
-
-  const goNext = useCallback(() => triggerFlip('next'), [triggerFlip]);
-  const goPrev = useCallback(() => triggerFlip('prev'), [triggerFlip]);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -411,121 +492,17 @@ export const BookReader: React.FC<BookReaderProps> = ({
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [goNext, goPrev, onClose]);
 
-  const theme = THEME_STYLES[paperTheme];
+  const theme = THEME_VARS[paperTheme];
   const activeChapter = [...toc]
     .reverse()
     .find((item) => item.page <= currentPage);
 
-  // Render any single page face cleanly (Cover or Text)
-  const renderPageFace = (pageNum: number | null, side: 'left' | 'right') => {
-    if (pageNum === null) {
-      if (side === 'left') {
-        // Inside front cover title plate
-        return (
-          <div className="flex h-full flex-col justify-between rounded border border-[#D8C6AB]/60 p-8 text-[#2A1F18]">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#9A7A58]">
-                Thư viện cá nhân · Tủ Sách Của Tôi
-              </p>
-              <h2 className="mt-6 font-display text-4xl font-bold leading-tight">
-                {book.title}
-              </h2>
-              <p className="mt-2 font-serif text-base italic text-[#6B5B4E]">
-                {book.author}
-              </p>
-              <div className="my-5 h-px w-16 bg-[#C28E48]" />
-              <p className="font-serif text-sm leading-relaxed text-[#4C3D31]">
-                {book.description}
-              </p>
-            </div>
-            <div className="space-y-1 text-xs text-[#7D6853]">
-              <p>{book.genre}</p>
-              <p>{totalPages} trang ({fontSize}px)</p>
-            </div>
-          </div>
-        );
-      }
-      return (
-        <div className="flex h-full items-center justify-center">
-          <span className={`font-serif text-sm italic ${theme.mutedText}`}>
-            — Hết cuốn sách —
-          </span>
-        </div>
-      );
-    }
-
-    if (pageNum === 1) {
-      return (
-        <div className="flex h-full flex-col justify-between">
-          <div className={`text-right text-[11px] font-serif ${theme.mutedText}`}>
-            Bìa sách
-          </div>
-          <div className="flex flex-1 items-center justify-center py-2">
-            {book.id === 'truong-ca-achilles' ? (
-              <div className="h-full max-h-[68vh] aspect-[2/3] overflow-hidden rounded shadow-xl">
-                <AchillesCoverArt />
-              </div>
-            ) : coverUrl ? (
-              <img
-                src={coverUrl}
-                alt={book.title}
-                className="max-h-full max-w-full rounded object-contain shadow-lg"
-              />
-            ) : (
-              <div className="text-center font-display text-3xl font-bold">
-                {book.title}
-              </div>
-            )}
-          </div>
-          <div className={`text-center font-serif text-xs ${theme.mutedText}`}>
-            1
-          </div>
-        </div>
-      );
-    }
-
-    const paras = paginated?.pages[pageNum - 2] || null;
-    return (
-      <div className="flex h-full flex-col justify-between">
-        <div
-          className={`flex items-center justify-between text-[11px] font-serif ${theme.mutedText}`}
-        >
-          <span className="truncate">{side === 'left' ? book.title : book.author}</span>
-          <span className="truncate opacity-75">
-            {side === 'left' ? activeChapter?.title || '' : ''}
-          </span>
-        </div>
-        {loading ? (
-          <div className="my-3 flex-1 animate-pulse rounded bg-black/5" />
-        ) : (
-          <PageTextColumn blocks={paras} fontSize={fontSize} theme={theme} />
-        )}
-        <div className={`text-center font-serif text-xs ${theme.mutedText}`}>
-          {pageNum}
-        </div>
-      </div>
-    );
-  };
-
-  // Compute Base Left/Right pages & Turning Sheet Front/Back faces for real two-sided 3D flip
-  const [curLeft, curRight] = getSpreadNums(currentPage);
-  const [destLeft, destRight] = flipState
-    ? getSpreadNums(flipState.toPage)
-    : [curLeft, curRight];
-
-  const baseLeftNum =
-    flipState?.direction === 'prev' ? destLeft : curLeft;
-  const baseRightNum =
-    flipState?.direction === 'next' ? destRight : curRight;
-
   const activeBookmark =
     progress.bookmarks.find(
-      (b) => b.page === currentPage || b.page === curLeft || b.page === curRight
+      (b) => Math.abs(b.page - currentPage) <= (isMobile ? 0 : 1)
     ) ||
     (progress.bookmarkedPage &&
-    (progress.bookmarkedPage === currentPage ||
-      progress.bookmarkedPage === curLeft ||
-      progress.bookmarkedPage === curRight)
+    Math.abs(progress.bookmarkedPage - currentPage) <= (isMobile ? 0 : 1)
       ? {
           id: 'primary',
           page: progress.bookmarkedPage,
@@ -590,19 +567,29 @@ export const BookReader: React.FC<BookReaderProps> = ({
     });
   };
 
-  const handleJumpPage = (e: React.FormEvent) => {
+  const handleJumpForm = (e: React.FormEvent) => {
     e.preventDefault();
     const parsed = parseInt(pageInput, 10);
     if (!Number.isNaN(parsed)) {
-      setCurrentPage(Math.max(1, Math.min(totalPages, parsed)));
+      jumpToPage(parsed);
     }
   };
 
-  const progressPercent = Math.round((currentPage / Math.max(1, totalPages)) * 100);
+  const progressPercent = Math.round(
+    (currentPage / Math.max(1, totalPages)) * 100
+  );
 
   return (
     <div
       className={`fixed inset-0 z-50 flex flex-col ${theme.backdrop} text-[#F7F1E5] select-none`}
+      style={
+        {
+          '--reader-bg': theme.pageBg,
+          '--reader-body': theme.bodyColor,
+          '--reader-muted': theme.mutedColor,
+          '--reader-heading': theme.headingColor,
+        } as React.CSSProperties
+      }
     >
       {/* Top Reader Toolbar */}
       <header className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 bg-black/30 px-3 sm:px-6 py-1.5 backdrop-blur-md">
@@ -748,20 +735,8 @@ export const BookReader: React.FC<BookReaderProps> = ({
         </div>
       )}
 
-      {/* Main Immersive Large-Format Reading Stage */}
-      <div
-        className="relative flex flex-1 items-center justify-center overflow-hidden px-2 py-2 sm:px-5 sm:py-3"
-        onTouchStart={(e) => {
-          touchStartX.current = e.touches[0].clientX;
-        }}
-        onTouchEnd={(e) => {
-          if (touchStartX.current === null) return;
-          const delta = e.changedTouches[0].clientX - touchStartX.current;
-          touchStartX.current = null;
-          if (delta < -45) goNext();
-          if (delta > 45) goPrev();
-        }}
-      >
+      {/* Main Soft-Paper StPageFlip Reading Stage */}
+      <div className="relative flex flex-1 items-center justify-center overflow-hidden px-2 py-2 sm:px-4">
         {/* TOC Drawer */}
         {showToc && (
           <aside className="absolute inset-y-0 left-0 z-40 flex w-72 sm:w-80 flex-col border-r border-[#C9B393]/30 bg-[#FAF5EC] text-[#221A14] shadow-2xl">
@@ -788,7 +763,7 @@ export const BookReader: React.FC<BookReaderProps> = ({
                     key={`${item.page}-${idx}`}
                     type="button"
                     onClick={() => {
-                      setCurrentPage(item.page);
+                      jumpToPage(item.page);
                       setShowToc(false);
                     }}
                     className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-xs transition ${
@@ -864,15 +839,13 @@ export const BookReader: React.FC<BookReaderProps> = ({
                 })}
               </div>
 
-              <div>
-                <input
-                  type="text"
-                  value={bookmarkNote}
-                  onChange={(e) => setBookmarkNote(e.target.value)}
-                  placeholder="Ghi chú ngắn (tuỳ chọn)..."
-                  className="w-full rounded-lg border border-[#D8C7AE] bg-white px-3 py-2 text-xs text-[#221A14] placeholder:text-[#A5937F] focus:border-[#8E2C5A] focus:outline-none"
-                />
-              </div>
+              <input
+                type="text"
+                value={bookmarkNote}
+                onChange={(e) => setBookmarkNote(e.target.value)}
+                placeholder="Ghi chú ngắn (tuỳ chọn)..."
+                className="w-full rounded-lg border border-[#D8C7AE] bg-white px-3 py-2 text-xs text-[#221A14] placeholder:text-[#A5937F] focus:border-[#8E2C5A] focus:outline-none"
+              />
 
               <button
                 type="button"
@@ -901,7 +874,7 @@ export const BookReader: React.FC<BookReaderProps> = ({
                         <button
                           type="button"
                           onClick={() => {
-                            setCurrentPage(bm.page);
+                            jumpToPage(bm.page);
                             setShowBookmarkPanel(false);
                           }}
                           className="flex flex-1 items-center gap-2 text-left min-w-0"
@@ -934,84 +907,31 @@ export const BookReader: React.FC<BookReaderProps> = ({
           </aside>
         )}
 
-        {/* Left Page Turn Button */}
+        {/* Left Arrow */}
         <button
           type="button"
           onClick={goPrev}
-          disabled={currentPage <= 1 || Boolean(flipState)}
-          className="hidden sm:flex mr-2 lg:mr-4 h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/15 bg-black/30 text-[#F5EAD6] transition hover:bg-black/55 disabled:opacity-20"
+          disabled={currentPage <= 1}
+          className="hidden sm:flex mr-3 h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/15 bg-black/30 text-[#F5EAD6] transition hover:bg-black/55 disabled:opacity-20"
           aria-label="Lật trang trước"
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
 
-        {/* ============================================================
-            THE LARGE-FORMAT REALISTIC OPEN BOOK
-           ============================================================ */}
+        {/* STPAGEFLIP SOFT-PAPER CORNER-CURL BOOK WRAPPER */}
         {errorMsg ? (
           <div className="rounded-2xl bg-[#FAF5EC] p-8 text-center text-[#221A14] shadow-xl">
             <BookOpen className="mx-auto h-10 w-10 text-[#8E2C2C]" />
             <p className="mt-3 font-medium">{errorMsg}</p>
           </div>
-        ) : isMobile ? (
-          /* Mobile Single Page Book with underneath next-page reveal */
-          <div className="flip-stage relative h-[82vh] w-full max-w-[460px] rounded-xl border-4 border-[#4A2E1D] shadow-[0_22px_50px_rgba(0,0,0,0.65)] overflow-visible">
-            {/* Bookmark peeking cleanly from top-center edge (never covers text!) */}
-            {activeBookmark && (
-              <div className="pointer-events-none absolute -top-9 left-1/2 z-30 -translate-x-1/2">
-                <DecorativeBookmark styleId={activeBookmark.style} size="sm" />
-              </div>
-            )}
-
-            {/* Base destination page visible underneath during flip */}
-            <div
-              ref={measureColRef}
-              className={`relative flex h-full w-full flex-col overflow-hidden rounded-lg ${theme.pageBg} px-5 py-3`}
-            >
-              {renderPageFace(
-                flipState ? flipState.toPage : currentPage,
-                'right'
-              )}
-              <button
-                type="button"
-                onClick={goPrev}
-                disabled={currentPage <= 1}
-                className="absolute inset-y-0 left-0 w-1/5 cursor-pointer focus:outline-none"
-                aria-label="Trang trước"
-              />
-              <button
-                type="button"
-                onClick={goNext}
-                disabled={currentPage >= totalPages}
-                className="absolute inset-y-0 right-0 w-1/5 cursor-pointer focus:outline-none"
-                aria-label="Trang sau"
-              />
-            </div>
-
-            {/* Mobile turning sheet */}
-            {flipState && (
-              <div
-                onTransitionEnd={handleFlipTransitionEnd}
-                className={`pointer-events-none absolute inset-0 z-20 overflow-hidden rounded-lg ${theme.pageBg} px-5 py-3 shadow-2xl transition-all duration-400 ease-[cubic-bezier(0.22,0.61,0.36,1)]`}
-                style={{
-                  transformOrigin:
-                    flipState.direction === 'next' ? 'left center' : 'right center',
-                  transform: flipState.active
-                    ? flipState.direction === 'next'
-                      ? 'rotateY(-120deg)'
-                      : 'rotateY(120deg)'
-                    : 'rotateY(0deg)',
-                  opacity: flipState.active ? 0 : 1,
-                }}
-              >
-                {renderPageFace(flipState.fromPage, 'right')}
-              </div>
-            )}
+        ) : loading ? (
+          <div className="flex flex-col items-center gap-3 text-sm text-[#DEC9A6]">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#E5B968] border-t-transparent" />
+            <span className="font-serif italic">Đang mở từng trang sách...</span>
           </div>
         ) : (
-          /* Desktop Large 2-Page Spread (94vw / max 1320px / 84vh) with REAL 2-sided 3D page turn */
           <div
-            className="flip-stage relative flex h-[84vh] max-h-[900px] w-[92vw] max-w-[1320px] rounded-xl bg-[#462B1B] p-2.5 shadow-[0_36px_80px_-14px_rgba(0,0,0,0.82)] ring-1 ring-white/10"
+            className="relative flex items-center justify-center rounded-xl bg-[#3D2518] p-2.5 shadow-[0_34px_80px_-14px_rgba(0,0,0,0.85)] ring-1 ring-white/10"
             onMouseMove={(e) => {
               if (paperTheme !== 'night') return;
               const rect = e.currentTarget.getBoundingClientRect();
@@ -1025,127 +945,44 @@ export const BookReader: React.FC<BookReaderProps> = ({
               setSpotlight((s) => (s.active ? { ...s, active: false } : s))
             }
           >
-            {/* BRIGHTER NIGHT MODE WARM CURSOR READING SPOTLIGHT */}
+            {/* Bright Night-Mode Cursor Reading Spotlight */}
             {paperTheme === 'night' && spotlight.active && (
               <div
                 className="pointer-events-none absolute inset-2.5 z-30 rounded-md"
                 style={{
-                  background: `radial-gradient(circle 240px at ${spotlight.x}px ${spotlight.y}px, rgba(255, 242, 200, 0.44) 0%, rgba(255, 218, 142, 0.22) 38%, rgba(255, 198, 110, 0.06) 64%, transparent 82%)`,
+                  background: `radial-gradient(circle 240px at ${spotlight.x}px ${spotlight.y}px, rgba(255, 242, 200, 0.46) 0%, rgba(255, 218, 142, 0.22) 38%, rgba(255, 198, 110, 0.06) 64%, transparent 82%)`,
                   mixBlendMode: 'screen',
                 }}
               />
             )}
 
-            {/* ENCHANTED CENTER-SPINE BOOKMARK (ZERO TEXT OVERLAP! Runs down the center gutter & dangles below book!) */}
-            {activeBookmark && (
+            {/* Center-Spine Enchanted Bookmark (runs cleanly inside center gutter, ZERO text overlap!) */}
+            {activeBookmark && currentPage > 1 && (
               <div className="pointer-events-none absolute inset-y-0 left-1/2 z-30 -translate-x-1/2 flex flex-col items-center">
-                {/* Tiny golden clasp peeking at top of spine */}
                 <div className="-mt-2.5 h-3 w-5 rounded-t-full border border-[#F5D680] bg-gradient-to-b from-[#FFEAA6] to-[#B88428] shadow" />
-                {/* Thin golden silk ribbon running strictly inside the center gutter between the 2 pages */}
-                <div className="w-[3px] flex-1 bg-gradient-to-b from-[#E5BD60] via-[#C89632] to-[#E5BD60] opacity-85 shadow-[0_0_6px_rgba(0,0,0,0.45)]" />
-                {/* Ornate jewel bookmark hanging gracefully BELOW the bottom edge of the open book */}
-                <div className="-mt-2 translate-y-4">
-                  <DecorativeBookmark styleId={activeBookmark.style} size="md" />
+                {!isMobile && (
+                  <div className="w-[3px] flex-1 bg-gradient-to-b from-[#E5BD60] via-[#C89632] to-[#E5BD60] opacity-85 shadow-[0_0_6px_rgba(0,0,0,0.45)]" />
+                )}
+                <div className={isMobile ? '-mt-1' : '-mt-2 translate-y-4'}>
+                  <DecorativeBookmark
+                    styleId={activeBookmark.style}
+                    size={isMobile ? 'sm' : 'md'}
+                  />
                 </div>
               </div>
             )}
 
-            {/* BASE LEFT PAGE (Static) */}
-            <div
-              onClick={() => {
-                if (currentPage > 1 && !flipState) goPrev();
-              }}
-              className={`relative flex h-full w-1/2 cursor-pointer flex-col overflow-hidden rounded-l-md ${theme.pageBg} px-10 py-6`}
-            >
-              {renderPageFace(baseLeftNum, 'left')}
-              <div className="book-crease-left pointer-events-none absolute inset-0" />
-            </div>
-
-            {/* BASE RIGHT PAGE (Static — already shows destination right page underneath during Next flip!) */}
-            <div
-              ref={measureColRef}
-              onClick={() => {
-                if (currentPage < totalPages && !flipState) goNext();
-              }}
-              className={`relative flex h-full w-1/2 cursor-pointer flex-col overflow-hidden rounded-r-md ${theme.pageBg} px-10 py-6`}
-            >
-              {renderPageFace(baseRightNum, 'right')}
-              <div className="book-crease-right pointer-events-none absolute inset-0" />
-            </div>
-
-            {/* REAL BUTTER-SMOOTH 60FPS TWO-SIDED 3D TURNING SHEET */}
-            {flipState?.direction === 'next' && (
-              <div
-                onTransitionEnd={handleFlipTransitionEnd}
-                className="gpu-turning-sheet pointer-events-none absolute top-2.5 bottom-2.5 right-2.5 left-1/2 z-20"
-                style={{
-                  transformOrigin: 'left center',
-                  transform: flipState.active
-                    ? 'rotateY(-180deg)'
-                    : 'rotateY(0deg)',
-                }}
-              >
-                <div
-                  className={`sheet-face-front absolute inset-0 rounded-r-md ${theme.pageBg} shadow-2xl`}
-                >
-                  <div className="relative flex h-full w-full flex-col overflow-hidden rounded-r-md px-10 py-6">
-                    {renderPageFace(curRight, 'right')}
-                    <div className="book-crease-right pointer-events-none absolute inset-0" />
-                    <div className="sheet-curl-shadow-front pointer-events-none absolute inset-0" />
-                  </div>
-                </div>
-                <div
-                  className={`sheet-face-back absolute inset-0 rounded-l-md ${theme.pageBg} shadow-2xl`}
-                >
-                  <div className="relative flex h-full w-full flex-col overflow-hidden rounded-l-md px-10 py-6">
-                    {renderPageFace(destLeft, 'left')}
-                    <div className="book-crease-left pointer-events-none absolute inset-0" />
-                    <div className="sheet-curl-shadow-back pointer-events-none absolute inset-0" />
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {flipState?.direction === 'prev' && (
-              <div
-                onTransitionEnd={handleFlipTransitionEnd}
-                className="gpu-turning-sheet pointer-events-none absolute top-2.5 bottom-2.5 left-2.5 right-1/2 z-20"
-                style={{
-                  transformOrigin: 'right center',
-                  transform: flipState.active
-                    ? 'rotateY(180deg)'
-                    : 'rotateY(0deg)',
-                }}
-              >
-                <div
-                  className={`sheet-face-front absolute inset-0 rounded-l-md ${theme.pageBg} shadow-2xl`}
-                >
-                  <div className="relative flex h-full w-full flex-col overflow-hidden rounded-l-md px-10 py-6">
-                    {renderPageFace(curLeft, 'left')}
-                    <div className="book-crease-left pointer-events-none absolute inset-0" />
-                    <div className="sheet-curl-shadow-front pointer-events-none absolute inset-0" />
-                  </div>
-                </div>
-                <div
-                  className={`sheet-face-back absolute inset-0 rounded-r-md ${theme.pageBg} shadow-2xl`}
-                >
-                  <div className="relative flex h-full w-full flex-col overflow-hidden rounded-r-md px-10 py-6">
-                    {renderPageFace(destRight, 'right')}
-                    <div className="book-crease-right pointer-events-none absolute inset-0" />
-                    <div className="sheet-curl-shadow-back pointer-events-none absolute inset-0" />
-                  </div>
-                </div>
-              </div>
-            )}
+            {/* StPageFlip Mount Container */}
+            <div ref={flipContainerRef} className="stf-host" />
           </div>
         )}
 
-        {/* Right Page Turn Button */}
+        {/* Right Arrow */}
         <button
           type="button"
           onClick={goNext}
-          disabled={currentPage >= totalPages || Boolean(flipState)}
-          className="hidden sm:flex ml-2 lg:ml-4 h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/15 bg-black/30 text-[#F5EAD6] transition hover:bg-black/55 disabled:opacity-20"
+          disabled={currentPage >= totalPages}
+          className="hidden sm:flex ml-3 h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/15 bg-black/30 text-[#F5EAD6] transition hover:bg-black/55 disabled:opacity-20"
           aria-label="Lật trang sau"
         >
           <ChevronRight className="h-5 w-5" />
@@ -1159,14 +996,14 @@ export const BookReader: React.FC<BookReaderProps> = ({
             <button
               type="button"
               onClick={goPrev}
-              disabled={currentPage <= 1 || Boolean(flipState)}
+              disabled={currentPage <= 1}
               className="flex sm:hidden h-8 w-8 items-center justify-center rounded-lg border border-white/15 bg-white/10 disabled:opacity-30"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
 
             <form
-              onSubmit={handleJumpPage}
+              onSubmit={handleJumpForm}
               className="flex items-center gap-1.5 text-xs"
             >
               <span className="text-[#CBB89E]">Trang</span>
@@ -1184,7 +1021,7 @@ export const BookReader: React.FC<BookReaderProps> = ({
             <button
               type="button"
               onClick={goNext}
-              disabled={currentPage >= totalPages || Boolean(flipState)}
+              disabled={currentPage >= totalPages}
               className="flex sm:hidden h-8 w-8 items-center justify-center rounded-lg border border-white/15 bg-white/10 disabled:opacity-30"
             >
               <ChevronRight className="h-4 w-4" />
@@ -1197,7 +1034,7 @@ export const BookReader: React.FC<BookReaderProps> = ({
               min={1}
               max={totalPages}
               value={currentPage}
-              onChange={(e) => setCurrentPage(Number(e.target.value))}
+              onChange={(e) => jumpToPage(Number(e.target.value))}
               className="h-1.5 w-full cursor-pointer accent-[#D4A857]"
               aria-label="Thanh tiến độ trang sách"
             />
