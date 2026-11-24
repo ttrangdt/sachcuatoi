@@ -259,25 +259,25 @@ async function resolveDestPage(doc, dest) {
  * Extract structured visual lines with exact X, Y, and width from PDF text items.
  */
 function extractVisualLines(textItems) {
+  // Group items into visual lines by Y-coordinate (±4pt tolerance), handling out-of-order PDF streams
   const rawLines = [];
-  let curItems = [];
-  let lastY = null;
-
   for (const item of textItems) {
     if (!item.str) continue;
     const y = Math.round(item.transform[5]);
-    if (lastY !== null && Math.abs(y - lastY) > 4) {
-      if (curItems.length) rawLines.push({ y: lastY, items: curItems });
-      curItems = [item];
-    } else {
-      curItems.push(item);
+    let bucket = rawLines.find((rl) => Math.abs(rl.y - y) <= 4);
+    if (!bucket) {
+      bucket = { y, items: [] };
+      rawLines.push(bucket);
     }
-    lastY = y;
+    bucket.items.push(item);
   }
-  if (curItems.length) rawLines.push({ y: lastY ?? 0, items: curItems });
+
+  // Sort top-to-bottom (higher PDF Y = higher on the page) so headers/titles ALWAYS precede body prose!
+  rawLines.sort((a, b) => b.y - a.y);
 
   const lines = [];
-  for (const rl of rawLines) {
+  for (let idx = 0; idx < rawLines.length; idx++) {
+    const rl = rawLines[idx];
     rl.items.sort((a, b) => a.transform[4] - b.transform[4]);
     const text = rl.items
       .map((it) => it.str)
@@ -287,7 +287,11 @@ function extractVisualLines(textItems) {
       .replace(/([“«(])\s+/g, '$1')
       .trim();
     if (!text) continue;
-    if (/^\d{1,4}$/.test(text)) continue;
+    // Strip pure page numbers (usually 1-3 digits, or 4 digits <= 1500 at very top/bottom of page),
+    // while keeping year headings like "1952", "1969" inside the story!
+    const isEdgeLine = idx === 0 || idx === rawLines.length - 1;
+    if (/^\d{1,3}$/.test(text) && isEdgeLine) continue;
+    if (/^\d{4}$/.test(text) && isEdgeLine && Number(text) <= 1500) continue;
     if (/thuviensach\.vn|sachvui\.com|tve-4u\.org/i.test(text)) continue;
 
     const minX = rl.items[0].transform[4];
@@ -388,7 +392,10 @@ function reconstructBookParagraphs(pageLinesList, pageChapters) {
     let outlineHeadingInserted = false;
     if (pageChapters.has(pdfPageNum)) {
       const outlineTitle = pageChapters.get(pdfPageNum);
-      const isNoiseTitle = /^(bìa|cover|bìa sách|title page)$/i.test(outlineTitle);
+      const isNoiseTitle =
+        /^(bìa|cover|bìa sách|title page|start|thông tin|thông tin ebook|\.\.\.)$/i.test(outlineTitle) ||
+        /^\[\d+\]$/.test(outlineTitle) ||
+        /\.x?html?$/i.test(outlineTitle);
       if (!isNoiseTitle) {
         pushPageBreak();
         chapters.push({
@@ -403,7 +410,7 @@ function reconstructBookParagraphs(pageLinesList, pageChapters) {
           .join(' ');
         const titleNorm = normalizeKey(outlineTitle);
         if (!firstTwoNorm.includes(titleNorm)) {
-          // Original PDF rendered the heading as an image graphic (e.g. "Lời nói đầu" banner) -> preserve it cleanly!
+          // Original PDF rendered the heading as an image graphic -> preserve it cleanly!
           paragraphs.push(`## ${outlineTitle}`);
           outlineHeadingInserted = true;
         }
@@ -448,6 +455,19 @@ function reconstructBookParagraphs(pageLinesList, pageChapters) {
         normalizeKey(text) === normalizeKey(pageChapters.get(pdfPageNum));
 
       const isHeading = isNumberedChapter || isKnownSectionTitle || matchesOutline;
+
+      // Avoid duplicating heading if we already injected a richer outline title on line 0 (e.g. "## I: ĐỒNG LẦY" vs "ĐỒNG LẦY")
+      if (
+        outlineHeadingInserted &&
+        i === 0 &&
+        text.length >= 3 &&
+        paragraphs.length > 0 &&
+        normalizeKey(paragraphs[paragraphs.length - 1].replace(/^##\s+/, '')).includes(
+          normalizeKey(text)
+        )
+      ) {
+        continue;
+      }
 
       if (isHeading) {
         // Avoid duplicating heading if we already injected it from outline
