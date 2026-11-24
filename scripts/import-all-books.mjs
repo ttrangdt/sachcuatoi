@@ -202,6 +202,13 @@ const MONG_VUOT_SERIES = {
   boxAccent: '#DFB664',
 };
 
+const BEARTOWN_SERIES = {
+  id: 'beartown',
+  name: 'Beartown',
+  boxColor: '#1C2E40',
+  boxAccent: '#D8E6F2',
+};
+
 const CURATED_META = [
   { match: 'achilles', id: 'truong-ca-achilles', title: 'Trường Ca Achilles', author: 'Madeline Miller', genre: 'Thần thoại · Tiểu thuyết', year: '2011', spineColor: '#851A2E', spineAccent: '#F4D36A', spineTextColor: '#F7DC88' },
   { match: 'ba ngoai', id: 'ba-ngoai-toi-gui-loi-xin-loi', title: 'Bà Ngoại Tôi Gửi Lời Xin Lỗi', author: 'Fredrik Backman', genre: 'Tiểu thuyết · Gia đình', year: '2013', spineColor: '#9E4B5A', spineAccent: '#F6DFC2', spineTextColor: '#FFF5EB' },
@@ -209,7 +216,7 @@ const CURATED_META = [
   { match: 'britt-marie', id: 'britt-marie-da-o-day', title: 'Britt-Marie Đã Ở Đây', author: 'Fredrik Backman', genre: 'Tiểu thuyết đương đại', year: '2014', spineColor: '#4A6E5D', spineAccent: '#F3DFB2', spineTextColor: '#F7FBF8' },
   { match: 'cay cam ngot', id: 'cay-cam-ngot-cua-toi', title: 'Cây Cam Ngọt Của Tôi', author: 'José Mauro de Vasconcelos', genre: 'Kinh điển · Tuổi thơ', year: '1968', spineColor: '#C86432', spineAccent: '#FCE5B4', spineTextColor: '#FFF7EC' },
   { match: 'pyjama', id: 'chu-be-mang-pyjama-soc', title: 'Chú Bé Mang Pyjama Sọc', author: 'John Boyne', genre: 'Tiểu thuyết lịch sử', year: '2006', spineColor: '#46586C', spineAccent: '#DCE6F0', spineTextColor: '#F5F8FB' },
-  { match: 'chung toi dau', id: 'chung-toi-dau-voi-cac-ban', title: 'Chúng Tôi Đấu Với Các Bạn', author: 'Fredrik Backman', genre: 'Tiểu thuyết · Tâm lý', year: '2017', spineColor: '#294054', spineAccent: '#DFC592', spineTextColor: '#F2F6FA' },
+  { match: 'chung toi dau', id: 'chung-toi-dau-voi-cac-ban', title: 'Chúng Tôi Đấu Với Các Bạn', author: 'Fredrik Backman', genre: 'Tiểu thuyết · Beartown', year: '2017', spineColor: '#294054', spineAccent: '#DFC592', spineTextColor: '#F2F6FA', series: { ...BEARTOWN_SERIES, order: 2 } },
   { match: 'con hoang', id: 'con-hoang', title: 'Con Hoang', author: 'Lê Hồng Nguyên', genre: 'Văn học Việt Nam', year: '2020', spineColor: '#4B3E35', spineAccent: '#EAD2AC', spineTextColor: '#FAF4EC' },
   { match: 'brooklyn', id: 'cay-brooklyn-xanh-biec', title: 'Cây Brooklyn Xanh Biếc', author: 'Betty Smith', genre: 'Kinh điển · Trưởng thành', year: '1943', spineColor: '#2C5E4A', spineAccent: '#EED9A4', spineTextColor: '#F2FAF5' },
   { match: 'sau ke bat hao', id: 'sau-ke-bat-hao', title: 'Sáu Kẻ Bất Hảo', author: 'Leigh Bardugo', genre: 'Kỳ ảo · Móng Vuốt Quạ Đen', year: '2015', spineColor: '#252129', spineAccent: '#DFB15E', spineTextColor: '#F7EFE4', series: { ...MONG_VUOT_SERIES, order: 1 } },
@@ -227,7 +234,9 @@ const CURATED_META = [
   { match: 'qua chuong', id: 'qua-chuong-ac-mong', title: 'Quả Chuông Ác Mộng', author: 'Sylvia Plath', genre: 'Kinh điển · Tâm lý', year: '1963', spineColor: '#665378', spineAccent: '#EFE2FA', spineTextColor: '#F8F4FC' },
   { match: 'auschwitz', id: 'tho-xam-o-auschwitz', title: 'Thợ Xăm Ở Auschwitz', author: 'Heather Morris', genre: 'Tiểu thuyết lịch sử', year: '2018', spineColor: '#4D4742', spineAccent: '#DFC7A2', spineTextColor: '#F6F2EC' },
   { match: 'thu vien nua dem', id: 'thu-vien-nua-dem', title: 'Thư Viện Nửa Đêm', author: 'Matt Haig', genre: 'Kỳ ảo · Triết lý sống', year: '2020', spineColor: '#1E3C47', spineAccent: '#F0D084', spineTextColor: '#F2F9FA' },
-  { match: 'thi tran nho', id: 'thi-tran-nho-giac-mo-lon', title: 'Thị Trấn Nhỏ Giấc Mơ Lớn', author: 'Fredrik Backman', genre: 'Tiểu thuyết · Thị trấn', year: '2016', spineColor: '#2E4D42', spineAccent: '#E8D29B', spineTextColor: '#F3FAF6' },
+  { match: 'thi tran nho', id: 'thi-tran-nho-giac-mo-lon', title: 'Thị Trấn Nhỏ Giấc Mơ Lớn', author: 'Fredrik Backman', genre: 'Tiểu thuyết · Beartown', year: '2016', spineColor: '#2E4D42', spineAccent: '#E8D29B', spineTextColor: '#F3FAF6', series: { ...BEARTOWN_SERIES, order: 1 } },
+  { match: 'beartown-3', id: 'nhung-nguoi-chien-thang', title: 'Những Người Chiến Thắng', author: 'Fredrik Backman', genre: 'Tiểu thuyết · Beartown', year: '2021', spineColor: '#24384A', spineAccent: '#DDE8F2', spineTextColor: '#F4F8FC', series: { ...BEARTOWN_SERIES, order: 3 } },
+  { match: 'nhung ke au lo', id: 'nhung-ke-au-lo', title: 'Những Kẻ Âu Lo', author: 'Fredrik Backman', genre: 'Tiểu thuyết · Hài ấm áp', year: '2019', spineColor: '#3B647A', spineAccent: '#F5E1B8', spineTextColor: '#F6FAFD' },
   { match: 'tan ngay de lai', id: 'tan-ngay-de-lai', title: 'Tàn Ngày Để Lại', author: 'Kazuo Ishiguro', genre: 'Kinh điển · Nobel', year: '1989', spineColor: '#6B4E3D', spineAccent: '#F2DBC0', spineTextColor: '#FAF4EE' },
   { match: 'bay ngay cho chet', id: 'bay-ngay-cho-chet', title: 'Bảy Ngày Chờ Chết', author: 'Holly Jackson', genre: 'Trinh thám · Giật gân', year: '2024', spineColor: '#2A2F3D', spineAccent: '#E8C57B', spineTextColor: '#F4F6FA' },
   { match: 'chien-tranh-khong-co-mot-khuon-mat', id: 'chien-tranh-khong-co-mot-khuon-mat-phu-nu', title: 'Chiến Tranh Không Có Một Khuôn Mặt Phụ Nữ', author: 'Svetlana Alexievich', genre: 'Phi hư cấu · Nobel', year: '1985', spineColor: '#5B3A38', spineAccent: '#ECD3A8', spineTextColor: '#FAF4EE' },
