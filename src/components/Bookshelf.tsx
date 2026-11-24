@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { BookOpen, CheckCircle2, Plus, Trash2 } from 'lucide-react';
 import { BookItem, BookProgress, BookSeriesInfo } from '../types/book';
 import { getBookCoverUrl } from '../utils/pdfEngine';
@@ -415,7 +415,78 @@ export const Bookshelf: React.FC<BookshelfProps> = ({
     setIsDragging(false);
   };
 
-  const packedCabinets = buildAndPackShelfUnits(books, progressMap);
+  const packedCabinets = useMemo(
+    () => buildAndPackShelfUnits(books, progressMap),
+    [books, progressMap]
+  );
+
+  // Ordered flat list of all books across shelves & cabinets (left -> right, top -> bottom, cab 0 -> 1 -> 2)
+  const orderedShelfBooks = useMemo(() => {
+    const list: Array<{ key: string; cabinet: 0 | 1 | 2; book: BookItem }> = [];
+    ([0, 1, 2] as const).forEach((cIdx) => {
+      packedCabinets[cIdx].forEach((tierUnits) => {
+        tierUnits.forEach((unit) => {
+          if (unit.type === 'series') {
+            unit.books.forEach((book) => {
+              list.push({ key: `cab${cIdx}-${book.id}`, cabinet: cIdx, book });
+            });
+          } else {
+            list.push({
+              key: `cab${cIdx}-${unit.book.id}`,
+              cabinet: cIdx,
+              book: unit.book,
+            });
+          }
+        });
+      });
+    });
+    return list;
+  }, [packedCabinets]);
+
+  // Keyboard navigation when a book cover is expanded: Left/Right to browse prev/next book, Enter to read, Esc to close
+  useEffect(() => {
+    if (!expandedBookKey || orderedShelfBooks.length === 0) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+      const curIdx = orderedShelfBooks.findIndex((item) => item.key === expandedBookKey);
+      if (curIdx === -1) return;
+
+      if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        const next = orderedShelfBooks[(curIdx + 1) % orderedShelfBooks.length];
+        setExpandedBookKey(next.key);
+        if (next.cabinet !== activeCabinet) {
+          setActiveCabinet(next.cabinet);
+        }
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        const prev =
+          orderedShelfBooks[
+            (curIdx - 1 + orderedShelfBooks.length) % orderedShelfBooks.length
+          ];
+        setExpandedBookKey(prev.key);
+        if (prev.cabinet !== activeCabinet) {
+          setActiveCabinet(prev.cabinet);
+        }
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        const cur = orderedShelfBooks[curIdx].book;
+        onOpenBook(
+          cur,
+          progressMap[cur.id]?.bookmarkedPage || progressMap[cur.id]?.currentPage
+        );
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        setExpandedBookKey(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [expandedBookKey, orderedShelfBooks, activeCabinet, onOpenBook, progressMap]);
 
   // Place "+" upload slot right after the last book in fill order (Left 0 -> Middle 1 -> Right 2)
   const addSlotTarget = (() => {
