@@ -318,9 +318,12 @@ function fixDropCapSpacing(text) {
   );
 }
 
-function isFrontMatterLine(text) {
-  return /(tác giả\s*:|người dịch\s*:|dịch giả\s*:|nhà xuất bản|nxb\s|phát hành\s*:|ebook|vctvegroup|mọt truyện|quét mã qr|isbn|bản quyền|copyright|chịu trách nhiệm|in tại|khổ sách|giấy phép)/i.test(
-    text
+function isCopyrightPage(lines) {
+  if (!lines || lines.length === 0 || lines.length > 14) return false;
+  const joined = lines.map((l) => l.text).join(' ');
+  if (joined.length > 420) return false; // Real prose page is much longer!
+  return /(tác giả\s*:|người dịch\s*:|dịch giả\s*:|phát hành\s*:|ebook©|vctvegroup|mọt truyện|quét mã qr|isbn|bản quyền)/i.test(
+    joined
   );
 }
 
@@ -351,31 +354,23 @@ function reconstructBookParagraphs(pageLinesList, pageChapters) {
 
     if (!lines || lines.length === 0) continue;
 
-    // Detect if this early PDF page is a Title / Publisher / Copyright / TOC / Epigraph front-matter page
-    const pageJoined = lines.map((l) => l.text).join(' ');
-    const isEarlyPage = pdfPageNum <= 14;
-    const hasFrontMatterKeywords = isFrontMatterLine(pageJoined);
-    const isTocPage =
-      isEarlyPage &&
-      lines.some((l) => /^MỤC LỤC$/i.test(l.text.trim()));
-    const isShortFrontPage =
-      isEarlyPage &&
-      (hasFrontMatterKeywords ||
-        isTocPage ||
-        (lines.length <= 8 && pageJoined.length < 360));
-
-    if (pageChapters.has(pdfPageNum)) {
+    // 1. Dedicated Copyright / Publisher Info Page (ONLY on first 5 PDF pages and strictly short!)
+    if (pdfPageNum <= 5 && isCopyrightPage(lines)) {
       pushPageBreak();
-      chapters.push({
-        title: pageChapters.get(pdfPageNum),
-        paragraphIndex: paragraphs.length,
-      });
-    } else if (isShortFrontPage) {
-      // Keep every front-matter page (publisher info, epigraph, TOC, intro) strictly on its own dedicated page!
+      for (const line of lines) {
+        const t = fixDropCapSpacing(line.text.trim());
+        if (t) paragraphs.push(`:: ${t}`);
+      }
       pushPageBreak();
+      continue;
     }
 
-    if (isShortFrontPage) {
+    // 2. Dedicated TOC page (ONLY on first 6 PDF pages if titled "MỤC LỤC")
+    if (
+      pdfPageNum <= 6 &&
+      lines.some((l) => /^MỤC LỤC$/i.test(l.text.trim()))
+    ) {
+      pushPageBreak();
       for (const line of lines) {
         const t = fixDropCapSpacing(line.text.trim());
         if (!t) continue;
@@ -387,6 +382,32 @@ function reconstructBookParagraphs(pageLinesList, pageChapters) {
       }
       pushPageBreak();
       continue;
+    }
+
+    // 3. Official PDF Outline Chapter / Section Start: ALWAYS start on a fresh page & ensure title is shown!
+    let outlineHeadingInserted = false;
+    if (pageChapters.has(pdfPageNum)) {
+      const outlineTitle = pageChapters.get(pdfPageNum);
+      const isNoiseTitle = /^(bìa|cover|bìa sách|title page)$/i.test(outlineTitle);
+      if (!isNoiseTitle) {
+        pushPageBreak();
+        chapters.push({
+          title: outlineTitle,
+          paragraphIndex: paragraphs.length,
+        });
+
+        // Check if the first 2 lines on this PDF page already contain this heading text
+        const firstTwoNorm = lines
+          .slice(0, 2)
+          .map((l) => normalizeKey(l.text))
+          .join(' ');
+        const titleNorm = normalizeKey(outlineTitle);
+        if (!firstTwoNorm.includes(titleNorm)) {
+          // Original PDF rendered the heading as an image graphic (e.g. "Lời nói đầu" banner) -> preserve it cleanly!
+          paragraphs.push(`## ${outlineTitle}`);
+          outlineHeadingInserted = true;
+        }
+      }
     }
 
     // Compute median normal leading & baseline left X margin for this page
@@ -409,12 +430,12 @@ function reconstructBookParagraphs(pageLinesList, pageChapters) {
       const prevLine = i > 0 ? lines[i - 1] : null;
       const gap = prevLine ? Math.abs(prevLine.y - line.y) : 0;
 
-      // STRICT heading detection
+      // STRICT heading detection: numbered chapters, known literary sections, or exact outline match
       const isNumberedChapter =
-        /^(CHƯƠNG|PHẦN|HỒI|CHAPTER|PART)\s+(\d+|[IVXLCDM]+|MỘT|HAI|BA|BỐN|NĂM|SÁU|BẢY|TÁM|CHÍN|MƯỜI)(\b|\s|:|-)/i.test(
+        /^(CHƯƠNG|PHẦN|HỒI|QUYỂN|CHAPTER|PART)\s+(\d+|[IVXLCDM]+|MỘT|HAI|BA|BỐN|NĂM|SÁU|BẢY|TÁM|CHÍN|MƯỜI)(\b|\s|:|-)/i.test(
           text
         ) &&
-        text.length < 52 &&
+        text.length < 55 &&
         !/[.,!?]$/.test(text);
 
       const isKnownSectionTitle =
@@ -429,8 +450,22 @@ function reconstructBookParagraphs(pageLinesList, pageChapters) {
       const isHeading = isNumberedChapter || isKnownSectionTitle || matchesOutline;
 
       if (isHeading) {
-        // Always start a new chapter or major section on a fresh clean page!
-        pushPageBreak();
+        // Avoid duplicating heading if we already injected it from outline
+        if (
+          outlineHeadingInserted &&
+          paragraphs.length > 0 &&
+          normalizeKey(paragraphs[paragraphs.length - 1].replace(/^##\s+/, '')) ===
+            normalizeKey(text)
+        ) {
+          continue;
+        }
+        // Only start a new page if there's already substantial content before this heading (not right after another heading)
+        const prevItem = paragraphs[paragraphs.length - 1] || '';
+        if (!prevItem.startsWith('## ') && prevItem !== '---PAGEBREAK---') {
+          pushPageBreak();
+        } else {
+          flush();
+        }
         paragraphs.push(`## ${text}`);
         continue;
       }

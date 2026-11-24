@@ -557,19 +557,21 @@
 }
 
 .stf-heading {
-  font-family: "Cormorant Garamond", Georgia, serif;
+  font-family: "Newsreader", Georgia, serif;
   font-weight: 700;
   text-align: center;
   color: var(--reader-heading, #3a2317);
-  margin: 8px 0 10px 0;
+  margin: 10px 0 14px 0;
   letter-spacing: 0.04em;
 }
 
 .stf-meta {
+  font-family: "Newsreader", Georgia, serif;
   margin: 6px 0;
   text-align: center;
-  font-style: italic;
-  color: var(--reader-muted, #7c6a58);
+  font-style: normal;
+  color: var(--reader-body, #2c221a);
+  opacity: 0.88;
 }
 
 .stf-para {
