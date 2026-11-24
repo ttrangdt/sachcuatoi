@@ -18,69 +18,154 @@
 }
 
 /* =========================================================
-   IMAGE 3 BUILT-IN CREAMY-WHITE LIBRARY BOOKCASE TEXTURES
+   ARCHITECTURAL WOOD BOOKCASE — 3 VIVID TIME-OF-DAY MOODS
    ========================================================= */
-.cream-cornice {
-  background: linear-gradient(
-    180deg,
-    #f9f5ec 0%,
-    #ece4d4 45%,
-    #d6cbb6 82%,
-    #b7aa92 100%
-  );
-  box-shadow: 0 8px 18px rgba(34, 24, 14, 0.28);
+
+/* --- 1. MORNING DAYLIGHT (Bright Sunlit Warm Oak & Crisp Cream) --- */
+.wood-cornice-morning {
+  background: linear-gradient(180deg, #faf6ee 0%, #ede4d4 52%, #d5c7b0 100%);
+  box-shadow: 0 8px 18px rgba(48, 38, 24, 0.22);
 }
 
-.cream-pilaster {
+.wood-pillar-morning {
   background: linear-gradient(
     90deg,
-    #d7ccb8 0%,
-    #f5efe4 28%,
-    #fcf9f2 52%,
-    #e8dfd0 82%,
-    #c6b9a2 100%
+    #cfc2ac 0%,
+    #f3ece0 28%,
+    #fbf8f2 52%,
+    #e6dccb 82%,
+    #c4b59c 100%
   );
   box-shadow:
-    3px 0 12px rgba(32, 24, 14, 0.24),
-    -3px 0 12px rgba(32, 24, 14, 0.24);
+    4px 0 14px rgba(48, 38, 24, 0.2),
+    -4px 0 14px rgba(48, 38, 24, 0.2);
 }
 
-.cream-shelf-plank {
+.wood-plank-morning {
   background: linear-gradient(
     180deg,
-    #fbf8f1 0%,
-    #efe8da 32%,
-    #dcd2bf 80%,
-    #bfb39d 100%
+    #fffdf9 0%,
+    #f2eadc 30%,
+    #ded3bf 78%,
+    #c3b59e 100%
   );
   box-shadow:
-    0 12px 20px -4px rgba(30, 22, 12, 0.36),
-    0 3px 6px -1px rgba(30, 22, 12, 0.22),
-    inset 0 1.5px 0 rgba(255, 255, 255, 0.92);
+    0 12px 20px -4px rgba(44, 34, 20, 0.28),
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.96);
 }
 
-.library-bay-day {
+.shelf-bay-morning {
   background: linear-gradient(
     180deg,
-    #cfc5b2 0%,
-    #e2dacb 16%,
-    #ece6d9 76%,
-    #d8cfbe 100%
+    #d5ccb8 0%,
+    #e9e2d4 16%,
+    #f5f0e6 78%,
+    #e2d9c8 100%
   );
   box-shadow:
-    inset 0 16px 24px -10px rgba(48, 36, 22, 0.34),
-    inset 14px 0 22px -12px rgba(48, 36, 22, 0.24),
-    inset -14px 0 22px -12px rgba(48, 36, 22, 0.24);
+    inset 0 14px 22px -10px rgba(58, 44, 28, 0.28),
+    inset 14px 0 20px -12px rgba(58, 44, 28, 0.18),
+    inset -14px 0 20px -12px rgba(58, 44, 28, 0.18);
 }
 
-.library-bay-evening {
+/* --- 2. GOLDEN HOUR SUNSET (Warm Honey-Amber Oak & Molten Glow) --- */
+.wood-cornice-golden {
+  background: linear-gradient(180deg, #b87447 0%, #8e502d 55%, #653319 100%);
+  box-shadow: 0 10px 22px rgba(56, 22, 8, 0.42);
+}
+
+.wood-pillar-golden {
+  background: linear-gradient(
+    90deg,
+    #6a381d 0%,
+    #9c5932 28%,
+    #b66e41 52%,
+    #884b29 82%,
+    #582c15 100%
+  );
+  box-shadow:
+    4px 0 16px rgba(52, 20, 8, 0.38),
+    -4px 0 16px rgba(52, 20, 8, 0.38);
+}
+
+.wood-plank-golden {
+  background: linear-gradient(
+    180deg,
+    #d6905c 0%,
+    #a86238 30%,
+    #7e4321 78%,
+    #562a12 100%
+  );
+  box-shadow:
+    0 14px 22px -4px rgba(48, 18, 6, 0.48),
+    inset 0 1.5px 0 rgba(255, 224, 174, 0.55);
+}
+
+.shelf-bay-golden {
   background:
-    radial-gradient(ellipse 85% 52% at 50% 8%, rgba(255, 212, 134, 0.28) 0%, transparent 72%),
-    linear-gradient(180deg, #544332 0%, #6b5845 18%, #77634f 78%, #524030 100%);
+    linear-gradient(122deg, rgba(255, 212, 134, 0.36) 0%, transparent 55%),
+    linear-gradient(180deg, #6b3d24 0%, #8c5334 20%, #a06441 78%, #703f25 100%);
   box-shadow:
-    inset 0 18px 26px -10px rgba(16, 10, 5, 0.56),
-    inset 14px 0 22px -12px rgba(16, 10, 5, 0.36),
-    inset -14px 0 22px -12px rgba(16, 10, 5, 0.36);
+    inset 0 16px 26px -10px rgba(42, 16, 6, 0.48),
+    inset 14px 0 22px -12px rgba(42, 16, 6, 0.32),
+    inset -14px 0 22px -12px rgba(42, 16, 6, 0.32);
+}
+
+/* --- 3. COZY NIGHT LIBRARY (Deep Espresso Walnut + Warm Recessed LED Downlights!) --- */
+.wood-cornice-night {
+  background: linear-gradient(180deg, #2d1e17 0%, #1c120d 55%, #0e0806 100%);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.72);
+}
+
+.wood-pillar-night {
+  background: linear-gradient(
+    90deg,
+    #110b08 0%,
+    #281a13 30%,
+    #352319 52%,
+    #1f140e 82%,
+    #0d0806 100%
+  );
+  box-shadow:
+    5px 0 18px rgba(0, 0, 0, 0.65),
+    -5px 0 18px rgba(0, 0, 0, 0.65);
+}
+
+.wood-plank-night {
+  background: linear-gradient(
+    180deg,
+    #4c3324 0%,
+    #311f15 28%,
+    #1e120c 78%,
+    #110a06 100%
+  );
+  box-shadow:
+    0 16px 26px -4px rgba(0, 0, 0, 0.78),
+    inset 0 1.5px 0 rgba(255, 206, 134, 0.28);
+}
+
+.shelf-bay-night {
+  background: linear-gradient(
+    180deg,
+    #130d0b 0%,
+    #1d1512 22%,
+    #241a15 78%,
+    #120c09 100%
+  );
+  box-shadow:
+    inset 0 18px 28px -10px rgba(0, 0, 0, 0.8),
+    inset 16px 0 24px -12px rgba(0, 0, 0, 0.62),
+    inset -16px 0 24px -12px rgba(0, 0, 0, 0.62);
+}
+
+/* Warm golden recessed cabinet downlight cone in Night mode */
+.shelf-downlight {
+  background: radial-gradient(
+    ellipse 68% 95% at 50% 0%,
+    rgba(255, 214, 136, 0.34) 0%,
+    rgba(255, 186, 92, 0.14) 48%,
+    transparent 85%
+  );
 }
 
 /* Warm Wooden Floorboard Base */
@@ -106,8 +191,8 @@
       transparent 1px,
       transparent 130px
     ),
-    linear-gradient(180deg, #332219 0%, #241812 50%, #19100c 100%);
-  box-shadow: inset 0 8px 18px rgba(0, 0, 0, 0.55);
+    linear-gradient(180deg, #241812 0%, #160e0a 50%, #0d0806 100%);
+  box-shadow: inset 0 8px 18px rgba(0, 0, 0, 0.65);
 }
 
 /* Crisp 3D Book Spine Hover */
@@ -121,8 +206,8 @@
   transform: translateY(-16px) scale(1.05);
   z-index: 30;
   box-shadow:
-    0 20px 30px -6px rgba(24, 14, 6, 0.55),
-    0 0 18px rgba(246, 214, 134, 0.38);
+    0 20px 30px -6px rgba(14, 8, 4, 0.65),
+    0 0 18px rgba(246, 214, 134, 0.42);
 }
 
 .book-sheen::after {
@@ -147,75 +232,112 @@
 }
 
 /* =========================================================
-   REAL TWO-SIDED 3D PAGE-TURN PHYSICS (SILKY 60FPS!)
+   SUPPLE, SILKY TWO-SIDED 3D PAGE-TURN PHYSICS (ZERO MIRRORING!)
    ========================================================= */
 .flip-stage {
-  perspective: 2600px;
+  perspective: 2400px;
 }
 
 .turning-sheet-next {
   transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
   transform-origin: left center;
-  animation: realFlipNext 0.58s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  will-change: transform;
+  animation: suppleFlipNext 0.72s cubic-bezier(0.28, 0.12, 0.22, 1) forwards;
 }
 
 .turning-sheet-prev {
   transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
   transform-origin: right center;
-  animation: realFlipPrev 0.58s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  will-change: transform;
+  animation: suppleFlipPrev 0.72s cubic-bezier(0.28, 0.12, 0.22, 1) forwards;
 }
 
+/* Explicit Z-separation prevents Chrome GPU Z-fighting & backwards text flash */
 .sheet-face-front {
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  transform: rotateY(0deg);
+  transform: rotateY(0deg) translateZ(1px);
 }
 
 .sheet-face-back {
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  transform: rotateY(180deg);
+  transform: rotateY(180deg) translateZ(1px);
 }
 
-@keyframes realFlipNext {
+/* Soft sweeping paper-curl shading during turn */
+.sheet-curl-shadow-front {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.12) 0%,
+    rgba(255, 255, 255, 0.08) 28%,
+    transparent 65%,
+    rgba(0, 0, 0, 0.08) 100%
+  );
+}
+
+.sheet-curl-shadow-back {
+  background: linear-gradient(
+    270deg,
+    rgba(0, 0, 0, 0.12) 0%,
+    rgba(255, 255, 255, 0.08) 28%,
+    transparent 65%,
+    rgba(0, 0, 0, 0.08) 100%
+  );
+}
+
+@keyframes suppleFlipNext {
   0% {
-    transform: rotateY(0deg);
-    filter: brightness(1);
+    transform: rotateY(0deg) skewY(0deg);
+  }
+  28% {
+    transform: rotateY(-46deg) skewY(-1.8deg);
   }
   50% {
-    transform: rotateY(-90deg);
-    filter: brightness(0.92);
+    transform: rotateY(-90deg) skewY(-2.4deg);
+  }
+  74% {
+    transform: rotateY(-136deg) skewY(-1.4deg);
   }
   100% {
-    transform: rotateY(-180deg);
-    filter: brightness(1);
+    transform: rotateY(-180deg) skewY(0deg);
   }
 }
 
-@keyframes realFlipPrev {
+@keyframes suppleFlipPrev {
   0% {
-    transform: rotateY(0deg);
-    filter: brightness(1);
+    transform: rotateY(0deg) skewY(0deg);
+  }
+  28% {
+    transform: rotateY(46deg) skewY(1.8deg);
   }
   50% {
-    transform: rotateY(90deg);
-    filter: brightness(0.92);
+    transform: rotateY(90deg) skewY(2.4deg);
+  }
+  74% {
+    transform: rotateY(136deg) skewY(1.4deg);
   }
   100% {
-    transform: rotateY(180deg);
-    filter: brightness(1);
+    transform: rotateY(180deg) skewY(0deg);
   }
 }
 
 @keyframes mobilePeelNext {
   0% {
     transform-origin: left center;
-    transform: rotateY(0deg);
+    transform: rotateY(0deg) skewY(0deg);
     opacity: 1;
+  }
+  55% {
+    transform-origin: left center;
+    transform: rotateY(-65deg) skewY(-2deg);
+    opacity: 0.9;
   }
   100% {
     transform-origin: left center;
-    transform: rotateY(-120deg);
+    transform: rotateY(-125deg) skewY(0deg);
     opacity: 0;
   }
 }
@@ -223,22 +345,27 @@
 @keyframes mobilePeelPrev {
   0% {
     transform-origin: right center;
-    transform: rotateY(0deg);
+    transform: rotateY(0deg) skewY(0deg);
     opacity: 1;
+  }
+  55% {
+    transform-origin: right center;
+    transform: rotateY(65deg) skewY(2deg);
+    opacity: 0.9;
   }
   100% {
     transform-origin: right center;
-    transform: rotateY(120deg);
+    transform: rotateY(125deg) skewY(0deg);
     opacity: 0;
   }
 }
 
 .animate-mobile-peel-next {
-  animation: mobilePeelNext 0.38s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: mobilePeelNext 0.44s cubic-bezier(0.28, 0.12, 0.22, 1) forwards;
 }
 
 .animate-mobile-peel-prev {
-  animation: mobilePeelPrev 0.38s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: mobilePeelPrev 0.44s cubic-bezier(0.28, 0.12, 0.22, 1) forwards;
 }
 
 /* Open Book Center Spine Crease */

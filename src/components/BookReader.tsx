@@ -347,14 +347,16 @@ export const BookReader: React.FC<BookReaderProps> = ({
       if (target === currentPage) return;
 
       setFlipState({ direction, fromPage: currentPage, toPage: target });
-      const duration = isMobile ? 380 : 580;
-      flipTimerRef.current = window.setTimeout(() => {
-        setCurrentPage(target);
-        setFlipState(null);
-      }, duration);
     },
     [currentPage, flipState, isMobile, totalPages]
   );
+
+  const handleFlipAnimationEnd = useCallback(() => {
+    if (!flipState) return;
+    const dest = flipState.toPage;
+    setCurrentPage(dest);
+    setFlipState(null);
+  }, [flipState]);
 
   const goNext = useCallback(() => triggerFlip('next'), [triggerFlip]);
   const goPrev = useCallback(() => triggerFlip('prev'), [triggerFlip]);
@@ -961,6 +963,7 @@ export const BookReader: React.FC<BookReaderProps> = ({
             {/* Mobile turning sheet */}
             {flipState && (
               <div
+                onAnimationEnd={handleFlipAnimationEnd}
                 className={`pointer-events-none absolute inset-0 z-20 overflow-hidden rounded-lg ${theme.pageBg} px-5 py-3 shadow-2xl ${
                   flipState.direction === 'next'
                     ? 'animate-mobile-peel-next'
@@ -988,12 +991,12 @@ export const BookReader: React.FC<BookReaderProps> = ({
               setSpotlight((s) => (s.active ? { ...s, active: false } : s))
             }
           >
-            {/* NIGHT MODE WARM CURSOR READING SPOTLIGHT (vầng sáng đèn đọc quanh con trỏ chuột) */}
+            {/* BRIGHTER NIGHT MODE WARM CURSOR READING SPOTLIGHT */}
             {paperTheme === 'night' && spotlight.active && (
               <div
-                className="pointer-events-none absolute inset-2.5 z-30 rounded-md transition-opacity duration-150"
+                className="pointer-events-none absolute inset-2.5 z-30 rounded-md"
                 style={{
-                  background: `radial-gradient(circle 190px at ${spotlight.x}px ${spotlight.y}px, rgba(255, 226, 158, 0.24) 0%, rgba(255, 210, 130, 0.08) 46%, transparent 74%)`,
+                  background: `radial-gradient(circle 240px at ${spotlight.x}px ${spotlight.y}px, rgba(255, 242, 200, 0.44) 0%, rgba(255, 218, 142, 0.22) 38%, rgba(255, 198, 110, 0.06) 64%, transparent 82%)`,
                   mixBlendMode: 'screen',
                 }}
               />
@@ -1036,41 +1039,59 @@ export const BookReader: React.FC<BookReaderProps> = ({
               <div className="book-crease-right pointer-events-none absolute inset-0" />
             </div>
 
-            {/* REAL TWO-SIDED 3D TURNING SHEET (Next: flips from right -> left; Prev: flips from left -> right) */}
+            {/* REAL SUPPLE TWO-SIDED 3D TURNING SHEET (ZERO MIRRORING, ZERO JITTER!) */}
             {flipState?.direction === 'next' && (
-              <div className="turning-sheet-next pointer-events-none absolute top-2.5 bottom-2.5 right-2.5 left-1/2 z-20">
-                {/* Front Face = Old Right Page */}
+              <div
+                onAnimationEnd={handleFlipAnimationEnd}
+                className="turning-sheet-next pointer-events-none absolute top-2.5 bottom-2.5 right-2.5 left-1/2 z-20"
+              >
+                {/* Front Face = Old Right Page (lifted slightly forward in Z so Chrome never Z-fights/mirrors) */}
                 <div
-                  className={`sheet-face-front absolute inset-0 flex flex-col overflow-hidden rounded-r-md ${theme.pageBg} px-10 py-6 shadow-xl`}
+                  className={`sheet-face-front absolute inset-0 rounded-r-md ${theme.pageBg} shadow-2xl`}
                 >
-                  {renderPageFace(curRight, 'right')}
-                  <div className="book-crease-right pointer-events-none absolute inset-0" />
+                  <div className="relative flex h-full w-full flex-col overflow-hidden rounded-r-md px-10 py-6">
+                    {renderPageFace(curRight, 'right')}
+                    <div className="book-crease-right pointer-events-none absolute inset-0" />
+                    <div className="sheet-curl-shadow-front pointer-events-none absolute inset-0" />
+                  </div>
                 </div>
-                {/* Back Face = New Left Page (revealed smoothly as sheet crosses 90°) */}
+                {/* Back Face = New Left Page (cleanly separated in Z, revealed smoothly past 90°) */}
                 <div
-                  className={`sheet-face-back absolute inset-0 flex flex-col overflow-hidden rounded-l-md ${theme.pageBg} px-10 py-6 shadow-xl`}
+                  className={`sheet-face-back absolute inset-0 rounded-l-md ${theme.pageBg} shadow-2xl`}
                 >
-                  {renderPageFace(destLeft, 'left')}
-                  <div className="book-crease-left pointer-events-none absolute inset-0" />
+                  <div className="relative flex h-full w-full flex-col overflow-hidden rounded-l-md px-10 py-6">
+                    {renderPageFace(destLeft, 'left')}
+                    <div className="book-crease-left pointer-events-none absolute inset-0" />
+                    <div className="sheet-curl-shadow-back pointer-events-none absolute inset-0" />
+                  </div>
                 </div>
               </div>
             )}
 
             {flipState?.direction === 'prev' && (
-              <div className="turning-sheet-prev pointer-events-none absolute top-2.5 bottom-2.5 left-2.5 right-1/2 z-20">
+              <div
+                onAnimationEnd={handleFlipAnimationEnd}
+                className="turning-sheet-prev pointer-events-none absolute top-2.5 bottom-2.5 left-2.5 right-1/2 z-20"
+              >
                 {/* Front Face = Old Left Page */}
                 <div
-                  className={`sheet-face-front absolute inset-0 flex flex-col overflow-hidden rounded-l-md ${theme.pageBg} px-10 py-6 shadow-xl`}
+                  className={`sheet-face-front absolute inset-0 rounded-l-md ${theme.pageBg} shadow-2xl`}
                 >
-                  {renderPageFace(curLeft, 'left')}
-                  <div className="book-crease-left pointer-events-none absolute inset-0" />
+                  <div className="relative flex h-full w-full flex-col overflow-hidden rounded-l-md px-10 py-6">
+                    {renderPageFace(curLeft, 'left')}
+                    <div className="book-crease-left pointer-events-none absolute inset-0" />
+                    <div className="sheet-curl-shadow-front pointer-events-none absolute inset-0" />
+                  </div>
                 </div>
                 {/* Back Face = New Right Page */}
                 <div
-                  className={`sheet-face-back absolute inset-0 flex flex-col overflow-hidden rounded-r-md ${theme.pageBg} px-10 py-6 shadow-xl`}
+                  className={`sheet-face-back absolute inset-0 rounded-r-md ${theme.pageBg} shadow-2xl`}
                 >
-                  {renderPageFace(destRight, 'right')}
-                  <div className="book-crease-right pointer-events-none absolute inset-0" />
+                  <div className="relative flex h-full w-full flex-col overflow-hidden rounded-r-md px-10 py-6">
+                    {renderPageFace(destRight, 'right')}
+                    <div className="book-crease-right pointer-events-none absolute inset-0" />
+                    <div className="sheet-curl-shadow-back pointer-events-none absolute inset-0" />
+                  </div>
                 </div>
               </div>
             )}

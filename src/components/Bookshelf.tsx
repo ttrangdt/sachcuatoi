@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import { BookOpen, Plus, Trash2 } from 'lucide-react';
 import { BookItem, BookProgress } from '../types/book';
 import { getBookCoverUrl } from '../utils/pdfEngine';
-import { DecorativeBookmark } from './DecorativeBookmark';
 import { AchillesCoverArt, AchillesSprayedEdge } from './AchillesArtwork';
 import { RealisticBookSpine } from './RealisticBookSpine';
 import { RoomMood } from './AmbientRoomEffects';
@@ -20,73 +19,21 @@ interface BookshelfProps {
   onAddBookClick?: () => void;
 }
 
-/** Lush trailing green ivy garland intertwined with warm fairy lights along vertical bookcase dividers (Image 3) */
-const IvyFairyColumn: React.FC<{ isEvening: boolean }> = ({ isEvening }) => (
+/** Realistic wooden vertical divider pilaster with architectural molding */
+const WoodCabinetDivider: React.FC<{ mood: RoomMood }> = ({ mood }) => (
   <div
-    className="pointer-events-none relative flex h-full w-6 sm:w-8 shrink-0 flex-col items-center justify-between overflow-visible z-20"
+    className={`relative h-full w-5 sm:w-7 shrink-0 z-20 transition-all duration-700 ${
+      mood === 'evening'
+        ? 'wood-pillar-night'
+        : mood === 'golden'
+          ? 'wood-pillar-golden'
+          : 'wood-pillar-morning'
+    }`}
     aria-hidden="true"
-  >
-    {/* Molded cream-white vertical bookcase pilaster */}
-    <div className="cream-pilaster absolute inset-y-0 inset-x-1" />
-
-    {/* Vine & warm fairy lights */}
-    <svg
-      viewBox="0 0 36 500"
-      preserveAspectRatio="none"
-      className="relative z-10 h-full w-full overflow-visible"
-    >
-      <path
-        d="M18 0 Q28 45 14 95 T22 195 T14 295 T22 395 T16 500"
-        fill="none"
-        stroke="#365938"
-        strokeWidth="2.4"
-      />
-      {[
-        18, 42, 68, 96, 126, 156, 188, 218, 248, 280, 312, 344, 376, 408, 440,
-        472,
-      ].map((y, idx) => {
-        const left = idx % 2 === 0;
-        const cx = left ? 10 : 26;
-        const rot = left ? -28 : 28;
-        return (
-          <g key={y}>
-            <ellipse
-              cx={cx}
-              cy={y}
-              rx="8.5"
-              ry="4.8"
-              fill={idx % 3 === 0 ? '#4B7748' : idx % 3 === 1 ? '#3B643B' : '#5B8854'}
-              transform={`rotate(${rot} ${cx} ${y})`}
-            />
-            {idx % 2 === 0 && (
-              <>
-                <circle
-                  cx={left ? 22 : 14}
-                  cy={y + 8}
-                  r={isEvening ? 9 : 4.5}
-                  fill="#FFE394"
-                  opacity={isEvening ? 0.45 : 0.22}
-                  className="sparkle-blink"
-                  style={{ animationDelay: `${idx * 0.25}s` }}
-                />
-                <circle
-                  cx={left ? 22 : 14}
-                  cy={y + 8}
-                  r="2.4"
-                  fill="#FFF7D6"
-                  className="sparkle-blink"
-                  style={{ animationDelay: `${idx * 0.25}s` }}
-                />
-              </>
-            )}
-          </g>
-        );
-      })}
-    </svg>
-  </div>
+  />
 );
 
-/** Crisp 3D companion hardcover spines (Image 1 & 2 clothbound aesthetic) */
+/** Crisp 3D companion clothbound hardcover spines with contact shadows */
 const ClothCompanionSpine: React.FC<{
   color: string;
   accent: string;
@@ -95,18 +42,18 @@ const ClothCompanionSpine: React.FC<{
   symbol?: 'leaf' | 'star' | 'rose' | 'moon';
 }> = ({ color, accent, heightClass, widthClass, symbol = 'leaf' }) => (
   <div
-    className={`relative shrink-0 overflow-hidden rounded-t-[4px] rounded-b-[1px] shadow-[3px_6px_12px_rgba(32,24,16,0.34)] ${heightClass} ${widthClass}`}
+    className={`relative shrink-0 overflow-hidden rounded-t-[4px] rounded-b-[1px] shadow-[4px_8px_14px_rgba(18,12,6,0.46)] ${heightClass} ${widthClass}`}
     style={{
       backgroundColor: color,
       backgroundImage: `
         repeating-linear-gradient(0deg, rgba(255,255,255,0.04) 0px, rgba(255,255,255,0.04) 1px, transparent 1px, transparent 3px),
-        linear-gradient(90deg, rgba(0,0,0,0.28) 0%, rgba(255,255,255,0.18) 12%, rgba(0,0,0,0) 50%, rgba(0,0,0,0.34) 100%)
+        linear-gradient(90deg, rgba(0,0,0,0.32) 0%, rgba(255,255,255,0.2) 12%, rgba(0,0,0,0) 50%, rgba(0,0,0,0.38) 100%)
       `,
     }}
     aria-hidden="true"
   >
-    <div className="pointer-events-none absolute inset-y-0 left-[3px] w-[1px] bg-black/20" />
-    <div className="pointer-events-none absolute inset-y-0 right-[3px] w-[1px] bg-black/20" />
+    <div className="pointer-events-none absolute inset-y-0 left-[3px] w-[1px] bg-black/25" />
+    <div className="pointer-events-none absolute inset-y-0 right-[3px] w-[1px] bg-black/25" />
     <div className="mx-1.5 mt-3 h-[2px] opacity-75" style={{ backgroundColor: accent }} />
     <div className="mt-4 flex justify-center opacity-70">
       <span
@@ -125,11 +72,10 @@ const ClothCompanionSpine: React.FC<{
 );
 
 /**
- * Interactive 3D Book on Shelf:
- * - Stands sharply spine-out with miniature cover art + crisp clothbound title (Images 1 & 2).
- * - Hover spine: elevates & glides forward crisply (never blurry!).
- * - Click spine: smoothly rotates IN PLACE ON THE SHELF into its full Front Cover (zero popup modal!).
- * - Click revealed cover: opens BookReader.
+ * Interactive 3D Book on Shelf (clean, ZERO floating bookmark clutter!):
+ * - Stands sharply spine-out with miniature cover art & clothbound texture.
+ * - Click spine -> rotates smoothly IN PLACE ON THE SHELF into full Front Cover.
+ * - Click cover -> opens BookReader.
  */
 const InlineFlipBook: React.FC<{
   book: BookItem;
@@ -154,7 +100,6 @@ const InlineFlipBook: React.FC<{
 }) => {
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
   const isAchilles = book.id === 'truong-ca-achilles';
-  const hasBookmark = Boolean(progress?.bookmarkedPage);
 
   useEffect(() => {
     if (isAchilles || coverUrl) return;
@@ -181,21 +126,6 @@ const InlineFlipBook: React.FC<{
       onMouseLeave={() => onHoverChange(false)}
       onClick={(e) => e.stopPropagation()}
     >
-      {/* Peeking Sparkling Bookmark above book */}
-      {hasBookmark && progress && (
-        <div
-          className={`pointer-events-none absolute -top-7 z-30 transition-transform duration-300 ${
-            isExpanded
-              ? 'right-3 -translate-y-2'
-              : isThisHovered
-                ? '-translate-y-4 scale-105'
-                : ''
-          }`}
-        >
-          <DecorativeBookmark styleId={progress.bookmarkStyle} size="sm" />
-        </div>
-      )}
-
       {book.isCustom && onDelete && (isThisHovered || isExpanded) && (
         <button
           type="button"
@@ -214,10 +144,10 @@ const InlineFlipBook: React.FC<{
         <button
           type="button"
           onClick={onOpenReader}
-          className="group/cover relative flex h-[176px] sm:h-[192px] lg:h-[204px] w-[142px] -translate-y-3 text-left transition-transform duration-300 hover:scale-[1.03] focus:outline-none"
+          className="group/cover relative flex h-[176px] sm:h-[192px] lg:h-[204px] w-[142px] -translate-y-2.5 text-left transition-transform duration-300 hover:scale-[1.03] focus:outline-none"
         >
           <div
-            className="book-sheen relative z-10 h-full flex-1 overflow-hidden rounded-l-[3px] rounded-r-[5px] shadow-[10px_16px_26px_-4px_rgba(24,16,8,0.65)] ring-1 ring-[#F4D36A]/70"
+            className="book-sheen relative z-10 h-full flex-1 overflow-hidden rounded-l-[3px] rounded-r-[5px] shadow-[10px_16px_28px_-4px_rgba(12,8,4,0.72)] ring-1 ring-[#F4D36A]/70"
             style={{ backgroundColor: book.spineColor }}
           >
             <div
@@ -276,9 +206,9 @@ const InlineFlipBook: React.FC<{
           type="button"
           onClick={onToggleExpand}
           style={{ width: `${spineWidth}px` }}
-          className="spine-book-btn book-sheen relative overflow-visible rounded-t-[5px] rounded-b-[2px] shadow-[4px_8px_16px_rgba(24,18,12,0.45)] focus:outline-none focus:ring-2 focus:ring-[#D4A857]"
+          className="spine-book-btn book-sheen relative overflow-visible rounded-t-[5px] rounded-b-[2px] shadow-[5px_8px_16px_rgba(14,10,6,0.52)] focus:outline-none focus:ring-2 focus:ring-[#D4A857]"
         >
-          {/* Top 3D page-block thickness edge (like Reference Image 1) */}
+          {/* Top 3D page-block thickness edge */}
           <div
             className="pointer-events-none absolute -top-[4px] left-[3px] right-[3px] h-[4px] rounded-t-[2px]"
             style={{
@@ -290,9 +220,8 @@ const InlineFlipBook: React.FC<{
         </button>
       )}
 
-      {/* Engraved miniature brass plaque for Finished Books on the Right Cabinet */}
       {showFinishedTag && progress?.isFinished && (
-        <div className="mt-1 rounded border border-[#C9A45A]/60 bg-[#2C1E14]/90 px-1.5 py-0.5 text-center text-[8.5px] leading-tight text-[#F6E2B3] shadow">
+        <div className="mt-1 rounded border border-[#C9A45A]/60 bg-[#241810]/92 px-1.5 py-0.5 text-center text-[8.5px] leading-tight text-[#F6E2B3] shadow">
           <div className="font-semibold">
             {formatReadingDuration(progress.firstOpenedAt, progress.finishedAt)}
           </div>
@@ -320,7 +249,6 @@ export const Bookshelf: React.FC<BookshelfProps> = ({
   const [expandedBookKey, setExpandedBookKey] = useState<string | null>(null);
 
   const dragStartX = useRef<number | null>(null);
-  const isEvening = roomMood === 'evening';
 
   const handlePointerDown = (e: React.PointerEvent) => {
     if ((e.target as HTMLElement).closest('button')) return;
@@ -354,8 +282,28 @@ export const Bookshelf: React.FC<BookshelfProps> = ({
   });
   const finishedBooks = books.filter((b) => progressMap[b.id]?.isFinished);
 
-  // Center cabinet (1) = 68% viewport width, leaving 16% Left cabinet & 16% Right cabinet peeking cleanly on both sides!
   const basePercent = 16 - activeCabinet * 68;
+
+  const bayClass =
+    roomMood === 'evening'
+      ? 'shelf-bay-night'
+      : roomMood === 'golden'
+        ? 'shelf-bay-golden'
+        : 'shelf-bay-morning';
+
+  const plankClass =
+    roomMood === 'evening'
+      ? 'wood-plank-night'
+      : roomMood === 'golden'
+        ? 'wood-plank-golden'
+        : 'wood-plank-morning';
+
+  const corniceClass =
+    roomMood === 'evening'
+      ? 'wood-cornice-night'
+      : roomMood === 'golden'
+        ? 'wood-cornice-golden'
+        : 'wood-cornice-morning';
 
   return (
     <div
@@ -368,13 +316,14 @@ export const Bookshelf: React.FC<BookshelfProps> = ({
       onPointerLeave={handlePointerUp}
       onClick={() => setExpandedBookKey(null)}
     >
-      {/* Top Molded Library Crown Cornice & Ivy Garland (Image 3) */}
-      <div className="cream-cornice relative z-30 h-5 sm:h-6 w-full shrink-0">
-        {/* Continuous horizontal wrought-iron ladder rail */}
-        <div className="pointer-events-none absolute inset-x-0 -bottom-2 h-[4px] bg-gradient-to-b from-[#2E2D30] via-[#171719] to-[#0B0B0D] shadow-md" />
+      {/* Architectural Molded Crown Cornice + Black Iron Ladder Rail */}
+      <div
+        className={`${corniceClass} relative z-30 h-5 sm:h-6 w-full shrink-0 transition-all duration-700`}
+      >
+        <div className="pointer-events-none absolute inset-x-0 -bottom-2 h-[4px] bg-gradient-to-b from-[#2E2D30] via-[#151518] to-[#08080A] shadow-md" />
       </div>
 
-      {/* 3-CABINET BUILT-IN LIBRARY WALL TRACK */}
+      {/* 3-CABINET BUILT-IN ARCHITECTURAL LIBRARY WALL */}
       <div
         className="flex flex-1 min-h-0 items-stretch"
         style={{
@@ -384,9 +333,7 @@ export const Bookshelf: React.FC<BookshelfProps> = ({
             : 'transform 0.65s cubic-bezier(0.22, 1, 0.36, 1)',
         }}
       >
-        {/* ============================================================
-            CABINET 0 (LEFT): IN-PROGRESS / READING BOOKS
-           ============================================================ */}
+        {/* CABINET 0 (LEFT): IN-PROGRESS BOOKS */}
         <section
           onClick={() => {
             if (activeCabinet !== 0) {
@@ -398,16 +345,17 @@ export const Bookshelf: React.FC<BookshelfProps> = ({
             activeCabinet === 0 ? 'opacity-100' : 'opacity-90 cursor-pointer'
           }`}
         >
-          <IvyFairyColumn isEvening={isEvening} />
-
+          <WoodCabinetDivider mood={roomMood} />
           <div className="flex flex-1 flex-col">
             {[0, 1, 2].map((tier) => (
               <div key={tier} className="relative flex flex-1 min-h-0 flex-col justify-end">
                 <div
-                  className={`${
-                    isEvening ? 'library-bay-evening' : 'library-bay-day'
-                  } relative flex flex-1 items-end justify-center gap-1.5 sm:gap-2 px-4 sm:px-8 pb-0.5 transition-colors duration-700`}
+                  className={`${bayClass} relative flex flex-1 items-end justify-center gap-1.5 sm:gap-2 px-4 sm:px-8 pb-0.5 transition-all duration-700`}
                 >
+                  {/* Warm recessed cabinet downlight strip in Night mode */}
+                  {roomMood === 'evening' && (
+                    <div className="shelf-downlight pointer-events-none absolute inset-x-6 top-0 h-28" />
+                  )}
                   {tier === 0 && (
                     <>
                       <ClothCompanionSpine color="#88A89A" accent="#F5EEDB" heightClass="h-[154px] sm:h-[170px]" widthClass="w-8 sm:w-9" symbol="leaf" />
@@ -454,15 +402,13 @@ export const Bookshelf: React.FC<BookshelfProps> = ({
                     </>
                   )}
                 </div>
-                <div className="cream-shelf-plank relative z-10 h-4 sm:h-[18px] w-full shrink-0" />
+                <div className={`${plankClass} relative z-10 h-4 sm:h-[19px] w-full shrink-0 transition-all duration-700`} />
               </div>
             ))}
           </div>
         </section>
 
-        {/* ============================================================
-            CABINET 1 (CENTER): MAIN PERSONAL LIBRARY
-           ============================================================ */}
+        {/* CABINET 1 (CENTER): MAIN LIBRARY */}
         <section
           onClick={() => {
             if (activeCabinet !== 1) {
@@ -474,8 +420,7 @@ export const Bookshelf: React.FC<BookshelfProps> = ({
             activeCabinet === 1 ? 'opacity-100' : 'opacity-90 cursor-pointer'
           }`}
         >
-          <IvyFairyColumn isEvening={isEvening} />
-
+          <WoodCabinetDivider mood={roomMood} />
           <div className="flex flex-1 flex-col">
             {[0, 1, 2].map((tier) => {
               const tierBooks =
@@ -484,16 +429,17 @@ export const Bookshelf: React.FC<BookshelfProps> = ({
               return (
                 <div key={tier} className="relative flex flex-1 min-h-0 flex-col justify-end">
                   <div
-                    className={`${
-                      isEvening ? 'library-bay-evening' : 'library-bay-day'
-                    } relative flex flex-1 items-end justify-center gap-1.5 sm:gap-2 px-4 sm:px-8 pb-0.5 transition-colors duration-700`}
+                    className={`${bayClass} relative flex flex-1 items-end justify-center gap-1.5 sm:gap-2 px-4 sm:px-8 pb-0.5 transition-all duration-700`}
                   >
+                    {roomMood === 'evening' && (
+                      <div className="shelf-downlight pointer-events-none absolute inset-x-6 top-0 h-28" />
+                    )}
+
                     {tier === 0 && (
                       <>
                         <ClothCompanionSpine color="#B5654D" accent="#FBE6C2" heightClass="h-[152px] sm:h-[168px]" widthClass="w-8 sm:w-9" symbol="leaf" />
                         <ClothCompanionSpine color="#457A6B" accent="#F2E4C8" heightClass="h-[162px] sm:h-[178px]" widthClass="w-8 sm:w-9" symbol="star" />
 
-                        {/* USER'S REAL INTERACTIVE 3D BOOKS */}
                         {tierBooks.map((book) => {
                           const key = `center-${book.id}`;
                           return (
@@ -570,7 +516,11 @@ export const Bookshelf: React.FC<BookshelfProps> = ({
                               e.stopPropagation();
                               onAddBookClick();
                             }}
-                            className="mx-2 mb-1 flex h-[140px] w-14 flex-col items-center justify-center rounded-t-[4px] border-2 border-dashed border-[#A89A84]/70 bg-white/30 text-[#5C4E3C] transition hover:border-[#6B5438] hover:bg-white/60"
+                            className={`mx-2 mb-1 flex h-[140px] w-14 flex-col items-center justify-center rounded-t-[4px] border-2 border-dashed transition ${
+                              roomMood === 'evening'
+                                ? 'border-amber-200/35 bg-white/5 text-amber-100/75 hover:border-amber-200/70 hover:bg-white/10'
+                                : 'border-[#8D7B64]/60 bg-white/25 text-[#5C4E3C] hover:border-[#5A452D] hover:bg-white/55'
+                            }`}
                             title="Thêm sách PDF mới"
                             aria-label="Thêm sách PDF mới"
                           >
@@ -593,16 +543,14 @@ export const Bookshelf: React.FC<BookshelfProps> = ({
                       </>
                     )}
                   </div>
-                  <div className="cream-shelf-plank relative z-10 h-4 sm:h-[18px] w-full shrink-0" />
+                  <div className={`${plankClass} relative z-10 h-4 sm:h-[19px] w-full shrink-0 transition-all duration-700`} />
                 </div>
               );
             })}
           </div>
         </section>
 
-        {/* ============================================================
-            CABINET 2 (RIGHT): FINISHED BOOKS + BLACK IRON LIBRARY LADDER (IMAGE 3)
-           ============================================================ */}
+        {/* CABINET 2 (RIGHT): FINISHED BOOKS + BLACK IRON LIBRARY LADDER */}
         <section
           onClick={() => {
             if (activeCabinet !== 2) {
@@ -614,10 +562,10 @@ export const Bookshelf: React.FC<BookshelfProps> = ({
             activeCabinet === 2 ? 'opacity-100' : 'opacity-90 cursor-pointer'
           }`}
         >
-          <IvyFairyColumn isEvening={isEvening} />
+          <WoodCabinetDivider mood={roomMood} />
 
           <div className="relative flex flex-1 flex-col">
-            {/* Matte-Black Wrought-Iron Rolling Library Ladder on right edge (Image 3 signature!) */}
+            {/* Wrought-Iron Rolling Library Ladder */}
             <div
               className="pointer-events-none absolute inset-y-0 right-6 sm:right-12 z-30 hidden md:flex w-28 flex-col justify-between py-2"
               aria-hidden="true"
@@ -635,10 +583,12 @@ export const Bookshelf: React.FC<BookshelfProps> = ({
             {[0, 1, 2].map((tier) => (
               <div key={tier} className="relative flex flex-1 min-h-0 flex-col justify-end">
                 <div
-                  className={`${
-                    isEvening ? 'library-bay-evening' : 'library-bay-day'
-                  } relative flex flex-1 items-end justify-center gap-1.5 sm:gap-2 px-4 sm:px-8 pb-0.5 transition-colors duration-700`}
+                  className={`${bayClass} relative flex flex-1 items-end justify-center gap-1.5 sm:gap-2 px-4 sm:px-8 pb-0.5 transition-all duration-700`}
                 >
+                  {roomMood === 'evening' && (
+                    <div className="shelf-downlight pointer-events-none absolute inset-x-6 top-0 h-28" />
+                  )}
+
                   {tier === 0 && (
                     <>
                       <ClothCompanionSpine color="#3B6258" accent="#EED492" heightClass="h-[154px] sm:h-[170px]" widthClass="w-8 sm:w-9" symbol="leaf" />
@@ -678,12 +628,12 @@ export const Bookshelf: React.FC<BookshelfProps> = ({
                     </>
                   )}
                 </div>
-                <div className="cream-shelf-plank relative z-10 h-4 sm:h-[18px] w-full shrink-0" />
+                <div className={`${plankClass} relative z-10 h-4 sm:h-[19px] w-full shrink-0 transition-all duration-700`} />
               </div>
             ))}
           </div>
 
-          <IvyFairyColumn isEvening={isEvening} />
+          <WoodCabinetDivider mood={roomMood} />
         </section>
       </div>
     </div>

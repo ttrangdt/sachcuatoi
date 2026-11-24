@@ -18,13 +18,13 @@ export const MOOD_LABELS: Record<RoomMood, string> = {
 
 const MOTES = [
   { left: '8%', top: '18%', size: 5.5, delay: '0s', dur: '11s' },
-  { left: '19%', top: '42%', size: 4, delay: '1.8s', dur: '13s' },
-  { left: '34%', top: '22%', size: 6, delay: '2.7s', dur: '14.5s' },
-  { left: '53%', top: '16%', size: 4.5, delay: '0.9s', dur: '12s' },
-  { left: '71%', top: '28%', size: 6, delay: '2.2s', dur: '13.5s' },
-  { left: '86%', top: '20%', size: 5, delay: '3.8s', dur: '11.5s' },
-  { left: '91%', top: '54%', size: 4, delay: '0.5s', dur: '10.5s' },
-  { left: '13%', top: '68%', size: 4.5, delay: '2.5s', dur: '12.5s' },
+  { left: '21%', top: '42%', size: 4.5, delay: '1.8s', dur: '13s' },
+  { left: '36%', top: '20%', size: 6.5, delay: '2.7s', dur: '14.5s' },
+  { left: '54%', top: '16%', size: 5, delay: '0.9s', dur: '12s' },
+  { left: '72%', top: '28%', size: 6, delay: '2.2s', dur: '13.5s' },
+  { left: '87%', top: '20%', size: 5, delay: '3.8s', dur: '11.5s' },
+  { left: '92%', top: '56%', size: 4.5, delay: '0.5s', dur: '10.5s' },
+  { left: '12%', top: '68%', size: 5, delay: '2.5s', dur: '12.5s' },
 ];
 
 interface AmbientRoomEffectsProps {
@@ -33,9 +33,8 @@ interface AmbientRoomEffectsProps {
 }
 
 /**
- * Cohesive, unified library room lighting environment — wall plaster, warm ceiling,
- * sunlit/twilight window spill, and floating motes/fireflies all stay architecturally consistent
- * across Morning, Golden Hour, and Night.
+ * High-contrast, unmistakable Morning / Golden Sunset / Cozy Night room lighting atmosphere
+ * with smooth 900ms transitions and subtle mouse parallax.
  */
 export const AmbientRoomEffects: React.FC<AmbientRoomEffectsProps> = ({
   mood,
@@ -46,50 +45,59 @@ export const AmbientRoomEffects: React.FC<AmbientRoomEffectsProps> = ({
   const isEvening = mood === 'evening';
 
   const moteColor = isEvening
-    ? 'rgba(255, 224, 132, 0.88)'
+    ? 'rgba(255, 224, 128, 0.95)'
     : isGolden
-      ? 'rgba(255, 206, 128, 0.85)'
-      : 'rgba(255, 253, 236, 0.9)';
+      ? 'rgba(255, 198, 112, 0.92)'
+      : 'rgba(255, 255, 245, 0.95)';
 
   return (
     <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
-      {/* Unified Hand-Painted Plaster Wall & Soft Ceiling Texture */}
+      {/* 1. Dramatic Wall Backdrop per Time of Day */}
       <div
         className="absolute inset-0 transition-all duration-1000"
         style={{
           background: isEvening
-            ? 'radial-gradient(ellipse 78% 60% at 50% 18%, #36281d 0%, #201712 52%, #130d0a 100%)'
+            ? 'radial-gradient(ellipse 85% 65% at 50% 10%, #1c2238 0%, #0f1322 52%, #070910 100%)'
             : isGolden
-              ? 'radial-gradient(ellipse 82% 62% at 22% 14%, #fbe4c4 0%, #e7c29c 48%, #c99875 100%)'
-              : 'radial-gradient(ellipse 84% 64% at 20% 12%, #f9fbf4 0%, #e7f0e6 50%, #d4e3d7 100%)',
+              ? 'radial-gradient(ellipse 90% 65% at 15% 12%, #ffdfb3 0%, #e8a472 48%, #8f4e48 100%)'
+              : 'radial-gradient(ellipse 90% 65% at 18% 10%, #ffffff 0%, #e5f2ec 48%, #c7dfd5 100%)',
         }}
       />
 
-      {/* Painterly Watercolor Brushstroke Wall Grain */}
-      <div
-        className="absolute inset-0 opacity-25 mix-blend-multiply"
-        style={{
-          backgroundImage:
-            'radial-gradient(rgba(96, 74, 52, 0.16) 1px, transparent 0), radial-gradient(rgba(96, 74, 52, 0.1) 1px, transparent 0)',
-          backgroundSize: '26px 26px',
-          backgroundPosition: '0 0, 13px 13px',
-        }}
-      />
-
-      {/* Soft Diagonal Window Sunlight / Evening Warm Chandelier Halo with Parallax */}
+      {/* 2. Window Light Spill / Sunset Beams / Night Moonlight */}
       <div
         className="absolute -inset-10 transition-all duration-1000"
         style={{
-          transform: `translate3d(${parallax.x * 12}px, ${parallax.y * 8}px, 0)`,
+          transform: `translate3d(${parallax.x * 14}px, ${parallax.y * 8}px, 0)`,
           background: isEvening
-            ? 'radial-gradient(circle 480px at 50% 10%, rgba(255, 200, 112, 0.22) 0%, rgba(255, 178, 86, 0.08) 45%, transparent 75%)'
+            ? 'radial-gradient(circle 420px at 85% 8%, rgba(142, 168, 255, 0.16) 0%, transparent 70%), radial-gradient(circle 520px at 50% 18%, rgba(255, 196, 102, 0.16) 0%, transparent 72%)'
             : isGolden
-              ? 'linear-gradient(116deg, rgba(255, 214, 140, 0.52) 0%, rgba(255, 182, 112, 0.16) 24%, transparent 38%, rgba(255, 212, 146, 0.28) 52%, transparent 68%)'
-              : 'linear-gradient(118deg, rgba(255, 255, 246, 0.65) 0%, rgba(255, 254, 238, 0.22) 22%, transparent 36%, rgba(255, 255, 246, 0.34) 48%, transparent 62%)',
+              ? 'linear-gradient(114deg, rgba(255, 226, 152, 0.72) 0%, rgba(255, 174, 96, 0.34) 24%, transparent 38%, rgba(255, 208, 134, 0.42) 52%, transparent 66%)'
+              : 'linear-gradient(118deg, rgba(255, 255, 250, 0.78) 0%, rgba(255, 255, 244, 0.28) 22%, transparent 36%, rgba(236, 255, 248, 0.42) 50%, transparent 64%)',
         }}
       />
 
-      {/* Floating Sunbeam Dust Motes / Warm Evening Fireflies */}
+      {/* 3. Evening Starfield shimmer in upper wall corners */}
+      {isEvening && (
+        <div className="absolute inset-0 opacity-75">
+          {[
+            ['6%', '10%'],
+            ['14%', '22%'],
+            ['88%', '12%'],
+            ['94%', '26%'],
+            ['82%', '8%'],
+            ['4%', '34%'],
+          ].map(([left, top], i) => (
+            <span
+              key={i}
+              className="sparkle-blink absolute h-1.5 w-1.5 rounded-full bg-[#FFF7D6] shadow-[0_0_8px_2px_rgba(255,240,180,0.85)]"
+              style={{ left, top, animationDelay: `${i * 0.4}s` }}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* 4. Floating Dust Motes / Sunset Embers / Night Fireflies */}
       {MOTES.map((m, idx) => (
         <span
           key={idx}
@@ -102,7 +110,7 @@ export const AmbientRoomEffects: React.FC<AmbientRoomEffectsProps> = ({
             width: `${m.size}px`,
             height: `${m.size}px`,
             backgroundColor: moteColor,
-            boxShadow: `0 0 ${m.size * (isEvening ? 4.2 : 2.6)}px ${moteColor}`,
+            boxShadow: `0 0 ${m.size * (isEvening ? 4.8 : 2.8)}px ${moteColor}`,
             animationDelay: m.delay,
             animationDuration: m.dur,
           }}
@@ -113,8 +121,8 @@ export const AmbientRoomEffects: React.FC<AmbientRoomEffectsProps> = ({
 };
 
 /**
- * Tactile Brass Pull-Chain Cord hanging from the top-left corner of the room.
- * Pulling it stretches the chain with a spring bounce and cycles Morning -> Golden -> Night.
+ * Tactile Brass Pull-Chain Cord hanging from top-left corner.
+ * Pull to cycle Morning -> Golden Sunset -> Cozy Night.
  */
 export const PullChainSwitch: React.FC<{
   mood: RoomMood;
@@ -135,17 +143,14 @@ export const PullChainSwitch: React.FC<{
       type="button"
       onClick={handleClick}
       className="group fixed top-0 left-4 sm:left-7 z-40 flex flex-col items-center focus:outline-none cursor-pointer"
-      title={`Kéo dây đổi ánh sáng (hiện tại: ${MOOD_LABELS[mood]})`}
+      title={`Kéo dây đổi ánh sáng (${MOOD_LABELS[mood]})`}
       aria-label="Kéo dây đổi ánh sáng phòng đọc"
     >
-      {/* Brass ceiling mount */}
       <div className="h-2.5 w-6 rounded-b-md bg-gradient-to-r from-[#8E6526] via-[#E5C16C] to-[#7C561E] shadow-md" />
-
-      {/* Beaded brass chain that stretches down on pull */}
       <div
         className="flex flex-col items-center transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]"
         style={{
-          transform: pulling ? 'translateY(16px)' : 'translateY(0)',
+          transform: pulling ? 'translateY(18px)' : 'translateY(0)',
         }}
       >
         <div
@@ -155,19 +160,17 @@ export const PullChainSwitch: React.FC<{
               'repeating-linear-gradient(180deg, #E8C56E 0px, #E8C56E 3px, #8A6222 3px, #8A6222 5px)',
           }}
         />
-        {/* Glowing pendant pull handle */}
         <div
           className={`relative flex h-8 w-5 flex-col items-center justify-center rounded-full border border-[#F5D680] shadow-lg transition-transform group-hover:scale-110 ${
             isEvening
-              ? 'bg-gradient-to-b from-[#FFE699] to-[#C88A2E] shadow-[0_0_18px_4px_rgba(255,210,112,0.65)]'
+              ? 'bg-gradient-to-b from-[#FFE699] to-[#C88A2E] shadow-[0_0_22px_6px_rgba(255,210,112,0.75)]'
               : mood === 'golden'
-                ? 'bg-gradient-to-b from-[#FFD28E] to-[#C46B34] shadow-[0_4px_12px_rgba(196,107,52,0.45)]'
-                : 'bg-gradient-to-b from-[#FFFDF2] to-[#C9AD6B] shadow-[0_4px_10px_rgba(72,96,82,0.28)]'
+                ? 'bg-gradient-to-b from-[#FFD28E] to-[#C46B34] shadow-[0_4px_14px_rgba(196,107,52,0.5)]'
+                : 'bg-gradient-to-b from-[#FFFDF2] to-[#C9AD6B] shadow-[0_4px_10px_rgba(72,96,82,0.3)]'
           }`}
         >
-          <span className="h-2.5 w-2.5 rounded-full bg-white/75 blur-[0.5px]" />
+          <span className="h-2.5 w-2.5 rounded-full bg-white/80 blur-[0.5px]" />
         </div>
-        {/* Small silk tassel tip */}
         <div className="h-3 w-1.5 rounded-b-full bg-gradient-to-b from-[#C89632] to-transparent opacity-80" />
       </div>
     </button>
