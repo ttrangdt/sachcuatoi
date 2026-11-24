@@ -259,11 +259,34 @@ async function resolveDestPage(doc, dest) {
  * Extract structured visual lines with exact X, Y, and width from PDF text items.
  */
 function extractVisualLines(textItems) {
-  // Group items into visual lines by Y-coordinate (±4pt tolerance), handling out-of-order PDF streams
+  // Compute median normal font height on this page to detect oversized drop-caps accurately
+  const heights = textItems
+    .filter((it) => it.str && it.str.trim().length >= 3)
+    .map((it) => Math.abs(it.transform?.[3] || it.height || 12))
+    .filter((h) => h > 4)
+    .sort((a, b) => a - b);
+  const normalFontH = heights.length > 0 ? heights[Math.floor(heights.length * 0.5)] : 12;
+
+  const dropCaps = [];
   const rawLines = [];
+
   for (const item of textItems) {
     if (!item.str) continue;
+    const trimmed = item.str.trim();
+    const itemH = Math.abs(item.transform?.[3] || item.height || normalFontH);
     const y = Math.round(item.transform[5]);
+    const x = item.transform[4];
+
+    // Detect giant drop-cap letter (1 uppercase letter, >= 1.55x normal font size) whose baseline sits on line 2/3
+    if (
+      trimmed.length === 1 &&
+      itemH >= normalFontH * 1.55 &&
+      /^[A-ZĐÀÁẢÃẠĂẮẰẲẴẶÂẤẦẨẪẬÈÉẺẼẸÊẾỀỂỄỆÌÍỈĨỊÒÓỎÕỌÔỐỒỔỖỘƠỚỜỞỠỢÙÚỦŨỤƯỨỪỬỮỰỲÝỶỸỴ“"']$/.test(trimmed)
+    ) {
+      dropCaps.push({ item, x, y, itemH });
+      continue;
+    }
+
     let bucket = rawLines.find((rl) => Math.abs(rl.y - y) <= 4);
     if (!bucket) {
       bucket = { y, items: [] };
@@ -274,6 +297,19 @@ function extractVisualLines(textItems) {
 
   // Sort top-to-bottom (higher PDF Y = higher on the page) so headers/titles ALWAYS precede body prose!
   rawLines.sort((a, b) => b.y - a.y);
+
+  // Snap each drop-cap to the top-most line it spans (within [y - 4, y + itemH * 1.15])
+  for (const dc of dropCaps) {
+    let targetLine = rawLines.find(
+      (rl) => rl.y >= dc.y - 4 && rl.y <= dc.y + dc.itemH * 1.15
+    );
+    if (!targetLine) {
+      targetLine = { y: dc.y, items: [] };
+      rawLines.push(targetLine);
+      rawLines.sort((a, b) => b.y - a.y);
+    }
+    targetLine.items.push(dc.item);
+  }
 
   const lines = [];
   for (let idx = 0; idx < rawLines.length; idx++) {
